@@ -1,0 +1,17 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.FinalProject" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="colorPrimary">@color/brand_orange</item>
+        <item name="colorPrimaryContainer">@color/brand_orange_light</item>
+        <item name="colorSecondary">@color/brand_orange</item>
+        <item name="colorAccent">@color/brand_orange</item>
+        <item name="colorControlActivated">@color/brand_orange</item>
+        <item name="android:colorAccent">@color/brand_orange</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/white</item>
+    </style>
+
+    <style name="Theme.FinalProject" parent="Base.Theme.FinalProject" />
+</resources>

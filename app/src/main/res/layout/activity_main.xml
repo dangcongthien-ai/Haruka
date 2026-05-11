@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:fontFamily="sans-serif">
+
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/custom_bottom_navigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/custom_bottom_navigation"
+        android:layout_width="0dp"
+        android:layout_height="124dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <View
+            android:id="@+id/bottom_nav_shape"
+            android:layout_width="0dp"
+            android:layout_height="124dp"
+            android:background="@drawable/bg_bottom_nav_union"
+            android:elevation="4dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <FrameLayout
+            android:id="@+id/nav_calendar_button"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginStart="17dp"
+            android:layout_marginBottom="6dp"
+            android:translationZ="12dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/nav_calendar_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/calendar"
+                android:scaleType="center"
+                android:src="@drawable/ic_calendar" />
+
+            <View
+                android:id="@+id/nav_calendar_indicator"
+                android:layout_width="18dp"
+                android:layout_height="2dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="7dp"
+                android:background="@color/brand_orange" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_todo_button"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginStart="87dp"
+            android:layout_marginBottom="6dp"
+            android:translationZ="12dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/nav_todo_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/todo"
+                android:src="@drawable/ic_todo" />
+
+            <View
+                android:id="@+id/nav_todo_indicator"
+                android:layout_width="18dp"
+                android:layout_height="2dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="7dp"
+                android:background="@color/brand_orange"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/main_fab"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:background="@drawable/bg_fab_square"
+            android:clickable="true"
+            android:contentDescription="@string/save"
+            android:elevation="12dp"
+            android:focusable="true"
+            android:layout_marginTop="31dp"
+            android:translationZ="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/save"
+                android:src="@drawable/ic_add" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_habits_button"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="82dp"
+            android:layout_marginBottom="6dp"
+            android:translationZ="12dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageView
+                android:id="@+id/nav_habits_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/habits"
+                android:src="@drawable/ic_habit" />
+
+            <View
+                android:id="@+id/nav_habits_indicator"
+                android:layout_width="18dp"
+                android:layout_height="2dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="7dp"
+                android:background="@color/brand_orange"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_journal_button"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="17dp"
+            android:layout_marginBottom="6dp"
+            android:translationZ="12dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageView
+                android:id="@+id/nav_journal_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/journal"
+                android:src="@drawable/ic_journal" />
+
+            <View
+                android:id="@+id/nav_journal_indicator"
+                android:layout_width="18dp"
+                android:layout_height="2dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="7dp"
+                android:background="@color/brand_orange"
+                android:visibility="gone" />
+        </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

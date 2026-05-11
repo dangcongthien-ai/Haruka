@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="337dp"
+    android:background="@drawable/bg_surface_rounded"
+    android:orientation="vertical"
+    android:paddingStart="16dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="10dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="@string/custom_reminder"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/edit_reminder_amount"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_chip_outline"
+        android:inputType="number"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:text="@string/default_one"
+        android:textCursorDrawable="@drawable/cursor_primary"
+        android:textColor="@color/text_primary" />
+
+    <RadioGroup
+        android:id="@+id/reminder_unit_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/radio_minutes"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:buttonTint="@color/brand_orange"
+            android:checked="true"
+            android:text="@string/minutes_before" />
+
+        <RadioButton
+            android:id="@+id/radio_hours"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:buttonTint="@color/brand_orange"
+            android:text="@string/hours_before" />
+
+        <RadioButton
+            android:id="@+id/radio_days"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:buttonTint="@color/brand_orange"
+            android:text="@string/days_before" />
+
+        <RadioButton
+            android:id="@+id/radio_weeks"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:buttonTint="@color/brand_orange"
+            android:text="@string/weeks_before" />
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/btn_custom_reminder_done"
+        android:layout_width="match_parent"
+        android:layout_height="37dp"
+        android:gravity="end|center_vertical"
+        android:text="@string/done"
+        android:textColor="@color/text_primary"
+        android:textStyle="bold" />
+</LinearLayout>

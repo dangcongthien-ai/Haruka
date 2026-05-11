@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="12dp">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/reminder"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save_reminder"
+            android:layout_width="74dp"
+            android:layout_height="32dp"
+            android:text="@string/save"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/brand_orange"
+            app:cornerRadius="22dp" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="@color/app_background" />
+
+    <LinearLayout
+        android:id="@+id/reminder_event_time"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/event_time" />
+
+        <TextView
+            android:id="@+id/check_event_time"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/reminder_1m"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/before_one_minute" />
+
+        <TextView
+            android:id="@+id/check_1m"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/reminder_5m"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/before_five_minutes" />
+
+        <TextView
+            android:id="@+id/check_5m"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/reminder_15m"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/before_fifteen_minutes" />
+
+        <TextView
+            android:id="@+id/check_15m"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/reminder_30m"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/before_thirty_minutes" />
+
+        <TextView
+            android:id="@+id/check_30m"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/reminder_1h"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/before_one_hour" />
+
+        <TextView
+            android:id="@+id/check_1h"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/reminder_1d"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/before_one_day" />
+
+        <TextView
+            android:id="@+id/check_1d"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/reminder_custom"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/custom" />
+
+        <TextView
+            android:id="@+id/check_custom"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+</LinearLayout>

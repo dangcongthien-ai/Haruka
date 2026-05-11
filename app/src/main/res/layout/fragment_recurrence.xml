@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="12dp">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/repeat"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save_recurrence"
+            android:layout_width="74dp"
+            android:layout_height="32dp"
+            android:text="@string/save"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/brand_orange"
+            app:cornerRadius="22dp" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="@color/app_background" />
+
+    <LinearLayout
+        android:id="@+id/option_none"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/none" />
+
+        <TextView
+            android:id="@+id/check_none"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/option_daily"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/daily" />
+
+        <TextView
+            android:id="@+id/check_daily"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/option_weekly"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/weekly" />
+
+        <TextView
+            android:id="@+id/check_weekly"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/option_monthly"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/monthly" />
+
+        <TextView
+            android:id="@+id/check_monthly"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/option_yearly"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/yearly" />
+
+        <TextView
+            android:id="@+id/check_yearly"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/option_custom"
+        style="@style/Caliary.OptionRow">
+
+        <TextView
+            style="@style/Caliary.OptionLabel"
+            android:text="@string/custom" />
+
+        <TextView
+            android:id="@+id/check_custom"
+            style="@style/Caliary.OptionCheck" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/custom_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        android:orientation="vertical"
+        android:padding="22dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:text="@string/repeat_every"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/edit_interval"
+                android:layout_width="52dp"
+                android:layout_height="42dp"
+                android:background="@drawable/bg_chip_outline"
+                android:gravity="center"
+                android:inputType="number"
+                android:text="@string/default_one"
+                android:textCursorDrawable="@drawable/cursor_primary"
+                android:textColor="@color/text_primary" />
+
+            <Spinner
+                android:id="@+id/spinner_freq_unit"
+                android:layout_width="104dp"
+                android:layout_height="42dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_chip_outline" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_repeat_on_label"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/repeat_on"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/weekly_days"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_monthly_pattern"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginTop="8dp"
+            android:textAllCaps="false"
+            android:visibility="gone"
+            app:backgroundTint="@color/surface"
+            app:cornerRadius="8dp"
+            app:strokeColor="@color/line"
+            app:strokeWidth="1dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/finish"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/end_none_row"
+            style="@style/Caliary.OptionRowSmall">
+
+            <TextView
+                style="@style/Caliary.OptionLabel"
+                android:text="@string/none" />
+
+            <TextView
+                android:id="@+id/check_end_none"
+                style="@style/Caliary.OptionCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/end_date_row"
+            style="@style/Caliary.OptionRowSmall">
+
+            <TextView
+                android:id="@+id/tv_end_date_option"
+                style="@style/Caliary.OptionLabel" />
+
+            <TextView
+                android:id="@+id/check_end_date"
+                style="@style/Caliary.OptionCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/end_count_row"
+            style="@style/Caliary.OptionRowSmall">
+
+            <TextView
+                android:id="@+id/tv_end_count_option"
+                style="@style/Caliary.OptionLabel"
+                android:text="@string/end_after_once" />
+
+            <TextView
+                android:id="@+id/check_end_count"
+                style="@style/Caliary.OptionCheck" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

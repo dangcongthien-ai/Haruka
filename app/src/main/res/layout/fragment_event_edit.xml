@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="12dp">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cancel"
+            android:src="@drawable/ic_back" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save_event"
+            android:layout_width="74dp"
+            android:layout_height="32dp"
+            android:text="@string/save"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/brand_orange"
+            app:cornerRadius="22dp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/edit_event_title"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:background="@color/surface"
+                android:hint="@string/title_hint"
+                android:inputType="textCapSentences"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/brand_orange"
+                android:textCursorDrawable="@drawable/cursor_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:background="@color/surface"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="24dp"
+                android:paddingEnd="12dp">
+
+                <TextView
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/color"
+                    android:textColor="@color/text_primary" />
+
+                <HorizontalScrollView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/color_palette"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/type_segment"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@color/surface"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_event_type"
+                    style="@style/Caliary.SegmentButton"
+                    android:text="@string/event" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_todo_type"
+                    style="@style/Caliary.SegmentButton"
+                    android:text="@string/todo" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@color/app_background" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:background="@color/surface"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="24dp"
+                android:paddingEnd="20dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/all_day_event"
+                    android:textColor="@color/text_primary" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switch_all_day"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleX="0.65"
+                    android:scaleY="0.65"
+                    app:thumbTint="@color/switch_thumb"
+                    app:trackTint="@color/switch_track" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/start_row"
+                style="@style/Caliary.FormRow">
+
+                <TextView
+                    style="@style/Caliary.FormLabel"
+                    android:text="@string/start" />
+
+                <TextView
+                    android:id="@+id/tv_start_date"
+                    style="@style/Caliary.FormValue" />
+
+                <TextView
+                    android:id="@+id/tv_start_time"
+                    style="@style/Caliary.FormTime" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/end_row"
+                style="@style/Caliary.FormRow">
+
+                <TextView
+                    style="@style/Caliary.FormLabel"
+                    android:text="@string/end" />
+
+                <TextView
+                    android:id="@+id/tv_end_date"
+                    style="@style/Caliary.FormValue" />
+
+                <TextView
+                    android:id="@+id/tv_end_time"
+                    style="@style/Caliary.FormTime" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@color/app_background" />
+
+            <LinearLayout
+                android:id="@+id/repeat_row"
+                style="@style/Caliary.FormRow">
+
+                <TextView
+                    style="@style/Caliary.FormLabel"
+                    android:text="@string/repeat" />
+
+                <TextView
+                    android:id="@+id/tv_repeat_value"
+                    style="@style/Caliary.FormValueMuted" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/reminder_section"
+                style="@style/Caliary.FormRow">
+
+                <TextView
+                    style="@style/Caliary.FormLabel"
+                    android:text="@string/reminder" />
+
+                <LinearLayout
+                    android:id="@+id/reminder_list"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/btn_add_reminder"
+                    android:layout_width="24dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textColor="@color/brand_orange"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@color/app_background" />
+
+            <EditText
+                android:id="@+id/edit_location"
+                style="@style/Caliary.PlainEdit"
+                android:hint="@string/location"
+                android:inputType="textCapSentences" />
+
+            <EditText
+                android:id="@+id/edit_url"
+                style="@style/Caliary.PlainEdit"
+                android:hint="@string/url"
+                android:inputType="textUri" />
+
+            <EditText
+                android:id="@+id/edit_notes"
+                style="@style/Caliary.PlainEdit"
+                android:hint="@string/note_hint"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minHeight="86dp" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
