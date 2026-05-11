@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="303dp"
+    android:background="@color/surface">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/priority_level"
+        android:scaleType="fitXY"
+        android:src="@drawable/priority_matrix" />
+
+    <TextView
+        android:id="@+id/priority_3"
+        android:layout_width="135dp"
+        android:layout_height="108dp"
+        android:layout_marginStart="57dp"
+        android:layout_marginTop="52dp"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <TextView
+        android:id="@+id/priority_1"
+        android:layout_width="137dp"
+        android:layout_height="108dp"
+        android:layout_marginStart="197dp"
+        android:layout_marginTop="52dp"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <TextView
+        android:id="@+id/priority_4"
+        android:layout_width="135dp"
+        android:layout_height="104dp"
+        android:layout_marginStart="57dp"
+        android:layout_marginTop="165dp"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <TextView
+        android:id="@+id/priority_2"
+        android:layout_width="137dp"
+        android:layout_height="104dp"
+        android:layout_marginStart="197dp"
+        android:layout_marginTop="165dp"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true" />
+</FrameLayout>

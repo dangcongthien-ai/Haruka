@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="12dp">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save_todo"
+            android:layout_width="74dp"
+            android:layout_height="32dp"
+            android:text="@string/save"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/brand_orange"
+            app:cornerRadius="22dp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/edit_todo_title"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:background="@color/surface"
+                android:gravity="center"
+                android:hint="@string/title_hint"
+                android:inputType="textCapSentences"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/brand_orange"
+                android:textCursorDrawable="@drawable/cursor_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/type_segment"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@color/surface"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_event_type"
+                    style="@style/Caliary.SegmentButton"
+                    android:text="@string/event" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_todo_type"
+                    style="@style/Caliary.SegmentButton"
+                    android:text="@string/todo" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:background="@color/app_background" />
+
+            <EditText
+                android:id="@+id/edit_todo_description"
+                style="@style/Caliary.PlainEdit"
+                android:hint="@string/description_hint"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minHeight="72dp" />
+
+            <LinearLayout
+                android:id="@+id/todo_date_row"
+                style="@style/Caliary.FormRow"
+                android:visibility="gone">
+
+                <TextView
+                    style="@style/Caliary.FormLabel"
+                    android:text="@string/day" />
+
+                <TextView
+                    android:id="@+id/tv_todo_date"
+                    style="@style/Caliary.FormValueMuted" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/reminder_section"
+                style="@style/Caliary.FormRow">
+
+                <TextView
+                    style="@style/Caliary.FormLabel"
+                    android:text="@string/reminder" />
+
+                <LinearLayout
+                    android:id="@+id/reminder_list"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/btn_add_reminder"
+                    android:layout_width="24dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textColor="@color/brand_orange"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:background="@color/app_background" />
+
+            <include
+                android:id="@+id/priority_matrix"
+                layout="@layout/include_priority_matrix" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_delete_todo"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="28dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginBottom="28dp"
+                android:text="@string/delete"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:visibility="gone"
+                app:backgroundTint="@color/brand_orange"
+                app:cornerRadius="20dp" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
