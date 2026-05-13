@@ -63,6 +63,7 @@ public class CalendarFragment extends Fragment {
     private LinearLayout weekContainer;
     private LinearLayout dayContainer;
     private LinearLayout dayDetailPanel;
+    private View dayDetailScroll;
     private TextView selectedDateLabel;
     private RecyclerView monthPager;
     private CalendarMonthPagerAdapter monthPagerAdapter;
@@ -116,9 +117,17 @@ public class CalendarFragment extends Fragment {
         weekContainer = view.findViewById(R.id.week_container);
         dayContainer = view.findViewById(R.id.day_container);
         dayDetailPanel = view.findViewById(R.id.day_detail_panel);
+        dayDetailScroll = view.findViewById(R.id.day_detail_scroll);
         selectedDateLabel = view.findViewById(R.id.tv_selected_date);
         weekTimelineRecycler = view.findViewById(R.id.week_timeline_recycler);
         monthBody.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> resizeMonthDetailPanel());
+        dayDetailScroll.setOnTouchListener((v, event) -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            if (event.getActionMasked() == MotionEvent.ACTION_UP || event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
+                v.getParent().requestDisallowInterceptTouchEvent(false);
+            }
+            return false;
+        });
     }
 
     private void setupAdapters(View view) {
@@ -355,6 +364,7 @@ public class CalendarFragment extends Fragment {
             selectedDateLabel.setText(DateTimeUtils.formatDateWithDow(selectedDate));
             selectedEventAdapter.submit(calendarRepository.getEventsForDate(selectedDate));
             selectedTodoAdapter.submit(todoRepository.getTodosForDate(selectedDate));
+            dayDetailScroll.post(dayDetailScroll::requestLayout);
         }
     }
 
