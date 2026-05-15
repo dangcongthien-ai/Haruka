@@ -356,6 +356,7 @@ public class CalendarFragment extends Fragment {
 
     private void refreshMonth() {
         monthPagerAdapter.setSelectedDate(selectedDate);
+        monthPagerAdapter.setMonthDetailVisible(monthDetailVisible);
         monthPagerAdapter.notifyDataSetChanged();
         resizeMonthDetailPanel();
         syncMonthPager(false);
