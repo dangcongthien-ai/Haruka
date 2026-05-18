@@ -2,6 +2,8 @@ package com.example.finalproject.adapter;
 
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +30,7 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
     private final List<CalendarDayCell> cells = new ArrayList<>();
     private final OnDayClickListener listener;
     private LocalDate selectedDate;
+    private int viewportHeight;
 
     public CalendarMonthAdapter(OnDayClickListener listener) {
         this.listener = listener;
@@ -38,6 +41,10 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         cells.addAll(newCells);
         this.selectedDate = selectedDate;
         notifyDataSetChanged();
+    }
+
+    void setViewportHeight(int viewportHeight) {
+        this.viewportHeight = viewportHeight;
     }
 
     @NonNull
@@ -54,7 +61,7 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         boolean selected = cell.getDate().equals(selectedDate);
         int fill = selected ? holder.itemView.getContext().getColor(R.color.brand_orange_light) : holder.itemView.getContext().getColor(R.color.surface);
         int stroke = selected ? holder.itemView.getContext().getColor(R.color.brand_orange) : holder.itemView.getContext().getColor(R.color.line);
-        holder.itemView.setBackground(UiUtils.roundedStroke(fill, stroke, 0, holder.itemView.getContext()));
+        holder.itemView.setBackground(createCellBackground(holder, fill, stroke, selected));
 
         holder.dayNumber.setText(String.valueOf(cell.getDate().getDayOfMonth()));
         holder.dayNumber.setTextColor(cell.isCurrentMonth()
@@ -63,8 +70,8 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         holder.dayNumber.setTypeface(selected ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
 
         holder.eventContainer.removeAllViews();
-        int max = Math.min(3, cell.getEvents().size());
-        boolean hasMore = cell.getEvents().size() > 3;
+        int max = Math.min(4, cell.getEvents().size());
+        boolean hasMore = cell.getEvents().size() > 4;
         Sizing sizing = applyResponsiveSizing(holder, cellHeight, max, hasMore);
         for (int i = 0; i < max; i++) {
             CalendarEvent event = cell.getEvents().get(i);
@@ -78,6 +85,8 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
             chip.setGravity(android.view.Gravity.CENTER);
             chip.setIncludeFontPadding(false);
             chip.setMaxLines(1);
+            chip.setSingleLine(true);
+            chip.setEllipsize(TextUtils.TruncateAt.END);
             chip.setText(event.getTitle());
             chip.setTextColor(Color.BLACK);
             chip.setTextSize(sizing.chipTextSize);
@@ -85,8 +94,45 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
             chip.setBackground(UiUtils.rounded(UiUtils.safeColor(event.getColor(), fallback), 4, holder.itemView.getContext()));
             holder.eventContainer.addView(chip);
         }
-        holder.more.setVisibility(hasMore ? View.VISIBLE : View.GONE);
+        if (hasMore) {
+            addMoreIndicator(holder, sizing);
+        } else {
+            holder.more.setVisibility(View.GONE);
+        }
         holder.itemView.setOnClickListener(v -> listener.onDayClick(cell.getDate()));
+    }
+
+    private GradientDrawable createCellBackground(DayViewHolder holder, int fill, int stroke, boolean selected) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(fill);
+        drawable.setStroke(selected ? UiUtils.dp(holder.itemView.getContext(), 1) : 1, stroke);
+        return drawable;
+    }
+
+    private void addMoreIndicator(DayViewHolder holder, Sizing sizing) {
+        View topSpacer = new View(holder.itemView.getContext());
+        View bottomSpacer = new View(holder.itemView.getContext());
+        holder.more.setVisibility(View.GONE);
+        holder.eventContainer.addView(topSpacer, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+        ));
+        TextView more = new TextView(holder.itemView.getContext());
+        more.setText(R.string.ellipsis);
+        more.setTextColor(holder.itemView.getContext().getColor(R.color.text_primary));
+        more.setGravity(android.view.Gravity.CENTER);
+        more.setIncludeFontPadding(false);
+        more.setTextSize(sizing.moreTextSize);
+        holder.eventContainer.addView(more, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                sizing.moreHeight
+        ));
+        holder.eventContainer.addView(bottomSpacer, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+        ));
     }
 
     private int resizeCellToGrid(DayViewHolder holder) {
@@ -97,10 +143,11 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
             return fallbackHeight;
         }
         RecyclerView parent = (RecyclerView) holder.itemView.getParent();
-        if (parent.getHeight() <= 0) {
+        int availableHeight = parent.getHeight() > 0 ? parent.getHeight() : viewportHeight;
+        if (availableHeight <= 0) {
             return fallbackHeight;
         }
-        int targetHeight = parent.getHeight() / 6;
+        int targetHeight = Math.max(1, availableHeight / 6);
         ViewGroup.LayoutParams params = holder.itemView.getLayoutParams();
         if (params != null && params.height != targetHeight) {
             params.height = targetHeight;
@@ -145,7 +192,8 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         } else {
             chipTextSize = 10f;
         }
-        return new Sizing(chipHeight, margin, chipTextSize);
+        float moreTextSize = moreHeight <= UiUtils.dp(holder.itemView.getContext(), 10) ? 8 : 11;
+        return new Sizing(chipHeight, margin, chipTextSize, Math.max(moreHeight, UiUtils.dp(holder.itemView.getContext(), 8)), moreTextSize);
     }
 
     private int clamp(int value, int min, int max) {
@@ -156,11 +204,15 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         final int chipHeight;
         final int chipMargin;
         final float chipTextSize;
+        final int moreHeight;
+        final float moreTextSize;
 
-        Sizing(int chipHeight, int chipMargin, float chipTextSize) {
+        Sizing(int chipHeight, int chipMargin, float chipTextSize, int moreHeight, float moreTextSize) {
             this.chipHeight = chipHeight;
             this.chipMargin = chipMargin;
             this.chipTextSize = chipTextSize;
+            this.moreHeight = moreHeight;
+            this.moreTextSize = moreTextSize;
         }
     }
 

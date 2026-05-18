@@ -8,7 +8,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="59dp"
+        android:layout_height="54dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="18dp"
@@ -66,14 +66,14 @@
     <LinearLayout
         android:id="@+id/calendar_nav_row"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="34dp"
         android:gravity="center"
         android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/btn_previous"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/month"
             android:src="@drawable/ic_arrow_left" />
@@ -85,13 +85,13 @@
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
             android:textColor="@color/text_primary"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="normal" />
 
         <ImageButton
             android:id="@+id/btn_next"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/month"
             android:src="@drawable/ic_arrow_right" />
@@ -106,7 +106,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="31dp"
+            android:layout_height="27dp"
             android:orientation="horizontal">
 
             <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_monday" />

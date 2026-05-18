@@ -33,6 +33,7 @@ public class CalendarMonthPagerAdapter extends RecyclerView.Adapter<CalendarMont
         this.baseMonth = baseMonth.withDayOfMonth(1);
         this.cellProvider = cellProvider;
         this.dayClickListener = dayClickListener;
+        setHasStableIds(true);
     }
 
     public void setSelectedDate(LocalDate selectedDate) {
@@ -40,10 +41,7 @@ public class CalendarMonthPagerAdapter extends RecyclerView.Adapter<CalendarMont
     }
 
     public void setMonthDetailVisible(boolean monthDetailVisible) {
-        if (this.monthDetailVisible != monthDetailVisible) {
-            this.monthDetailVisible = monthDetailVisible;
-            notifyDataSetChanged();
-        }
+        this.monthDetailVisible = monthDetailVisible;
     }
 
     public int getPositionForMonth(LocalDate monthStart) {
@@ -61,10 +59,10 @@ public class CalendarMonthPagerAdapter extends RecyclerView.Adapter<CalendarMont
     @Override
     public MonthViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         RecyclerView recyclerView = new RecyclerView(parent.getContext());
-        int width = parent.getWidth() > 0
-                ? parent.getWidth()
-                : parent.getResources().getDisplayMetrics().widthPixels;
-        recyclerView.setLayoutParams(new RecyclerView.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT));
+        recyclerView.setLayoutParams(new RecyclerView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
         recyclerView.setClipToPadding(false);
         recyclerView.setOverScrollMode(RecyclerView.OVER_SCROLL_NEVER);
         recyclerView.setNestedScrollingEnabled(false);
@@ -84,10 +82,16 @@ public class CalendarMonthPagerAdapter extends RecyclerView.Adapter<CalendarMont
         return PAGE_COUNT;
     }
 
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
     static class MonthViewHolder extends RecyclerView.ViewHolder {
         final CalendarMonthAdapter adapter;
         final RecyclerView recyclerView;
         final MonthGridLayoutManager layoutManager;
+        private int lastViewportHeight;
 
         MonthViewHolder(@NonNull RecyclerView recyclerView, OnDayClickListener listener) {
             super(recyclerView);
@@ -95,10 +99,21 @@ public class CalendarMonthPagerAdapter extends RecyclerView.Adapter<CalendarMont
             this.layoutManager = (MonthGridLayoutManager) recyclerView.getLayoutManager();
             adapter = new CalendarMonthAdapter(listener::onDayClick);
             recyclerView.setAdapter(adapter);
+            recyclerView.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                int height = bottom - top;
+                if (height > 0 && height != lastViewportHeight) {
+                    lastViewportHeight = height;
+                    adapter.setViewportHeight(height);
+                    recyclerView.post(adapter::notifyDataSetChanged);
+                }
+            });
         }
 
         void applyMonthDetailMode(boolean visible) {
             layoutManager.setVerticalScrollEnabled(visible);
+            if (recyclerView.getHeight() > 0) {
+                adapter.setViewportHeight(recyclerView.getHeight());
+            }
             recyclerView.post(() -> {
                 int bottomPadding = visible ? recyclerView.getHeight() / 2 : 0;
                 if (recyclerView.getPaddingBottom() != bottomPadding) {

@@ -75,6 +75,7 @@
     <string name="placeholder_journal">Tab nhật ký sẽ triển khai sau</string>
     <string name="choose_date">Chọn ngày</string>
     <string name="choose_month">Chọn tháng</string>
+    <string name="choose_year">Chọn năm</string>
     <string name="empty_title_error">Vui lòng nhập tiêu đề</string>
     <string name="add_reminder">Thêm thông báo</string>
     <string name="choose_color">Chọn màu</string>
