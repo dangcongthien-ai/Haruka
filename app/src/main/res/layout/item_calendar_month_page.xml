@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/month_week_header"
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:orientation="horizontal">
+
+        <TextView
+            style="@style/Caliary.WeekLabel"
+            android:text="@string/weekday_monday" />
+
+        <TextView
+            style="@style/Caliary.WeekLabel"
+            android:text="@string/weekday_tuesday" />
+
+        <TextView
+            style="@style/Caliary.WeekLabel"
+            android:text="@string/weekday_wednesday" />
+
+        <TextView
+            style="@style/Caliary.WeekLabel"
+            android:text="@string/weekday_thursday" />
+
+        <TextView
+            style="@style/Caliary.WeekLabel"
+            android:text="@string/weekday_friday" />
+
+        <TextView
+            style="@style/Caliary.WeekLabel"
+            android:text="@string/weekday_saturday" />
+
+        <TextView
+            style="@style/Caliary.WeekLabel"
+            android:text="@string/weekday_sunday" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <com.example.finalproject.ui.calendar.MonthGridView
+            android:id="@+id/month_grid_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/month_grid_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:nestedScrollingEnabled="false"
+            android:overScrollMode="never" />
+    </FrameLayout>
+</LinearLayout>

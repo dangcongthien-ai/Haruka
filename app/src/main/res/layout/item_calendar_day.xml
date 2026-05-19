@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="94dp"
+    android:layout_height="82dp"
     android:background="@drawable/bg_day_cell"
     android:clickable="true"
     android:focusable="true"
@@ -24,15 +24,66 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical" />
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tv_more"
-        android:layout_width="match_parent"
-        android:layout_height="16dp"
-        android:gravity="center"
-        android:text="@string/ellipsis"
-        android:textColor="@color/text_primary"
-        android:textSize="12sp"
-        android:visibility="gone" />
+        <TextView
+            android:id="@+id/tv_event_chip_1"
+            android:layout_width="match_parent"
+            android:layout_height="14dp"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_event_chip_2"
+            android:layout_width="match_parent"
+            android:layout_height="14dp"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_event_chip_3"
+            android:layout_width="match_parent"
+            android:layout_height="14dp"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:visibility="gone" />
+
+        <View
+            android:id="@+id/more_top_spacer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_more"
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="@string/ellipsis"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <View
+            android:id="@+id/more_bottom_spacer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+    </LinearLayout>
 </LinearLayout>
