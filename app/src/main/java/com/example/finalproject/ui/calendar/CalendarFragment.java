@@ -67,6 +67,8 @@ public class CalendarFragment extends Fragment {
     private static final float MONTH_DETAIL_PANEL_RATIO = 0.45f;
     private static final long MONTH_PANEL_OPEN_DURATION_MS = 220L;
     private static final long MONTH_PANEL_CLOSE_DURATION_MS = 180L;
+    private static final long PERIOD_SWIPE_OUT_DURATION_MS = 140L;
+    private static final long PERIOD_SWIPE_IN_DURATION_MS = 220L;
 
     private CalendarRepository calendarRepository;
     private TodoRepository todoRepository;
@@ -91,14 +93,18 @@ public class CalendarFragment extends Fragment {
     private DaySelectorAdapter dayStripAdapter;
     private EventListAdapter dayEventAdapter;
     private TodoListAdapter dayTodoAdapter;
+    private View weekTopEventRow;
+    private TextView weekMonthBadge;
     private NestedScrollView weekTimelineScroll;
     private WeekTimelineLayout weekTimelineView;
+    private WeekTopStripLayout weekTopStripView;
 
     private int mode = MODE_MONTH;
     private LocalDate selectedDate = LocalDate.now();
     private LocalDate visibleMonth = selectedDate.withDayOfMonth(1);
     private LocalDate lastWeekTimelineStart;
     private boolean monthDetailVisible = false;
+    private boolean periodTransitionRunning = false;
     private int monthPanelAnimationGeneration = 0;
     private int monthDetailPanelTop = RecyclerView.NO_POSITION;
     private final Map<YearMonth, List<CalendarDayCell>> monthCellCache = new HashMap<>();
@@ -141,8 +147,11 @@ public class CalendarFragment extends Fragment {
         dayDetailPanel = view.findViewById(R.id.day_detail_panel);
         dayDetailScroll = view.findViewById(R.id.day_detail_scroll);
         selectedDateLabel = view.findViewById(R.id.tv_selected_date);
+        weekTopEventRow = view.findViewById(R.id.week_top_event_row);
+        weekMonthBadge = view.findViewById(R.id.tv_week_month_badge);
         weekTimelineScroll = view.findViewById(R.id.week_timeline_scroll);
         weekTimelineView = view.findViewById(R.id.week_timeline_view);
+        weekTopStripView = view.findViewById(R.id.week_top_event_strip);
         monthBody.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> resizeMonthDetailPanel());
         dayDetailScroll.setOnTouchListener((v, event) -> {
             v.getParent().requestDisallowInterceptTouchEvent(true);
@@ -205,6 +214,13 @@ public class CalendarFragment extends Fragment {
         weekJournalRecycler.setAdapter(weekJournalAdapter);
 
         weekTimelineView.setListener(event -> {
+            if (event.getDate() != null) {
+                selectedDate = event.getDate();
+                ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+            }
+            ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
+        });
+        weekTopStripView.setListener(event -> {
             if (event.getDate() != null) {
                 selectedDate = event.getDate();
                 ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
@@ -425,13 +441,80 @@ public class CalendarFragment extends Fragment {
             notifyMonthPages(previousMonth, visibleMonth);
             syncMonthPager(true);
             return;
-        } else if (mode == MODE_WEEK) {
+        }
+        animatePeriodSwipe(direction);
+    }
+
+    private void animatePeriodSwipe(int direction) {
+        if (periodTransitionRunning) {
+            return;
+        }
+        View container = mode == MODE_WEEK ? weekContainer : dayContainer;
+        if (container == null || container.getWidth() <= 0) {
+            applyPeriodShift(direction);
+            refresh();
+            return;
+        }
+        periodTransitionRunning = true;
+        float distance = Math.max(container.getWidth() * 0.24f, UiUtils.dp(requireContext(), 72));
+        float exitTranslation = direction > 0 ? -distance : distance;
+        float enterTranslation = -exitTranslation;
+        container.animate().cancel();
+        container.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        container.animate()
+                .translationX(exitTranslation)
+                .alpha(0.78f)
+                .setDuration(PERIOD_SWIPE_OUT_DURATION_MS)
+                .setInterpolator(new AccelerateInterpolator(1.25f))
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        if (!isAdded()) {
+                            periodTransitionRunning = false;
+                            return;
+                        }
+                        applyPeriodShift(direction);
+                        refresh();
+                        container.animate().cancel();
+                        container.setTranslationX(enterTranslation);
+                        container.setAlpha(0.82f);
+                        container.animate()
+                                .translationX(0f)
+                                .alpha(1f)
+                                .setDuration(PERIOD_SWIPE_IN_DURATION_MS)
+                                .setInterpolator(new DecelerateInterpolator(1.4f))
+                                .setListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        periodTransitionRunning = false;
+                                        container.setLayerType(View.LAYER_TYPE_NONE, null);
+                                    }
+
+                                    @Override
+                                    public void onAnimationCancel(Animator animation) {
+                                        periodTransitionRunning = false;
+                                        container.setLayerType(View.LAYER_TYPE_NONE, null);
+                                    }
+                                })
+                                .start();
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        periodTransitionRunning = false;
+                        container.setLayerType(View.LAYER_TYPE_NONE, null);
+                    }
+                })
+                .start();
+    }
+
+    private void applyPeriodShift(int direction) {
+        if (mode == MODE_WEEK) {
             selectedDate = selectedDate.plusWeeks(direction);
         } else {
             selectedDate = selectedDate.plusDays(direction);
         }
         ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
-        refresh();
     }
 
     private void refresh() {
@@ -518,10 +601,13 @@ public class CalendarFragment extends Fragment {
     private void refreshWeek() {
         LocalDate weekStart = getWeekStart(selectedDate);
         List<LocalDate> days = buildWeekDays(weekStart);
+        weekMonthBadge.setText(getString(R.string.week_month_short, selectedDate.getMonthValue()));
         weekDayAdapter.submit(days);
         weekJournalAdapter.submit(days);
         List<CalendarEvent> events = calendarRepository.getEventsBetween(weekStart.atStartOfDay(), weekStart.plusDays(7).atStartOfDay());
         weekTimelineView.submit(days, events);
+        weekTopStripView.submit(days, weekTimelineView.getStripItems());
+        UiUtils.visible(weekTopEventRow, true);
         if (lastWeekTimelineStart == null || !lastWeekTimelineStart.equals(weekStart)) {
             lastWeekTimelineStart = weekStart;
             weekTimelineScroll.post(() -> weekTimelineScroll.scrollTo(0, weekTimelineView.getScrollYForHour(6)));
@@ -850,7 +936,7 @@ public class CalendarFragment extends Fragment {
         GestureDetector detector = new GestureDetector(requireContext(), new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                if (mode == MODE_MONTH || e1 == null || e2 == null || Math.abs(velocityX) < Math.abs(velocityY)) {
+                if (mode == MODE_MONTH || periodTransitionRunning || e1 == null || e2 == null || Math.abs(velocityX) < Math.abs(velocityY)) {
                     return false;
                 }
                 if (Math.abs(e2.getX() - e1.getX()) > UiUtils.dp(requireContext(), 80)) {
@@ -865,8 +951,12 @@ public class CalendarFragment extends Fragment {
             return false;
         };
         view.setOnTouchListener(listener);
+        view.findViewById(R.id.week_day_recycler).setOnTouchListener(listener);
+        view.findViewById(R.id.week_journal_recycler).setOnTouchListener(listener);
+        view.findViewById(R.id.week_top_event_strip).setOnTouchListener(listener);
         view.findViewById(R.id.week_timeline_scroll).setOnTouchListener(listener);
         view.findViewById(R.id.day_event_recycler).setOnTouchListener(listener);
+        view.findViewById(R.id.day_todo_recycler).setOnTouchListener(listener);
     }
 
     private static class SmoothMonthLayoutManager extends LinearLayoutManager {

@@ -88,6 +88,7 @@
     <string name="weekday_friday">T6</string>
     <string name="weekday_saturday">T7</string>
     <string name="weekday_sunday">CN</string>
+    <string name="week_month_short">Th%1$d</string>
     <string name="default_one">1</string>
     <string name="ellipsis">...</string>
 </resources>
