@@ -28,6 +28,7 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
     }
 
     private static final int MONTH_CELL_HEIGHT_DP = 82;
+    private static final int EVENT_CHIP_HORIZONTAL_INSET_DP = 2;
 
     private final List<CalendarDayCell> cells = new ArrayList<>();
     private final OnDayClickListener listener;
@@ -188,11 +189,12 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
 
     private void bindEventChips(DayViewHolder holder, CalendarDayCell cell, int max, Sizing sizing) {
         int fallback = holder.itemView.getContext().getColor(R.color.event_blue);
+        int horizontalInset = UiUtils.dp(holder.itemView.getContext(), EVENT_CHIP_HORIZONTAL_INSET_DP);
         for (int i = 0; i < holder.eventChips.length; i++) {
             TextView chip = holder.eventChips[i];
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) chip.getLayoutParams();
             params.height = sizing.chipHeight;
-            params.setMargins(0, sizing.chipMargin, 0, sizing.chipMargin);
+            params.setMargins(horizontalInset, sizing.chipMargin, horizontalInset, sizing.chipMargin);
             chip.setLayoutParams(params);
             if (i < max) {
                 CalendarEvent event = cell.getEvents().get(i);

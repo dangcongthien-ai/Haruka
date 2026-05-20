@@ -8,7 +8,8 @@
     <LinearLayout
         android:id="@+id/month_week_header"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="30dp"
+        android:paddingTop="6dp"
         android:orientation="horizontal">
 
         <TextView

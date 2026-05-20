@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/surface"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:orientation="vertical">
 
     <LinearLayout
@@ -66,14 +68,18 @@
     <LinearLayout
         android:id="@+id/calendar_nav_row"
         android:layout_width="match_parent"
-        android:layout_height="30dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="4dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="4dp"
         android:gravity="center"
         android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/btn_previous"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/month"
             android:src="@drawable/ic_arrow_left" />
@@ -81,7 +87,8 @@
         <TextView
             android:id="@+id/tv_period_title"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
             android:textColor="@color/text_primary"
@@ -90,8 +97,8 @@
 
         <ImageButton
             android:id="@+id/btn_next"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/month"
             android:src="@drawable/ic_arrow_right" />
@@ -220,38 +227,59 @@
         android:orientation="vertical"
         android:visibility="gone">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/week_day_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:clipToPadding="false"
-            android:paddingStart="52dp"
-            android:overScrollMode="never" />
-
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="32dp"
+            android:layout_height="54dp"
             android:orientation="horizontal">
 
             <View
-                android:layout_width="52dp"
+                android:layout_width="45dp"
                 android:layout_height="match_parent" />
 
-            <TextView
-                android:id="@+id/journal_placeholder"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/week_day_recycler"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:gravity="center"
-                android:textColor="@color/text_muted" />
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never" />
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/week_timeline_recycler"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="45dp"
+                android:layout_height="match_parent" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/week_journal_recycler"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never" />
+        </LinearLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/week_timeline_scroll"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:overScrollMode="never" />
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:paddingBottom="92dp">
+
+            <com.example.finalproject.ui.calendar.WeekTimelineLayout
+                android:id="@+id/week_timeline_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </androidx.core.widget.NestedScrollView>
     </LinearLayout>
 
     <LinearLayout
