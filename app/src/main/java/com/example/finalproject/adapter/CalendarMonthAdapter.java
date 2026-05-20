@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdapter.DayViewHolder> {
+    private static final int MAX_VISIBLE_EVENTS = 3;
     public interface OnDayClickListener {
         void onDayClick(LocalDate date);
     }
@@ -155,9 +156,9 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
                 : holder.itemView.getContext().getColor(R.color.text_muted));
         holder.dayNumber.setTypeface(selected ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
 
-        int max = Math.min(3, cell.getEvents().size());
-        boolean hasMore = cell.getEvents().size() > 3;
-        Sizing sizing = applyResponsiveSizing(holder, cellHeight, max, hasMore);
+        int max = Math.min(MAX_VISIBLE_EVENTS, cell.getEvents().size());
+        boolean hasMore = cell.getEvents().size() > MAX_VISIBLE_EVENTS;
+        Sizing sizing = applyResponsiveSizing(holder, cellHeight);
         bindEventChips(holder, cell, max, sizing);
         bindMoreIndicator(holder, hasMore, sizing);
         holder.itemView.setOnClickListener(v -> listener.onDayClick(cell.getDate()));
@@ -254,23 +255,19 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         return targetHeight;
     }
 
-    private Sizing applyResponsiveSizing(DayViewHolder holder, int cellHeight, int chipCount, boolean hasMore) {
+    private Sizing applyResponsiveSizing(DayViewHolder holder, int cellHeight) {
         int dayHeight = clamp(cellHeight / 5, UiUtils.dp(holder.itemView.getContext(), 14), UiUtils.dp(holder.itemView.getContext(), 19));
-        int margin = cellHeight < UiUtils.dp(holder.itemView.getContext(), 58)
-                ? 1
-                : UiUtils.dp(holder.itemView.getContext(), 1);
-        int moreHeight = hasMore
-                ? clamp(cellHeight / 7, UiUtils.dp(holder.itemView.getContext(), 12), UiUtils.dp(holder.itemView.getContext(), 16))
-                : 0;
-        int usedByMargins = chipCount * margin * 2;
+        int margin = UiUtils.dp(holder.itemView.getContext(), 1);
+        int reservedMoreHeight = clamp(cellHeight / 7, UiUtils.dp(holder.itemView.getContext(), 12), UiUtils.dp(holder.itemView.getContext(), 16));
+        int usedByMargins = MAX_VISIBLE_EVENTS * margin * 2;
         int availableForChips = cellHeight
                 - dayHeight
-                - moreHeight
+                - reservedMoreHeight
                 - holder.itemView.getPaddingTop()
                 - holder.itemView.getPaddingBottom()
                 - usedByMargins;
-        int chipHeight = chipCount == 0 ? 0 : availableForChips / chipCount;
-        chipHeight = clamp(chipHeight, UiUtils.dp(holder.itemView.getContext(), 8), UiUtils.dp(holder.itemView.getContext(), 18));
+        int chipHeight = availableForChips / MAX_VISIBLE_EVENTS;
+        chipHeight = clamp(chipHeight, UiUtils.dp(holder.itemView.getContext(), 10), UiUtils.dp(holder.itemView.getContext(), 15));
 
         ViewGroup.LayoutParams dayParams = holder.dayNumber.getLayoutParams();
         dayParams.height = dayHeight;
@@ -279,10 +276,10 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         holder.dayNumber.setTextSize(dayHeight <= UiUtils.dp(holder.itemView.getContext(), 15) ? 11 : 14);
 
         ViewGroup.LayoutParams moreParams = holder.more.getLayoutParams();
-        moreParams.height = Math.max(moreHeight, UiUtils.dp(holder.itemView.getContext(), 8));
+        moreParams.height = reservedMoreHeight;
         holder.more.setLayoutParams(moreParams);
         holder.more.setIncludeFontPadding(false);
-        holder.more.setTextSize(moreHeight <= UiUtils.dp(holder.itemView.getContext(), 10) ? 8 : 11);
+        holder.more.setTextSize(reservedMoreHeight <= UiUtils.dp(holder.itemView.getContext(), 10) ? 8 : 11);
 
         float chipTextSize;
         if (chipHeight <= UiUtils.dp(holder.itemView.getContext(), 10)) {
@@ -294,8 +291,8 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         } else {
             chipTextSize = 10f;
         }
-        float moreTextSize = moreHeight <= UiUtils.dp(holder.itemView.getContext(), 13) ? 10 : 13;
-        return new Sizing(chipHeight, margin, chipTextSize, moreHeight, moreTextSize);
+        float moreTextSize = reservedMoreHeight <= UiUtils.dp(holder.itemView.getContext(), 13) ? 10 : 13;
+        return new Sizing(chipHeight, margin, chipTextSize, reservedMoreHeight, moreTextSize);
     }
 
     private int clamp(int value, int min, int max) {

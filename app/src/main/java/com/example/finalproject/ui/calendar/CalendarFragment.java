@@ -61,7 +61,7 @@ public class CalendarFragment extends Fragment {
     public static final int MODE_MONTH = 0;
     public static final int MODE_WEEK = 1;
     public static final int MODE_DAY = 2;
-    private static final float MONTH_DETAIL_PANEL_RATIO = 0.50f;
+    private static final float MONTH_DETAIL_PANEL_RATIO = 0.45f;
     private static final long MONTH_PANEL_OPEN_DURATION_MS = 220L;
     private static final long MONTH_PANEL_CLOSE_DURATION_MS = 180L;
 
