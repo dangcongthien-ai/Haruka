@@ -138,7 +138,7 @@ public class TodoEditFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishToHome());
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreenOrHome());
         view.findViewById(R.id.btn_save_todo).setOnClickListener(v -> save());
         view.findViewById(R.id.todo_date_row).setOnClickListener(v -> {
             captureInput();
@@ -161,7 +161,7 @@ public class TodoEditFragment extends Fragment {
                 if (todoId > 0) {
                     repository.deleteTodo(todoId);
                 }
-                ((MainActivity) requireActivity()).finishToHome();
+                ((MainActivity) requireActivity()).finishFullScreenOrHome();
             });
         });
     }
@@ -259,7 +259,7 @@ public class TodoEditFragment extends Fragment {
         item.setReminders(reminders);
         repository.saveTodo(item);
         ((MainActivity) requireActivity()).setSelectedDate(todoDate);
-        ((MainActivity) requireActivity()).finishToHome();
+        ((MainActivity) requireActivity()).finishFullScreenOrHome();
     }
 
     private String colorForPriority(int priority) {

@@ -27,7 +27,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.PagerSnapHelper;
@@ -39,7 +41,8 @@ import com.example.finalproject.adapter.CalendarMonthPagerAdapter;
 import com.example.finalproject.adapter.DaySelectorAdapter;
 import com.example.finalproject.adapter.EventListAdapter;
 import com.example.finalproject.adapter.TodoListAdapter;
-import com.example.finalproject.adapter.WeekHourAdapter;
+import com.example.finalproject.adapter.WeekDayHeaderAdapter;
+import com.example.finalproject.adapter.WeekJournalAdapter;
 import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.CalendarDayCell;
 import com.example.finalproject.model.CalendarEvent;
@@ -83,16 +86,18 @@ public class CalendarFragment extends Fragment {
     private PagerSnapHelper monthSnapHelper;
     private EventListAdapter selectedEventAdapter;
     private TodoListAdapter selectedTodoAdapter;
-    private DaySelectorAdapter weekDayAdapter;
+    private WeekDayHeaderAdapter weekDayAdapter;
+    private WeekJournalAdapter weekJournalAdapter;
     private DaySelectorAdapter dayStripAdapter;
-    private WeekHourAdapter weekHourAdapter;
     private EventListAdapter dayEventAdapter;
     private TodoListAdapter dayTodoAdapter;
-    private RecyclerView weekTimelineRecycler;
+    private NestedScrollView weekTimelineScroll;
+    private WeekTimelineLayout weekTimelineView;
 
     private int mode = MODE_MONTH;
     private LocalDate selectedDate = LocalDate.now();
     private LocalDate visibleMonth = selectedDate.withDayOfMonth(1);
+    private LocalDate lastWeekTimelineStart;
     private boolean monthDetailVisible = false;
     private int monthPanelAnimationGeneration = 0;
     private int monthDetailPanelTop = RecyclerView.NO_POSITION;
@@ -136,7 +141,8 @@ public class CalendarFragment extends Fragment {
         dayDetailPanel = view.findViewById(R.id.day_detail_panel);
         dayDetailScroll = view.findViewById(R.id.day_detail_scroll);
         selectedDateLabel = view.findViewById(R.id.tv_selected_date);
-        weekTimelineRecycler = view.findViewById(R.id.week_timeline_recycler);
+        weekTimelineScroll = view.findViewById(R.id.week_timeline_scroll);
+        weekTimelineView = view.findViewById(R.id.week_timeline_view);
         monthBody.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> resizeMonthDetailPanel());
         dayDetailScroll.setOnTouchListener((v, event) -> {
             v.getParent().requestDisallowInterceptTouchEvent(true);
@@ -182,18 +188,29 @@ public class CalendarFragment extends Fragment {
         selectedTodoRecycler.setNestedScrollingEnabled(false);
         selectedTodoRecycler.setAdapter(selectedTodoAdapter);
 
-        weekDayAdapter = new DaySelectorAdapter(date -> {
-            selectedDate = date;
-            ((MainActivity) requireActivity()).setSelectedDate(date);
-            refresh();
-        });
+        weekDayAdapter = new WeekDayHeaderAdapter();
         RecyclerView weekDayRecycler = view.findViewById(R.id.week_day_recycler);
-        weekDayRecycler.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+        weekDayRecycler.setLayoutManager(new GridLayoutManager(requireContext(), 7));
+        weekDayRecycler.setNestedScrollingEnabled(false);
+        weekDayRecycler.setHasFixedSize(true);
+        weekDayRecycler.setItemAnimator(null);
         weekDayRecycler.setAdapter(weekDayAdapter);
 
-        weekHourAdapter = new WeekHourAdapter(event -> ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate));
-        weekTimelineRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
-        weekTimelineRecycler.setAdapter(weekHourAdapter);
+        weekJournalAdapter = new WeekJournalAdapter();
+        RecyclerView weekJournalRecycler = view.findViewById(R.id.week_journal_recycler);
+        weekJournalRecycler.setLayoutManager(new GridLayoutManager(requireContext(), 7));
+        weekJournalRecycler.setNestedScrollingEnabled(false);
+        weekJournalRecycler.setHasFixedSize(true);
+        weekJournalRecycler.setItemAnimator(null);
+        weekJournalRecycler.setAdapter(weekJournalAdapter);
+
+        weekTimelineView.setListener(event -> {
+            if (event.getDate() != null) {
+                selectedDate = event.getDate();
+                ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+            }
+            ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
+        });
 
         dayStripAdapter = new DaySelectorAdapter(date -> {
             selectedDate = date;
@@ -501,10 +518,14 @@ public class CalendarFragment extends Fragment {
     private void refreshWeek() {
         LocalDate weekStart = getWeekStart(selectedDate);
         List<LocalDate> days = buildWeekDays(weekStart);
-        weekDayAdapter.submit(days, selectedDate);
+        weekDayAdapter.submit(days);
+        weekJournalAdapter.submit(days);
         List<CalendarEvent> events = calendarRepository.getEventsBetween(weekStart.atStartOfDay(), weekStart.plusDays(7).atStartOfDay());
-        weekHourAdapter.submit(days, events);
-        weekTimelineRecycler.post(() -> weekTimelineRecycler.scrollToPosition(6));
+        weekTimelineView.submit(days, events);
+        if (lastWeekTimelineStart == null || !lastWeekTimelineStart.equals(weekStart)) {
+            lastWeekTimelineStart = weekStart;
+            weekTimelineScroll.post(() -> weekTimelineScroll.scrollTo(0, weekTimelineView.getScrollYForHour(6)));
+        }
     }
 
     private void refreshDay() {
@@ -844,7 +865,7 @@ public class CalendarFragment extends Fragment {
             return false;
         };
         view.setOnTouchListener(listener);
-        view.findViewById(R.id.week_timeline_recycler).setOnTouchListener(listener);
+        view.findViewById(R.id.week_timeline_scroll).setOnTouchListener(listener);
         view.findViewById(R.id.day_event_recycler).setOnTouchListener(listener);
     }
 

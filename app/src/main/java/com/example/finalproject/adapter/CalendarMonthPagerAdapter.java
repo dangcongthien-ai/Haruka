@@ -26,6 +26,7 @@ public class CalendarMonthPagerAdapter extends RecyclerView.Adapter<CalendarMont
 
     private static final int PAGE_COUNT = 2401;
     private static final int CENTER_POSITION = PAGE_COUNT / 2;
+    private static final int REVEAL_TOP_GAP_DP = 8;
     private static final int REVEAL_PANEL_GAP_DP = 36;
     private static final int DETAIL_BOTTOM_SCROLL_BUFFER_DP = 96;
     private static final int MONTH_CELL_HEIGHT_DP = 82;
@@ -326,12 +327,31 @@ public class CalendarMonthPagerAdapter extends RecyclerView.Adapter<CalendarMont
             if (position == RecyclerView.NO_POSITION) {
                 return;
             }
+            int desiredTop = dp(REVEAL_TOP_GAP_DP);
             View selectedCell = layoutManager.findViewByPosition(position);
             if (selectedCell == null) {
+                if (smooth) {
+                    recyclerView.smoothScrollToPosition(position);
+                } else {
+                    recyclerView.stopScroll();
+                    layoutManager.scrollToPositionWithOffset(position, desiredTop);
+                    syncGridMetrics();
+                }
                 return;
             }
             int panelTopInRecycler = getPanelTop() - recyclerView.getTop();
             int desiredBottom = panelTopInRecycler - dp(REVEAL_PANEL_GAP_DP);
+            int hiddenTop = desiredTop - selectedCell.getTop();
+            if (hiddenTop > 0) {
+                if (smooth) {
+                    recyclerView.smoothScrollBy(0, -hiddenTop);
+                } else {
+                    recyclerView.stopScroll();
+                    recyclerView.scrollBy(0, -hiddenTop);
+                    syncGridMetrics();
+                }
+                return;
+            }
             int overflow = selectedCell.getBottom() - desiredBottom;
             if (overflow > 0) {
                 if (smooth) {
