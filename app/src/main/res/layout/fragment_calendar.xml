@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/surface"
@@ -232,9 +233,15 @@
             android:layout_height="54dp"
             android:orientation="horizontal">
 
-            <View
+            <TextView
+                android:id="@+id/tv_week_month_badge"
                 android:layout_width="45dp"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                tools:text="Th5" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/week_day_recycler"
@@ -263,6 +270,24 @@
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="false"
                 android:overScrollMode="never" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/week_top_event_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="45dp"
+                android:layout_height="match_parent" />
+
+            <com.example.finalproject.ui.calendar.WeekTopStripLayout
+                android:id="@+id/week_top_event_strip"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
         </LinearLayout>
 
         <androidx.core.widget.NestedScrollView

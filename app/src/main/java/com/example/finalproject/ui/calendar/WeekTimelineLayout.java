@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -34,15 +35,18 @@ public class WeekTimelineLayout extends ViewGroup {
     private static final int TIME_COLUMN_WIDTH_DP = 45;
     private static final int HOUR_ROW_HEIGHT_DP = 45;
     private static final int MAX_VISIBLE_OVERLAP = 2;
-    private static final int EVENT_HORIZONTAL_INSET_DP = 2;
-    private static final int EVENT_VERTICAL_INSET_DP = 6;
-    private static final int EVENT_TEXT_PADDING_DP = 4;
+    private static final int EVENT_HORIZONTAL_INSET_DP = 3;
+    private static final int EVENT_TOP_INSET_DP = 1;
+    private static final int EVENT_BOTTOM_INSET_DP = 3;
+    private static final int EVENT_TEXT_HORIZONTAL_PADDING_DP = 5;
+    private static final int EVENT_TEXT_VERTICAL_PADDING_DP = 4;
     private static final int EVENT_MIN_HEIGHT_DP = 34;
 
     private final Paint linePaint = new Paint();
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final List<LocalDate> weekDates = new ArrayList<>();
     private final List<EventPlacement> placements = new ArrayList<>();
+    private final List<WeekStripItem> stripItems = new ArrayList<>();
     private Listener listener;
 
     public WeekTimelineLayout(@NonNull Context context) {
@@ -67,15 +71,21 @@ public class WeekTimelineLayout extends ViewGroup {
     public void submit(@Nullable List<LocalDate> dates, @Nullable List<CalendarEvent> events) {
         weekDates.clear();
         placements.clear();
+        stripItems.clear();
         if (dates != null) {
             weekDates.addAll(dates);
         }
         if (events != null && !weekDates.isEmpty()) {
-            buildPlacements(events);
+            buildLayoutData(events);
         }
         rebuildEventViews();
         requestLayout();
         invalidate();
+    }
+
+    @NonNull
+    public List<WeekStripItem> getStripItems() {
+        return new ArrayList<>(stripItems);
     }
 
     public int getScrollYForHour(int hour) {
@@ -88,17 +98,18 @@ public class WeekTimelineLayout extends ViewGroup {
         linePaint.setColor(getContext().getColor(R.color.line));
         linePaint.setStrokeWidth(1f);
         linePaint.setAntiAlias(false);
-        textPaint.setColor(getContext().getColor(R.color.text_primary));
-        textPaint.setTextSize(sp(12));
-        textPaint.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+        textPaint.setColor(getContext().getColor(R.color.text_secondary));
+        textPaint.setTextSize(sp(11));
+        textPaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
     }
 
-    private void buildPlacements(List<CalendarEvent> events) {
+    private void buildLayoutData(List<CalendarEvent> events) {
+        addSpanningStripItems(events);
         for (int dayIndex = 0; dayIndex < weekDates.size(); dayIndex++) {
             LocalDate date = weekDates.get(dayIndex);
             List<EventPlacement> dayPlacements = new ArrayList<>();
             for (CalendarEvent event : events) {
-                if (event.getStartDateTime() == null || !date.equals(event.getDate())) {
+                if (event.getStartDateTime() == null || !date.equals(event.getDate()) || shouldShowInTopStrip(event)) {
                     continue;
                 }
                 float startHour = resolveStartHour(event);
@@ -107,11 +118,75 @@ public class WeekTimelineLayout extends ViewGroup {
             }
             assignLanes(dayPlacements);
             for (EventPlacement placement : dayPlacements) {
-                if (!placement.hidden) {
+                if (placement.hidden) {
+                    stripItems.add(new WeekStripItem(
+                            placement.event,
+                            placement.dayIndex,
+                            placement.dayIndex + 1,
+                            buildOverflowLabel(placement.event),
+                            WeekStripItem.TYPE_OVERFLOW
+                    ));
+                } else {
                     placements.add(placement);
                 }
             }
         }
+    }
+
+    private void addSpanningStripItems(List<CalendarEvent> events) {
+        if (weekDates.isEmpty()) {
+            return;
+        }
+        LocalDate weekStart = weekDates.get(0);
+        LocalDate weekEndExclusive = weekDates.get(weekDates.size() - 1).plusDays(1);
+        for (CalendarEvent event : events) {
+            if (event.getStartDateTime() == null || !shouldShowInTopStrip(event)) {
+                continue;
+            }
+            int startDay = resolveWeekStartIndex(event, weekStart);
+            int endDayExclusive = resolveWeekEndExclusiveIndex(event, weekStart, weekEndExclusive);
+            if (endDayExclusive <= startDay) {
+                continue;
+            }
+            stripItems.add(new WeekStripItem(
+                    event,
+                    startDay,
+                    endDayExclusive,
+                    event.getTitle(),
+                    event.isAllDay() ? WeekStripItem.TYPE_ALL_DAY : WeekStripItem.TYPE_MULTI_DAY
+            ));
+        }
+    }
+
+    private boolean shouldShowInTopStrip(CalendarEvent event) {
+        if (event == null || event.getStartDateTime() == null) {
+            return false;
+        }
+        if (event.isAllDay()) {
+            return true;
+        }
+        LocalDateTime end = event.getEndDateTime();
+        return end != null && !end.minusNanos(1).toLocalDate().equals(event.getStartDateTime().toLocalDate());
+    }
+
+    private int resolveWeekStartIndex(CalendarEvent event, LocalDate weekStart) {
+        LocalDate eventStart = event.getStartDateTime().toLocalDate();
+        return Math.max(0, (int) java.time.temporal.ChronoUnit.DAYS.between(weekStart, eventStart));
+    }
+
+    private int resolveWeekEndExclusiveIndex(CalendarEvent event, LocalDate weekStart, LocalDate weekEndExclusive) {
+        LocalDateTime endDateTime = event.getEndDateTime();
+        LocalDate inclusiveEnd = endDateTime == null
+                ? event.getStartDateTime().toLocalDate()
+                : endDateTime.minusNanos(1).toLocalDate();
+        LocalDate clippedEndExclusive = inclusiveEnd.plusDays(1).isAfter(weekEndExclusive)
+                ? weekEndExclusive
+                : inclusiveEnd.plusDays(1);
+        return Math.min(DAY_COUNT, (int) java.time.temporal.ChronoUnit.DAYS.between(weekStart, clippedEndExclusive));
+    }
+
+    private String buildOverflowLabel(CalendarEvent event) {
+        return event.getTitle();
     }
 
     private float resolveStartHour(CalendarEvent event) {
@@ -125,7 +200,7 @@ public class WeekTimelineLayout extends ViewGroup {
 
     private float resolveEndHour(CalendarEvent event, float startHour) {
         if (event.isAllDay()) {
-            return 1f;
+            return HOUR_COUNT;
         }
         LocalDateTime end = event.getEndDateTime();
         if (end == null) {
@@ -204,17 +279,20 @@ public class WeekTimelineLayout extends ViewGroup {
     private View createEventView(EventPlacement placement) {
         TextView view = new TextView(getContext());
         view.setText(placement.event.getTitle());
-        view.setTextColor(getContext().getColor(R.color.black));
+        view.setTextColor(getContext().getColor(R.color.text_primary));
         view.setTextSize(TypedValue.COMPLEX_UNIT_SP, placement.laneCount > 1 ? 9f : 10f);
         view.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         view.setGravity(Gravity.START | Gravity.TOP);
-        int padding = dp(EVENT_TEXT_PADDING_DP);
-        view.setPadding(padding, padding, padding, padding);
+        int horizontalPadding = dp(EVENT_TEXT_HORIZONTAL_PADDING_DP);
+        int verticalPadding = dp(EVENT_TEXT_VERTICAL_PADDING_DP);
+        view.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
         view.setIncludeFontPadding(false);
         view.setLineSpacing(0f, 1f);
-        view.setMaxLines(6);
+        view.setMaxLines(4);
+        view.setEllipsize(TextUtils.TruncateAt.END);
         int fallback = getContext().getColor(R.color.event_blue);
-        view.setBackground(UiUtils.rounded(UiUtils.safeColor(placement.event.getColor(), fallback), 8, getContext()));
+        view.setBackground(UiUtils.rounded(UiUtils.safeColor(placement.event.getColor(), fallback), 10, getContext()));
+        view.setElevation(dp(1));
         view.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onEventClick(placement.event);
@@ -294,14 +372,15 @@ public class WeekTimelineLayout extends ViewGroup {
     private Rect computeBounds(EventPlacement placement, int width, int height) {
         int timeColumnWidth = dp(TIME_COLUMN_WIDTH_DP);
         int columnInset = dp(EVENT_HORIZONTAL_INSET_DP);
-        int verticalInset = dp(EVENT_VERTICAL_INSET_DP);
+        int topInset = dp(EVENT_TOP_INSET_DP);
+        int bottomInset = dp(EVENT_BOTTOM_INSET_DP);
         int minHeight = dp(EVENT_MIN_HEIGHT_DP);
         float dayColumnWidth = Math.max(1f, (width - timeColumnWidth) / (float) DAY_COUNT);
         float laneWidth = dayColumnWidth / placement.laneCount;
         int left = Math.round(timeColumnWidth + (placement.dayIndex * dayColumnWidth) + (placement.laneIndex * laneWidth) + columnInset);
         int right = Math.round(timeColumnWidth + (placement.dayIndex * dayColumnWidth) + ((placement.laneIndex + 1) * laneWidth) - columnInset);
-        int top = Math.round(placement.startHour * dp(HOUR_ROW_HEIGHT_DP)) + verticalInset;
-        int bottom = Math.round(placement.endHour * dp(HOUR_ROW_HEIGHT_DP)) - verticalInset;
+        int top = Math.round(placement.startHour * dp(HOUR_ROW_HEIGHT_DP)) + topInset;
+        int bottom = Math.round(placement.endHour * dp(HOUR_ROW_HEIGHT_DP)) - bottomInset;
         if (bottom - top < minHeight) {
             bottom = top + minHeight;
         }
@@ -309,7 +388,7 @@ public class WeekTimelineLayout extends ViewGroup {
         if (right - left < minWidth) {
             right = left + minWidth;
         }
-        bottom = Math.min(height - verticalInset, bottom);
+        bottom = Math.min(height - bottomInset, bottom);
         return new Rect(left, top, right, bottom);
     }
 
@@ -348,6 +427,46 @@ public class WeekTimelineLayout extends ViewGroup {
             this.dayIndex = dayIndex;
             this.startHour = startHour;
             this.endHour = endHour;
+        }
+    }
+
+    public static class WeekStripItem {
+        public static final int TYPE_ALL_DAY = 0;
+        public static final int TYPE_MULTI_DAY = 1;
+        public static final int TYPE_OVERFLOW = 2;
+
+        private final CalendarEvent event;
+        private final int startDayIndex;
+        private final int endDayExclusiveIndex;
+        private final String label;
+        private final int type;
+
+        public WeekStripItem(CalendarEvent event, int startDayIndex, int endDayExclusiveIndex, String label, int type) {
+            this.event = event;
+            this.startDayIndex = startDayIndex;
+            this.endDayExclusiveIndex = endDayExclusiveIndex;
+            this.label = label;
+            this.type = type;
+        }
+
+        public CalendarEvent getEvent() {
+            return event;
+        }
+
+        public int getStartDayIndex() {
+            return startDayIndex;
+        }
+
+        public int getEndDayExclusiveIndex() {
+            return endDayExclusiveIndex;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public int getType() {
+            return type;
         }
     }
 }

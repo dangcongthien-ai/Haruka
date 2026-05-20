@@ -34,12 +34,12 @@ public class WeekJournalAdapter extends RecyclerView.Adapter<WeekJournalAdapter.
     @Override
     public void onBindViewHolder(@NonNull JournalViewHolder holder, int position) {
         holder.card.setBackground(UiUtils.roundedStroke(
-                holder.itemView.getContext().getColor(R.color.surface),
+                holder.itemView.getContext().getColor(R.color.surface_soft),
                 holder.itemView.getContext().getColor(R.color.line),
-                10,
+                11,
                 holder.itemView.getContext()
         ));
-        holder.card.setAlpha(0.55f);
+        holder.card.setAlpha(0.9f);
     }
 
     @Override
