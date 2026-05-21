@@ -21,7 +21,6 @@ import com.example.finalproject.ui.common.UiUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class WeekTopStripLayout extends ViewGroup {
@@ -33,6 +32,7 @@ public class WeekTopStripLayout extends ViewGroup {
     private static final int BASE_STRIP_HEIGHT_DP = 45;
     private static final int STRIP_ROW_HEIGHT_DP = 22;
     private static final int STRIP_ROW_GAP_DP = 4;
+    private static final int STRIP_VERTICAL_INSET_DP = 2;
     private static final int STRIP_ITEM_HORIZONTAL_INSET_DP = 2;
     private static final int STRIP_TEXT_HORIZONTAL_PADDING_DP = 6;
     private static final int STRIP_TEXT_VERTICAL_PADDING_DP = 3;
@@ -95,14 +95,8 @@ public class WeekTopStripLayout extends ViewGroup {
         if (items.isEmpty()) {
             return;
         }
-        List<WeekTimelineLayout.WeekStripItem> sorted = new ArrayList<>(items);
-        sorted.sort(Comparator
-                .comparingInt(WeekTimelineLayout.WeekStripItem::getType)
-                .thenComparingInt(WeekTimelineLayout.WeekStripItem::getStartDayIndex)
-                .thenComparingInt(item -> -(item.getEndDayExclusiveIndex() - item.getStartDayIndex()))
-                .thenComparing(item -> item.getLabel() == null ? "" : item.getLabel()));
         List<Integer> rowEnds = new ArrayList<>();
-        for (WeekTimelineLayout.WeekStripItem item : sorted) {
+        for (WeekTimelineLayout.WeekStripItem item : items) {
             int targetRow = -1;
             for (int row = 0; row < rowEnds.size(); row++) {
                 if (rowEnds.get(row) <= item.getStartDayIndex()) {
@@ -157,8 +151,9 @@ public class WeekTopStripLayout extends ViewGroup {
         int baseHeight = UiUtils.dp(getContext(), BASE_STRIP_HEIGHT_DP);
         int rowHeight = UiUtils.dp(getContext(), STRIP_ROW_HEIGHT_DP);
         int rowGap = UiUtils.dp(getContext(), STRIP_ROW_GAP_DP);
+        int verticalInset = UiUtils.dp(getContext(), STRIP_VERTICAL_INSET_DP);
         int contentHeight = rowCount == 0 ? 0 : (rowCount * rowHeight) + ((rowCount - 1) * rowGap);
-        int measuredHeight = Math.max(baseHeight, contentHeight) + 1;
+        int measuredHeight = Math.max(baseHeight, contentHeight + (verticalInset * 2)) + 1;
         setMeasuredDimension(resolveSize(measuredWidth, widthMeasureSpec), resolveSize(measuredHeight, heightMeasureSpec));
         for (int i = 0; i < getChildCount() && i < placements.size(); i++) {
             Rect bounds = computeBounds(placements.get(i), getMeasuredWidth(), measuredHeight);
@@ -213,19 +208,7 @@ public class WeekTopStripLayout extends ViewGroup {
         int rowHeight = UiUtils.dp(getContext(), STRIP_ROW_HEIGHT_DP);
         int rowGap = UiUtils.dp(getContext(), STRIP_ROW_GAP_DP);
         int contentHeight = rowCount == 0 ? 0 : (rowCount * rowHeight) + ((rowCount - 1) * rowGap);
-        int topOffset = rowCount == 0 ? 0 : Math.max(0, (Math.max(baseHeight, contentHeight) - contentHeight) / 2);
-        int visibleRows = Math.max(1, rowCount);
-        for (int row = 0; row <= visibleRows; row++) {
-            float y;
-            if (rowCount == 0) {
-                y = row == 0 ? 0f : getHeight() - 1f;
-            } else if (row == visibleRows) {
-                y = Math.min(getHeight() - 1f, topOffset + contentHeight);
-            } else {
-                y = topOffset + (row * (rowHeight + rowGap)) - (row == 0 ? 0 : rowGap / 2f);
-            }
-            canvas.drawLine(0, crisp(y), getWidth(), crisp(y), linePaint);
-        }
+        canvas.drawLine(0, crisp(0f), getWidth(), crisp(0f), linePaint);
         canvas.drawLine(0, crisp(getHeight() - 1f), getWidth(), crisp(getHeight() - 1f), linePaint);
     }
 
@@ -234,9 +217,8 @@ public class WeekTopStripLayout extends ViewGroup {
         int inset = UiUtils.dp(getContext(), STRIP_ITEM_HORIZONTAL_INSET_DP);
         int rowHeight = UiUtils.dp(getContext(), STRIP_ROW_HEIGHT_DP);
         int rowGap = UiUtils.dp(getContext(), STRIP_ROW_GAP_DP);
-        int baseHeight = UiUtils.dp(getContext(), BASE_STRIP_HEIGHT_DP);
-        int contentHeight = rowCount == 0 ? 0 : (rowCount * rowHeight) + ((rowCount - 1) * rowGap);
-        int topOffset = rowCount == 0 ? 0 : Math.max(0, (Math.max(baseHeight, contentHeight) - contentHeight) / 2);
+        int verticalInset = UiUtils.dp(getContext(), STRIP_VERTICAL_INSET_DP);
+        int topOffset = verticalInset;
         int left = Math.round((placement.item.getStartDayIndex() * dayWidth)) + inset;
         int right = Math.round((placement.item.getEndDayExclusiveIndex() * dayWidth)) - inset;
         int top = topOffset + (placement.rowIndex * (rowHeight + rowGap));
