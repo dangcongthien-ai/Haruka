@@ -60,6 +60,7 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
             holder.startTime.setText(DateTimeUtils.formatVietnameseTime(event.getStartDateTime().toLocalTime()));
             holder.endTime.setText(event.getEndDateTime() == null ? "" : DateTimeUtils.formatVietnameseTime(event.getEndDateTime().toLocalTime()));
         }
+        holder.endTime.setVisibility(event.isAllDay() ? View.GONE : View.VISIBLE);
         holder.title.setText(event.getTitle());
         int fallback = holder.itemView.getContext().getColor(R.color.event_blue);
         holder.colorBar.setBackground(UiUtils.rounded(UiUtils.safeColor(event.getColor(), fallback), 4, holder.itemView.getContext()));
