@@ -157,7 +157,7 @@ public class TodoEditFragment extends Fragment {
         priority3.setOnClickListener(v -> setPriority(3));
         priority4.setOnClickListener(v -> setPriority(4));
         deleteButton.setOnClickListener(v -> {
-            UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_event), () -> {
+            UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_todo), () -> {
                 if (todoId > 0) {
                     repository.deleteTodo(todoId);
                 }

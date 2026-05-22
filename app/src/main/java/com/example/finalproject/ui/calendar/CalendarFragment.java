@@ -193,9 +193,9 @@ public class CalendarFragment extends Fragment {
         monthPager.post(() -> syncMonthPager(false));
 
         selectedEventAdapter = new EventListAdapter(eventActions());
-        selectedEventAdapter.setShowActions(false);
+        selectedEventAdapter.setShowActions(true);
         selectedTodoAdapter = new TodoListAdapter(todoActions());
-        selectedTodoAdapter.setShowActions(false);
+        selectedTodoAdapter.setShowActions(true);
         RecyclerView selectedEventRecycler = view.findViewById(R.id.selected_event_recycler);
         selectedEventRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         selectedEventRecycler.setNestedScrollingEnabled(false);
@@ -710,7 +710,7 @@ public class CalendarFragment extends Fragment {
 
             @Override
             public void onDelete(TodoItem item) {
-                UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_event), () -> {
+                UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_todo), () -> {
                     todoRepository.deleteTodo(item.getId());
                     refresh();
                 });

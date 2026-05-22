@@ -92,4 +92,7 @@
     <string name="day_month_year_badge">Th%1$d %2$d</string>
     <string name="default_one">1</string>
     <string name="ellipsis">...</string>
+    <string name="all_day_short">C&#x1EA3; ng&#x00E0;y</string>
+    <string name="delete_dialog_title">X&#x00F3;a m&#x1EE5;c n&#x00E0;y?</string>
+    <string name="delete_confirm_todo">B&#x1EA1;n c&#x00F3; ch&#x1EAF;c ch&#x1EAF;n mu&#x1ED1;n x&#x00F3;a vi&#x1EC7;c c&#x1EA7;n l&#x00E0;m n&#x00E0;y?</string>
 </resources>
