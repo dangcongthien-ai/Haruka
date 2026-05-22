@@ -1,6 +1,7 @@
 package com.example.finalproject.adapter;
 
-import android.graphics.Color;
+import android.graphics.Typeface;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,9 +55,13 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
     public void onBindViewHolder(@NonNull EventViewHolder holder, int position) {
         CalendarEvent event = events.get(position);
         if (event.isAllDay()) {
-            holder.startTime.setText("Cả ngày");
+            holder.startTime.setText(holder.itemView.getContext().getString(R.string.all_day_short));
+            holder.startTime.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+            holder.startTime.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f);
             holder.endTime.setText("");
         } else {
+            holder.startTime.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+            holder.startTime.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
             holder.startTime.setText(DateTimeUtils.formatVietnameseTime(event.getStartDateTime().toLocalTime()));
             holder.endTime.setText(event.getEndDateTime() == null ? "" : DateTimeUtils.formatVietnameseTime(event.getEndDateTime().toLocalTime()));
         }
