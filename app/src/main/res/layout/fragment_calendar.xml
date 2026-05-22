@@ -237,11 +237,19 @@
                 android:id="@+id/tv_week_month_badge"
                 android:layout_width="45dp"
                 android:layout_height="match_parent"
+                android:clickable="true"
                 android:fontFamily="sans-serif-medium"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
                 android:gravity="center"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="0dp"
+                android:maxLines="2"
+                android:paddingTop="6dp"
+                android:paddingBottom="4dp"
+                android:textAlignment="center"
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                tools:text="Th5" />
+                android:textSize="11sp"
+                tools:text="Th5&#10;2026" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/week_day_recycler"
@@ -332,46 +340,39 @@
         android:orientation="vertical"
         android:visibility="gone">
 
+        <TextView
+            android:id="@+id/tv_day_month_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center_vertical"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            tools:text="Th5 2026" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/day_strip_recycler"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:overScrollMode="never" />
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:nestedScrollingEnabled="false"
+            android:overScrollMode="never"
+            android:paddingStart="11dp"
+            android:paddingTop="2dp"
+            android:paddingEnd="11dp"
+            android:paddingBottom="4dp" />
 
-        <TextView
-            android:id="@+id/day_journal_placeholder"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/day_pager"
             android:layout_width="match_parent"
-            android:layout_height="78dp"
-            android:gravity="center"
-            android:textColor="@color/text_muted" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="28dp"
-            android:gravity="center_vertical"
-            android:text="@string/calendar"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/day_event_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:overScrollMode="never" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="28dp"
-            android:gravity="center_vertical"
-            android:text="@string/todo"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/day_todo_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="160dp"
+            android:layout_height="match_parent"
             android:overScrollMode="never" />
     </LinearLayout>
 </LinearLayout>
