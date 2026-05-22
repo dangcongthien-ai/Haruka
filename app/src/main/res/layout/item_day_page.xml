@@ -45,7 +45,7 @@
                 android:fontFamily="sans-serif-medium"
                 android:text="@string/calendar"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/day_page_event_recycler"
@@ -62,7 +62,7 @@
                 android:fontFamily="sans-serif-medium"
                 android:text="@string/todo"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/day_page_todo_recycler"
