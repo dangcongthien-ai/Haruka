@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="312dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="336dp"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_dialog_confirmation"
+    android:background="@drawable/bg_dialog_soft"
     android:orientation="vertical"
-    android:paddingStart="18dp"
-    android:paddingTop="18dp"
-    android:paddingEnd="18dp"
-    android:paddingBottom="14dp">
+    android:paddingStart="20dp"
+    android:paddingTop="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
 
     <TextView
         android:layout_width="match_parent"
@@ -21,9 +22,9 @@
     <EditText
         android:id="@+id/edit_reminder_amount"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="48dp"
         android:layout_marginTop="14dp"
-        android:background="@drawable/bg_orange_outline"
+        android:background="@drawable/bg_habit_input_box"
         android:inputType="number"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
@@ -37,6 +38,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:background="@drawable/bg_surface_card_soft"
         android:orientation="vertical">
 
         <RadioButton
@@ -45,6 +47,8 @@
             android:layout_height="46dp"
             android:buttonTint="@color/brand_orange"
             android:checked="true"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:text="@string/minutes_before"
             android:textColor="@color/text_primary"
             android:textSize="14sp" />
@@ -54,6 +58,8 @@
             android:layout_width="match_parent"
             android:layout_height="46dp"
             android:buttonTint="@color/brand_orange"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:text="@string/hours_before"
             android:textColor="@color/text_primary"
             android:textSize="14sp" />
@@ -63,6 +69,8 @@
             android:layout_width="match_parent"
             android:layout_height="46dp"
             android:buttonTint="@color/brand_orange"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:text="@string/days_before"
             android:textColor="@color/text_primary"
             android:textSize="14sp" />
@@ -72,18 +80,43 @@
             android:layout_width="match_parent"
             android:layout_height="46dp"
             android:buttonTint="@color/brand_orange"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:text="@string/weeks_before"
             android:textColor="@color/text_primary"
             android:textSize="14sp" />
     </RadioGroup>
 
-    <TextView
-        android:id="@+id/btn_custom_reminder_done"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:gravity="end|center_vertical"
-        android:text="@string/done"
-        android:textColor="@color/text_primary"
-        android:textSize="15sp"
-        android:textStyle="bold" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_custom_reminder_cancel"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:text="@string/cancel"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            app:backgroundTint="@color/surface"
+            app:cornerRadius="21dp"
+            app:strokeColor="@color/line"
+            app:strokeWidth="1dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_custom_reminder_done"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:text="@string/done"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/brand_orange"
+            app:cornerRadius="21dp" />
+    </LinearLayout>
 </LinearLayout>

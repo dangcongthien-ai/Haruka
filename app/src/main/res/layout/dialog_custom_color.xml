@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="312dp"
+    android:layout_width="336dp"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_dialog_confirmation"
+    android:background="@drawable/bg_dialog_soft"
     android:orientation="vertical"
-    android:paddingStart="18dp"
-    android:paddingTop="18dp"
-    android:paddingEnd="18dp"
-    android:paddingBottom="18dp">
+    android:paddingStart="20dp"
+    android:paddingTop="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
 
     <TextView
         android:layout_width="match_parent"
@@ -21,17 +21,17 @@
 
     <View
         android:id="@+id/view_custom_color_preview"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="16dp" />
 
     <EditText
         android:id="@+id/edit_custom_color_hex"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="48dp"
         android:layout_marginTop="16dp"
-        android:background="@drawable/bg_orange_outline"
+        android:background="@drawable/bg_habit_input_box"
         android:gravity="center_vertical"
         android:hint="@string/custom_color_hint"
         android:inputType="textCapCharacters"
@@ -53,7 +53,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_custom_color_cancel"
             android:layout_width="0dp"
-            android:layout_height="42dp"
+            android:layout_height="44dp"
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
             android:text="@string/cancel"
@@ -67,7 +67,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_custom_color_apply"
             android:layout_width="0dp"
-            android:layout_height="42dp"
+            android:layout_height="44dp"
             android:layout_weight="1"
             android:text="@string/apply"
             android:textAllCaps="false"
