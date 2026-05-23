@@ -233,5 +233,20 @@
     <string name="habit_target_type_hint">Chọn</string>
     <string name="habit_target_value_hint">1</string>
     <string name="habit_target_unit_hint">trang</string>
+    <string name="custom_color">Màu tùy chỉnh</string>
+    <string name="custom_color_hint">Nhập mã màu HEX, ví dụ #EB9B54</string>
+    <string name="apply">Áp dụng</string>
+    <string name="custom_color_invalid">Màu không hợp lệ</string>
+    <string name="add_another_reminder">+ Thêm thông báo</string>
+    <string name="reminder_count_value">%1$d thông báo</string>
+    <string name="remove_reminder">Xóa thông báo</string>
+    <string name="monthly_on_day">H&#x1EB1;ng th&#x00E1;ng v&#x00E0;o ng&#x00E0;y %1$d</string>
+    <string name="repeat_count_times">L&#x1EB7;p l&#x1EA1;i %1$d l&#x1EA7;n</string>
+    <string-array name="recurrence_units">
+        <item>ng&#x00E0;y</item>
+        <item>tu&#x1EA7;n</item>
+        <item>th&#x00E1;ng</item>
+        <item>n&#x0103;m</item>
+    </string-array>
 </resources>
 
