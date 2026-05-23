@@ -40,6 +40,7 @@ public class CaliaryDbHelper extends SQLiteOpenHelper {
         db.execSQL(createSticker());
         db.execSQL(createJournalEntrySticker());
         ensureDefaultUser(db);
+        ensureDefaultJournalLayouts(db);
     }
 
     @Override
@@ -68,6 +69,12 @@ public class CaliaryDbHelper extends SQLiteOpenHelper {
         return ensureDefaultUser(db);
     }
 
+    public void ensureDefaultJournalLayouts(SQLiteDatabase db) {
+        ensureJournalLayout(db, 1L, "Gingham");
+        ensureJournalLayout(db, 2L, "Denim Star");
+        ensureJournalLayout(db, 3L, "Plaid");
+    }
+
     private long ensureDefaultUser(SQLiteDatabase db) {
         try (Cursor cursor = db.query(
                 DbContract.AppUser.TABLE,
@@ -88,6 +95,19 @@ public class CaliaryDbHelper extends SQLiteOpenHelper {
         values.put(DbContract.AppUser.EMAIL, "default@caliary.local");
         values.put(DbContract.AppUser.CREATED_AT, DateTimeUtils.nowIso());
         return db.insertOrThrow(DbContract.AppUser.TABLE, null, values);
+    }
+
+    private void ensureJournalLayout(SQLiteDatabase db, long layoutId, String name) {
+        ContentValues values = new ContentValues();
+        values.put(DbContract.JournalLayout.LAYOUT_ID, layoutId);
+        values.put(DbContract.JournalLayout.NAME, name);
+        values.put(DbContract.JournalLayout.CREATED_AT, DateTimeUtils.nowIso());
+        db.insertWithOnConflict(
+                DbContract.JournalLayout.TABLE,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_IGNORE
+        );
     }
 
     private String createAppUser() {
