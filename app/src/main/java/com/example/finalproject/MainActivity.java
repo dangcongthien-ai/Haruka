@@ -17,6 +17,11 @@ import androidx.fragment.app.FragmentManager;
 import com.example.finalproject.ui.calendar.CalendarFragment;
 import com.example.finalproject.ui.calendar.EventEditFragment;
 import com.example.finalproject.ui.common.PlaceholderFragment;
+import com.example.finalproject.ui.habit.HabitEditFragment;
+import com.example.finalproject.ui.habit.HabitFragment;
+import com.example.finalproject.ui.journal.JournalEditFragment;
+import com.example.finalproject.ui.journal.JournalFragment;
+import com.example.finalproject.ui.journal.JournalStatsFragment;
 import com.example.finalproject.ui.todo.TodoDetailFragment;
 import com.example.finalproject.ui.todo.TodoEditFragment;
 import com.example.finalproject.ui.todo.TodoFragment;
@@ -102,6 +107,19 @@ public class MainActivity extends AppCompatActivity {
         openFullScreen(TodoDetailFragment.newInstance(todoId));
     }
 
+    public void openJournalEditor(long journalId, LocalDate date) {
+        openFullScreen(JournalEditFragment.newInstance(journalId, date == null ? selectedDate : date));
+    }
+
+    public void openJournalStats(LocalDate date) {
+        openFullScreen(JournalStatsFragment.newInstance(date == null ? selectedDate : date));
+    }
+
+    public void openHabitEditor(long habitId) {
+        LocalDate today = selectedDate == null ? LocalDate.now() : selectedDate;
+        openFullScreen(HabitEditFragment.newInstance(habitId, today));
+    }
+
     public void finishFullScreen() {
         FragmentManager manager = getSupportFragmentManager();
         if (manager.getBackStackEntryCount() > 0) {
@@ -114,9 +132,9 @@ public class MainActivity extends AppCompatActivity {
         if (currentTabId == R.id.nav_todo) {
             showTodo();
         } else if (currentTabId == R.id.nav_habits) {
-            showPlaceholder(getString(R.string.placeholder_habit));
+            showHabits();
         } else if (currentTabId == R.id.nav_journal) {
-            showPlaceholder(getString(R.string.placeholder_journal));
+            showJournal();
         } else {
             showCalendar();
         }
@@ -143,9 +161,9 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.nav_todo) {
             showTodo();
         } else if (id == R.id.nav_habits) {
-            showPlaceholder(getString(R.string.placeholder_habit));
+            showHabits();
         } else if (id == R.id.nav_journal) {
-            showPlaceholder(getString(R.string.placeholder_journal));
+            showJournal();
         }
     }
 
@@ -162,6 +180,12 @@ public class MainActivity extends AppCompatActivity {
             openTodoEditor(0, selectedDate);
         } else if (currentTabId == R.id.nav_calendar) {
             openEventEditor(0, selectedDate);
+        } else if (currentTabId == R.id.nav_habits) {
+            openHabitEditor(0);
+        } else if (currentTabId == R.id.nav_journal) {
+            LocalDate today = LocalDate.now();
+            setSelectedDate(today);
+            openJournalEditor(0, today);
         }
     }
 
@@ -171,6 +195,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void showTodo() {
         replaceHome(TodoFragment.newInstance(selectedDate));
+    }
+
+    private void showJournal() {
+        replaceHome(JournalFragment.newInstance(selectedDate));
+    }
+
+    private void showHabits() {
+        replaceHome(HabitFragment.newInstance());
     }
 
     private void showPlaceholder(String message) {
@@ -184,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.fragment_container, fragment)
                 .commit();
         bottomNavigationView.setVisibility(View.VISIBLE);
-        fab.setVisibility(currentTabId == R.id.nav_habits || currentTabId == R.id.nav_journal ? View.GONE : View.VISIBLE);
+        fab.setVisibility(View.VISIBLE);
         updateNavSelection();
     }
 
@@ -200,6 +232,11 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         FragmentManager manager = getSupportFragmentManager();
         if (manager.getBackStackEntryCount() > 0) {
+            Fragment current = manager.findFragmentById(R.id.fragment_container);
+            if (current instanceof JournalEditFragment) {
+                ((JournalEditFragment) current).handleBackPressed();
+                return;
+            }
             manager.popBackStack();
         } else {
             super.onBackPressed();
@@ -217,5 +254,14 @@ public class MainActivity extends AppCompatActivity {
         indicatorTodo.setVisibility(currentTabId == R.id.nav_todo ? View.VISIBLE : View.GONE);
         indicatorHabits.setVisibility(currentTabId == R.id.nav_habits ? View.VISIBLE : View.GONE);
         indicatorJournal.setVisibility(currentTabId == R.id.nav_journal ? View.VISIBLE : View.GONE);
+        if (currentTabId == R.id.nav_todo) {
+            fab.setContentDescription(getString(R.string.add_todo));
+        } else if (currentTabId == R.id.nav_habits) {
+            fab.setContentDescription(getString(R.string.add_habit));
+        } else if (currentTabId == R.id.nav_journal) {
+            fab.setContentDescription(getString(R.string.add_journal));
+        } else {
+            fab.setContentDescription(getString(R.string.add_event));
+        }
     }
 }
