@@ -20,7 +20,6 @@ import com.example.finalproject.MainActivity;
 import com.example.finalproject.R;
 import com.example.finalproject.model.Reminder;
 import com.example.finalproject.ui.common.UiUtils;
-import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,14 +70,34 @@ public class ReminderFragment extends Fragment {
 
     private void setupClicks(View view) {
         view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreen());
-        view.findViewById(R.id.btn_save_reminder).setOnClickListener(v -> saveResult());
-        view.findViewById(R.id.reminder_event_time).setOnClickListener(v -> setAtTime());
-        view.findViewById(R.id.reminder_1m).setOnClickListener(v -> setBefore(1, "MINUTE"));
-        view.findViewById(R.id.reminder_5m).setOnClickListener(v -> setBefore(5, "MINUTE"));
-        view.findViewById(R.id.reminder_15m).setOnClickListener(v -> setBefore(15, "MINUTE"));
-        view.findViewById(R.id.reminder_30m).setOnClickListener(v -> setBefore(30, "MINUTE"));
-        view.findViewById(R.id.reminder_1h).setOnClickListener(v -> setBefore(1, "HOUR"));
-        view.findViewById(R.id.reminder_1d).setOnClickListener(v -> setBefore(1, "DAY"));
+        view.findViewById(R.id.reminder_event_time).setOnClickListener(v -> {
+            setAtTime();
+            saveResult();
+        });
+        view.findViewById(R.id.reminder_1m).setOnClickListener(v -> {
+            setBefore(1, "MINUTE");
+            saveResult();
+        });
+        view.findViewById(R.id.reminder_5m).setOnClickListener(v -> {
+            setBefore(5, "MINUTE");
+            saveResult();
+        });
+        view.findViewById(R.id.reminder_15m).setOnClickListener(v -> {
+            setBefore(15, "MINUTE");
+            saveResult();
+        });
+        view.findViewById(R.id.reminder_30m).setOnClickListener(v -> {
+            setBefore(30, "MINUTE");
+            saveResult();
+        });
+        view.findViewById(R.id.reminder_1h).setOnClickListener(v -> {
+            setBefore(1, "HOUR");
+            saveResult();
+        });
+        view.findViewById(R.id.reminder_1d).setOnClickListener(v -> {
+            setBefore(1, "DAY");
+            saveResult();
+        });
         view.findViewById(R.id.reminder_custom).setOnClickListener(v -> showCustomDialog());
     }
 
@@ -145,6 +164,15 @@ public class ReminderFragment extends Fragment {
         if (reminder.getOffsetValue() != null) {
             amount.setText(String.valueOf(reminder.getOffsetValue()));
         }
+        if ("HOUR".equals(reminder.getOffsetUnit())) {
+            unitGroup.check(R.id.radio_hours);
+        } else if ("DAY".equals(reminder.getOffsetUnit())) {
+            unitGroup.check(R.id.radio_days);
+        } else if ("WEEK".equals(reminder.getOffsetUnit())) {
+            unitGroup.check(R.id.radio_weeks);
+        } else {
+            unitGroup.check(R.id.radio_minutes);
+        }
         view.findViewById(R.id.btn_custom_reminder_done).setOnClickListener(v -> {
             int value = parseAmount(amount);
             String unit = "MINUTE";
@@ -158,6 +186,7 @@ public class ReminderFragment extends Fragment {
             }
             setBefore(value, unit);
             dialog.dismiss();
+            saveResult();
         });
         dialog.show();
     }
