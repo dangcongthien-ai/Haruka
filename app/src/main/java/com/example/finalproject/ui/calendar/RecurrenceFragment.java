@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -338,6 +339,11 @@ public class RecurrenceFragment extends Fragment {
         dialog.setContentView(content);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(UiUtils.dp(requireContext(), 336), ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
+            attributes.dimAmount = 0.28f;
+            dialog.getWindow().setAttributes(attributes);
         }
         NumberPicker picker = content.findViewById(R.id.picker_repeat_count);
         picker.setMinValue(1);

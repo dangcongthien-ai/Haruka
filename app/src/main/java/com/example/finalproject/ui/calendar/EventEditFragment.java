@@ -5,6 +5,8 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.transition.AutoTransition;
+import android.transition.TransitionManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
@@ -12,11 +14,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -97,9 +101,14 @@ public class EventEditFragment extends Fragment {
     private TextView addReminderButton;
     private LinearLayout reminderList;
     private View typeSegment;
+    private ViewGroup rootView;
+    private ScrollView contentScroll;
+    private View startTimeContainer;
+    private View endTimeContainer;
     private LinearLayout colorPalette;
     private MaterialButton eventTypeButton;
     private MaterialButton todoTypeButton;
+    private boolean timePickerShowing;
 
     public static EventEditFragment newInstance(long eventId, LocalDate date) {
         EventEditFragment fragment = new EventEditFragment();
@@ -159,6 +168,8 @@ public class EventEditFragment extends Fragment {
     }
 
     private void bind(View view) {
+        rootView = view.findViewById(R.id.event_edit_root);
+        contentScroll = view.findViewById(R.id.event_edit_scroll);
         titleEdit = view.findViewById(R.id.edit_event_title);
         locationEdit = view.findViewById(R.id.edit_location);
         urlEdit = view.findViewById(R.id.edit_url);
@@ -168,6 +179,8 @@ public class EventEditFragment extends Fragment {
         endDateText = view.findViewById(R.id.tv_end_date);
         startTimeText = view.findViewById(R.id.tv_start_time);
         endTimeText = view.findViewById(R.id.tv_end_time);
+        startTimeContainer = view.findViewById(R.id.start_time_container);
+        endTimeContainer = view.findViewById(R.id.end_time_container);
         recurrenceText = view.findViewById(R.id.tv_repeat_value);
         reminderValueText = view.findViewById(R.id.tv_reminder_value);
         addReminderButton = view.findViewById(R.id.btn_add_reminder);
@@ -226,6 +239,10 @@ public class EventEditFragment extends Fragment {
             captureInput();
             ((MainActivity) requireActivity()).switchFullScreen(TodoEditFragment.newInstance(0, startDate));
         });
+        installFieldVisibilityBehavior(titleEdit);
+        installFieldVisibilityBehavior(locationEdit);
+        installFieldVisibilityBehavior(urlEdit);
+        installFieldVisibilityBehavior(notesEdit);
     }
 
     private void openReminderPicker() {
@@ -240,23 +257,22 @@ public class EventEditFragment extends Fragment {
         if (titleEdit == null) {
             return;
         }
-        titleEdit.setText(title);
-        locationEdit.setText(location);
-        urlEdit.setText(url);
-        notesEdit.setText(notes);
+        setTextIfChanged(titleEdit, title);
+        setTextIfChanged(locationEdit, location);
+        setTextIfChanged(urlEdit, url);
+        setTextIfChanged(notesEdit, notes);
         allDaySwitch.setOnCheckedChangeListener(null);
         allDaySwitch.setChecked(allDay);
         allDaySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             captureInput();
             allDay = isChecked;
-            bindValues();
+            updateTimeVisibility(true);
         });
         startDateText.setText(DateTimeUtils.formatDateWithDow(startDate));
         endDateText.setText(DateTimeUtils.formatDateWithDow(endDate));
         startTimeText.setText(DateTimeUtils.formatVietnameseTime(startTime));
         endTimeText.setText(DateTimeUtils.formatVietnameseTime(endTime));
-        startTimeText.setVisibility(allDay ? View.GONE : View.VISIBLE);
-        endTimeText.setVisibility(allDay ? View.GONE : View.VISIBLE);
+        updateTimeVisibility(false);
 
         RecurrenceRule currentRule = recurrenceRule == null ? RecurrenceRule.none() : recurrenceRule;
         recurrenceText.setText(currentRule.getDisplayText());
@@ -330,6 +346,11 @@ public class EventEditFragment extends Fragment {
         dialog.setContentView(content);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(dp(336), ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
+            attributes.dimAmount = 0.28f;
+            dialog.getWindow().setAttributes(attributes);
         }
 
         View preview = content.findViewById(R.id.view_custom_color_preview);
@@ -478,12 +499,22 @@ public class EventEditFragment extends Fragment {
 
     private void openDatePicker(String resultKey, LocalDate date) {
         captureInput();
+        if (getParentFragmentManager().findFragmentByTag(resultKey) != null) {
+            return;
+        }
         DatePickerDialogFragment
                 .newInstance(resultKey, date)
                 .show(getParentFragmentManager(), resultKey);
     }
 
     private void openTimePicker(boolean start) {
+        if (timePickerShowing) {
+            return;
+        }
+        String tag = start ? "start_time_picker" : "end_time_picker";
+        if (getParentFragmentManager().findFragmentByTag(tag) != null) {
+            return;
+        }
         LocalTime initial = start ? startTime : endTime;
         MaterialTimePicker picker = new MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_12H)
@@ -492,6 +523,7 @@ public class EventEditFragment extends Fragment {
                 .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
                 .setTitleText(R.string.set_time)
                 .build();
+        timePickerShowing = true;
         picker.addOnPositiveButtonClickListener(v -> {
             LocalTime pickedTime = LocalTime.of(picker.getHour(), picker.getMinute());
             if (start) {
@@ -501,7 +533,57 @@ public class EventEditFragment extends Fragment {
             }
             bindValues();
         });
-        picker.show(getParentFragmentManager(), start ? "start_time_picker" : "end_time_picker");
+        picker.addOnDismissListener(dialog -> timePickerShowing = false);
+        picker.show(getParentFragmentManager(), tag);
+    }
+
+    private void updateTimeVisibility(boolean animate) {
+        if (startTimeContainer == null || endTimeContainer == null) {
+            return;
+        }
+        if (animate && rootView != null) {
+            AutoTransition transition = new AutoTransition();
+            transition.setDuration(180L);
+            TransitionManager.beginDelayedTransition(rootView, transition);
+        }
+        int visibility = allDay ? View.GONE : View.VISIBLE;
+        startTimeContainer.setVisibility(visibility);
+        endTimeContainer.setVisibility(visibility);
+    }
+
+    private void installFieldVisibilityBehavior(EditText editText) {
+        if (editText == null) {
+            return;
+        }
+        editText.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                scrollFieldIntoView(v);
+            }
+        });
+        editText.setOnClickListener(this::scrollFieldIntoView);
+    }
+
+    private void scrollFieldIntoView(View target) {
+        if (contentScroll == null || target == null) {
+            return;
+        }
+        contentScroll.postDelayed(() -> {
+            if (!isAdded()) {
+                return;
+            }
+            int extraTop = dp(96);
+            int scrollY = Math.max(0, target.getTop() - extraTop);
+            contentScroll.smoothScrollTo(0, scrollY);
+        }, 140L);
+    }
+
+    private void setTextIfChanged(EditText editText, String value) {
+        String safe = value == null ? "" : value;
+        String current = editText.getText() == null ? "" : editText.getText().toString();
+        if (!safe.equals(current)) {
+            editText.setText(safe);
+            editText.setSelection(editText.getText().length());
+        }
     }
 
     private boolean isPresetColor(String hexColor) {

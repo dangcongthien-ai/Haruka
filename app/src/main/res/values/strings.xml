@@ -248,5 +248,9 @@
         <item>th&#x00E1;ng</item>
         <item>n&#x0103;m</item>
     </string-array>
+    <string name="date_picker_selected_format">%1$d Th%2$d, %3$d</string>
+    <string name="date_picker_month_year">th&#x00E1;ng %1$d n&#x0103;m %2$d</string>
+    <string name="month_chip_format">Th&#x00E1;ng %1$d</string>
+    <string name="repeat_count_title">L&#x1EB7;p l&#x1EA1;i x l&#x1EA7;n</string>
 </resources>
 
