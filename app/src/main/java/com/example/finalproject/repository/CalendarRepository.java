@@ -74,7 +74,9 @@ public class CalendarRepository {
                 args,
                 null,
                 null,
-                DbContract.CalendarEvent.START_DATETIME + " ASC"
+                DbContract.CalendarEvent.START_DATETIME + " ASC, "
+                        + DbContract.CalendarEvent.CREATED_AT + " ASC, "
+                        + DbContract.CalendarEvent.EVENT_ID + " ASC"
         )) {
             while (cursor.moveToNext()) {
                 result.add(mapEvent(cursor));

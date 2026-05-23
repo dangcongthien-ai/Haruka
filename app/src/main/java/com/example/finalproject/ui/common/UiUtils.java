@@ -4,11 +4,13 @@ import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.example.finalproject.R;
@@ -57,7 +59,7 @@ public final class UiUtils {
     }
 
     public static void setCheck(TextView view, boolean checked) {
-        view.setText(checked ? "✓" : "");
+        view.setText(checked ? "\u2713" : "");
     }
 
     public static void visible(View view, boolean visible) {
@@ -68,7 +70,9 @@ public final class UiUtils {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(context).inflate(R.layout.dialog_delete_confirmation, null, false);
+        TextView titleView = content.findViewById(R.id.tv_delete_title);
         TextView messageView = content.findViewById(R.id.tv_delete_message);
+        titleView.setText(R.string.delete_dialog_title);
         messageView.setText(message);
         content.findViewById(R.id.btn_delete_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_delete_confirm).setOnClickListener(v -> {
@@ -78,7 +82,13 @@ public final class UiUtils {
         dialog.setContentView(content);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(dp(context, 312), ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
+            attributes.dimAmount = 0.28f;
+            dialog.getWindow().setAttributes(attributes);
         }
+        dialog.setCanceledOnTouchOutside(true);
         dialog.show();
     }
 }

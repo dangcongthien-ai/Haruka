@@ -1,35 +1,50 @@
 package com.example.finalproject.ui.calendar;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Dialog;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.GridLayout;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.finalproject.MainActivity;
 import com.example.finalproject.R;
 import com.example.finalproject.adapter.CalendarMonthPagerAdapter;
+import com.example.finalproject.adapter.DayPagerAdapter;
 import com.example.finalproject.adapter.DaySelectorAdapter;
 import com.example.finalproject.adapter.EventListAdapter;
 import com.example.finalproject.adapter.TodoListAdapter;
-import com.example.finalproject.adapter.WeekHourAdapter;
+import com.example.finalproject.adapter.WeekDayHeaderAdapter;
+import com.example.finalproject.adapter.WeekJournalAdapter;
 import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.CalendarDayCell;
 import com.example.finalproject.model.CalendarEvent;
@@ -51,6 +66,11 @@ public class CalendarFragment extends Fragment {
     public static final int MODE_MONTH = 0;
     public static final int MODE_WEEK = 1;
     public static final int MODE_DAY = 2;
+    private static final float MONTH_DETAIL_PANEL_RATIO = 0.45f;
+    private static final long MONTH_PANEL_OPEN_DURATION_MS = 220L;
+    private static final long MONTH_PANEL_CLOSE_DURATION_MS = 180L;
+    private static final long PERIOD_SWIPE_OUT_DURATION_MS = 140L;
+    private static final long PERIOD_SWIPE_IN_DURATION_MS = 220L;
 
     private CalendarRepository calendarRepository;
     private TodoRepository todoRepository;
@@ -70,17 +90,29 @@ public class CalendarFragment extends Fragment {
     private PagerSnapHelper monthSnapHelper;
     private EventListAdapter selectedEventAdapter;
     private TodoListAdapter selectedTodoAdapter;
-    private DaySelectorAdapter weekDayAdapter;
+    private WeekDayHeaderAdapter weekDayAdapter;
+    private WeekJournalAdapter weekJournalAdapter;
     private DaySelectorAdapter dayStripAdapter;
-    private WeekHourAdapter weekHourAdapter;
-    private EventListAdapter dayEventAdapter;
-    private TodoListAdapter dayTodoAdapter;
-    private RecyclerView weekTimelineRecycler;
+    private RecyclerView dayStripRecycler;
+    private ViewPager2 dayPager;
+    private DayPagerAdapter dayPagerAdapter;
+    private View weekTopEventRow;
+    private TextView weekMonthBadge;
+    private TextView dayMonthBadge;
+    private NestedScrollView weekTimelineScroll;
+    private WeekTimelineLayout weekTimelineView;
+    private WeekTopStripLayout weekTopStripView;
 
     private int mode = MODE_MONTH;
     private LocalDate selectedDate = LocalDate.now();
     private LocalDate visibleMonth = selectedDate.withDayOfMonth(1);
+    private LocalDate lastWeekTimelineStart;
     private boolean monthDetailVisible = false;
+    private boolean periodTransitionRunning = false;
+    private boolean dayPagerRecentering = false;
+    private int monthPanelAnimationGeneration = 0;
+    private int monthDetailPanelTop = RecyclerView.NO_POSITION;
+    private final Map<YearMonth, List<CalendarDayCell>> monthCellCache = new HashMap<>();
     private final DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("'Tháng' MM/yyyy", Locale.US);
 
     @Nullable
@@ -100,6 +132,7 @@ public class CalendarFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        invalidateMonthCache();
         refresh();
     }
 
@@ -119,7 +152,14 @@ public class CalendarFragment extends Fragment {
         dayDetailPanel = view.findViewById(R.id.day_detail_panel);
         dayDetailScroll = view.findViewById(R.id.day_detail_scroll);
         selectedDateLabel = view.findViewById(R.id.tv_selected_date);
-        weekTimelineRecycler = view.findViewById(R.id.week_timeline_recycler);
+        weekTopEventRow = view.findViewById(R.id.week_top_event_row);
+        weekMonthBadge = view.findViewById(R.id.tv_week_month_badge);
+        dayMonthBadge = view.findViewById(R.id.tv_day_month_badge);
+        dayStripRecycler = view.findViewById(R.id.day_strip_recycler);
+        weekTimelineScroll = view.findViewById(R.id.week_timeline_scroll);
+        dayPager = view.findViewById(R.id.day_pager);
+        weekTimelineView = view.findViewById(R.id.week_timeline_view);
+        weekTopStripView = view.findViewById(R.id.week_top_event_strip);
         monthBody.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> resizeMonthDetailPanel());
         dayDetailScroll.setOnTouchListener((v, event) -> {
             v.getParent().requestDisallowInterceptTouchEvent(true);
@@ -132,8 +172,11 @@ public class CalendarFragment extends Fragment {
 
     private void setupAdapters(View view) {
         monthPager = view.findViewById(R.id.month_recycler);
-        monthPager.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+        monthPager.setLayoutManager(new SmoothMonthLayoutManager(requireContext()));
         monthPager.setNestedScrollingEnabled(false);
+        monthPager.setHasFixedSize(true);
+        monthPager.setItemViewCacheSize(5);
+        monthPager.setItemAnimator(null);
         monthPagerAdapter = new CalendarMonthPagerAdapter(visibleMonth, this::buildMonthCells, this::onMonthDateClicked);
         monthPagerAdapter.setSelectedDate(selectedDate);
         monthPager.setAdapter(monthPagerAdapter);
@@ -150,9 +193,9 @@ public class CalendarFragment extends Fragment {
         monthPager.post(() -> syncMonthPager(false));
 
         selectedEventAdapter = new EventListAdapter(eventActions());
-        selectedEventAdapter.setShowActions(false);
+        selectedEventAdapter.setShowActions(true);
         selectedTodoAdapter = new TodoListAdapter(todoActions());
-        selectedTodoAdapter.setShowActions(false);
+        selectedTodoAdapter.setShowActions(true);
         RecyclerView selectedEventRecycler = view.findViewById(R.id.selected_event_recycler);
         selectedEventRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         selectedEventRecycler.setNestedScrollingEnabled(false);
@@ -162,39 +205,77 @@ public class CalendarFragment extends Fragment {
         selectedTodoRecycler.setNestedScrollingEnabled(false);
         selectedTodoRecycler.setAdapter(selectedTodoAdapter);
 
-        weekDayAdapter = new DaySelectorAdapter(date -> {
-            selectedDate = date;
-            ((MainActivity) requireActivity()).setSelectedDate(date);
-            refresh();
-        });
+        weekDayAdapter = new WeekDayHeaderAdapter();
         RecyclerView weekDayRecycler = view.findViewById(R.id.week_day_recycler);
-        weekDayRecycler.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+        weekDayRecycler.setLayoutManager(new GridLayoutManager(requireContext(), 7));
+        weekDayRecycler.setNestedScrollingEnabled(false);
+        weekDayRecycler.setHasFixedSize(true);
+        weekDayRecycler.setItemAnimator(null);
         weekDayRecycler.setAdapter(weekDayAdapter);
 
-        weekHourAdapter = new WeekHourAdapter(event -> ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate));
-        weekTimelineRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
-        weekTimelineRecycler.setAdapter(weekHourAdapter);
+        weekJournalAdapter = new WeekJournalAdapter();
+        RecyclerView weekJournalRecycler = view.findViewById(R.id.week_journal_recycler);
+        weekJournalRecycler.setLayoutManager(new GridLayoutManager(requireContext(), 7));
+        weekJournalRecycler.setNestedScrollingEnabled(false);
+        weekJournalRecycler.setHasFixedSize(true);
+        weekJournalRecycler.setItemAnimator(null);
+        weekJournalRecycler.setAdapter(weekJournalAdapter);
+
+        weekTimelineView.setListener(event -> {
+            if (event.getDate() != null) {
+                selectedDate = event.getDate();
+                ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+            }
+            ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
+        });
+        weekTopStripView.setListener(event -> {
+            if (event.getDate() != null) {
+                selectedDate = event.getDate();
+                ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+            }
+            ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
+        });
 
         dayStripAdapter = new DaySelectorAdapter(date -> {
             selectedDate = date;
             ((MainActivity) requireActivity()).setSelectedDate(date);
-            refresh();
+            updateHeader();
+            refreshDay();
         });
-        RecyclerView dayStripRecycler = view.findViewById(R.id.day_strip_recycler);
-        dayStripRecycler.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+        dayStripRecycler.setLayoutManager(new GridLayoutManager(requireContext(), 7));
+        dayStripRecycler.setNestedScrollingEnabled(false);
+        dayStripRecycler.setHasFixedSize(true);
+        dayStripRecycler.setItemAnimator(null);
         dayStripRecycler.setAdapter(dayStripAdapter);
 
-        dayEventAdapter = new EventListAdapter(eventActions());
-        dayEventAdapter.setShowActions(false);
-        RecyclerView dayEventRecycler = view.findViewById(R.id.day_event_recycler);
-        dayEventRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
-        dayEventRecycler.setAdapter(dayEventAdapter);
-
-        dayTodoAdapter = new TodoListAdapter(todoActions());
-        dayTodoAdapter.setShowActions(false);
-        RecyclerView dayTodoRecycler = view.findViewById(R.id.day_todo_recycler);
-        dayTodoRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
-        dayTodoRecycler.setAdapter(dayTodoAdapter);
+        dayPagerAdapter = new DayPagerAdapter(
+                calendarRepository,
+                todoRepository,
+                eventActions(),
+                todoActions()
+        );
+        dayPager.setAdapter(dayPagerAdapter);
+        dayPager.setOffscreenPageLimit(1);
+        dayPager.setCurrentItem(1, false);
+        dayPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                super.onPageScrollStateChanged(state);
+                if (dayPagerRecentering || state != ViewPager2.SCROLL_STATE_IDLE) {
+                    return;
+                }
+                int position = dayPager.getCurrentItem();
+                if (position == 1) {
+                    return;
+                }
+                dayPagerRecentering = true;
+                selectedDate = dayPagerAdapter.getDateForPosition(position);
+                ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+                updateHeader();
+                refreshDay();
+                dayPagerRecentering = false;
+            }
+        });
     }
 
     private void setupClicks(View view) {
@@ -204,10 +285,46 @@ public class CalendarFragment extends Fragment {
         previous.setOnClickListener(v -> movePeriod(-1));
         next.setOnClickListener(v -> movePeriod(1));
         periodTitle.setOnClickListener(v -> showMonthPicker());
-        view.findViewById(R.id.btn_close_month_detail).setOnClickListener(v -> {
-            monthDetailVisible = false;
-            refreshMonth();
-        });
+        weekMonthBadge.setOnClickListener(v -> showMonthPicker());
+        dayMonthBadge.setOnClickListener(v -> showMonthPicker());
+        view.findViewById(R.id.btn_close_month_detail).setOnClickListener(v -> closeMonthDetailPanel());
+    }
+
+    private void closeMonthDetailPanel() {
+        if (!monthDetailVisible || dayDetailPanel == null || monthPagerAdapter == null) {
+            return;
+        }
+        int currentPosition = monthPagerAdapter.getPositionForMonth(visibleMonth);
+        int animationGeneration = ++monthPanelAnimationGeneration;
+        dayDetailPanel.animate().cancel();
+        monthDetailVisible = false;
+        float closeDistance = Math.max(dayDetailPanel.getHeight(), monthBody.getHeight() - getMonthDetailPanelTop());
+        dayDetailPanel.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        dayDetailPanel.animate()
+                .translationY(closeDistance)
+                .alpha(0f)
+                .setDuration(MONTH_PANEL_CLOSE_DURATION_MS)
+                .setInterpolator(new AccelerateInterpolator(1.4f))
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        if (animationGeneration != monthPanelAnimationGeneration || monthDetailVisible) {
+                            return;
+                        }
+                        UiUtils.visible(dayDetailPanel, false);
+                        dayDetailPanel.setTranslationY(0f);
+                        dayDetailPanel.setAlpha(1f);
+                        dayDetailPanel.setLayerType(View.LAYER_TYPE_NONE, null);
+                        monthDetailPanelTop = RecyclerView.NO_POSITION;
+                        monthPagerAdapter.closeMonthDetailInstantly(monthPager, currentPosition, selectedDate);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        dayDetailPanel.setLayerType(View.LAYER_TYPE_NONE, null);
+                    }
+                })
+                .start();
     }
 
     private void showModeMenu() {
@@ -249,7 +366,8 @@ public class CalendarFragment extends Fragment {
 
         TextView yearLabel = content.findViewById(R.id.tv_picker_year);
         GridLayout monthGrid = content.findViewById(R.id.month_picker_grid);
-        YearMonth[] draft = {YearMonth.from(visibleMonth)};
+        LocalDate anchorDate = mode == MODE_MONTH ? visibleMonth : selectedDate;
+        YearMonth[] draft = {YearMonth.from(anchorDate)};
         Runnable[] render = new Runnable[1];
         render[0] = () -> {
             yearLabel.setText(String.valueOf(draft[0].getYear()));
@@ -269,7 +387,7 @@ public class CalendarFragment extends Fragment {
                         GridLayout.spec((month - 1) / 3),
                         GridLayout.spec((month - 1) % 3)
                 );
-                params.width = UiUtils.dp(requireContext(), 82);
+                params.width = UiUtils.dp(requireContext(), 88);
                 params.height = UiUtils.dp(requireContext(), 40);
                 int margin = UiUtils.dp(requireContext(), 3);
                 params.setMargins(margin, UiUtils.dp(requireContext(), 4), margin, UiUtils.dp(requireContext(), 4));
@@ -291,10 +409,14 @@ public class CalendarFragment extends Fragment {
             draft[0] = draft[0].plusYears(1);
             render[0].run();
         });
+        yearLabel.setOnClickListener(v -> showYearPicker(draft[0].getYear(), year -> {
+            draft[0] = YearMonth.of(year, draft[0].getMonthValue());
+            render[0].run();
+        }));
         content.findViewById(R.id.btn_month_picker_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_month_picker_ok).setOnClickListener(v -> {
             visibleMonth = draft[0].atDay(1);
-            selectedDate = visibleMonth.withDayOfMonth(Math.min(selectedDate.getDayOfMonth(), visibleMonth.lengthOfMonth()));
+            selectedDate = visibleMonth.withDayOfMonth(Math.min(selectedDate.getDayOfMonth(), draft[0].lengthOfMonth()));
             monthDetailVisible = false;
             ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
             dialog.dismiss();
@@ -304,23 +426,140 @@ public class CalendarFragment extends Fragment {
         dialog.show();
     }
 
+    private void showYearPicker(int selectedYear, YearPickerListener listener) {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_year_picker, null, false);
+        dialog.setContentView(content);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        NumberPicker picker = content.findViewById(R.id.picker_year);
+        int minYear = Math.max(1900, selectedYear - 100);
+        int maxYear = Math.min(2200, selectedYear + 100);
+        picker.setMinValue(minYear);
+        picker.setMaxValue(maxYear);
+        picker.setValue(selectedYear);
+        picker.setWrapSelectorWheel(false);
+
+        content.findViewById(R.id.btn_year_cancel).setOnClickListener(v -> dialog.dismiss());
+        content.findViewById(R.id.btn_year_ok).setOnClickListener(v -> {
+            listener.onYearPicked(picker.getValue());
+            dialog.dismiss();
+        });
+        dialog.show();
+    }
+
+    private interface YearPickerListener {
+        void onYearPicked(int year);
+    }
+
     private void movePeriod(int direction) {
         if (mode == MODE_MONTH) {
+            LocalDate previousMonth = visibleMonth;
             visibleMonth = visibleMonth.plusMonths(direction);
             selectedDate = visibleMonth.withDayOfMonth(Math.min(selectedDate.getDayOfMonth(), visibleMonth.lengthOfMonth()));
             monthDetailVisible = false;
+            monthDetailPanelTop = RecyclerView.NO_POSITION;
             ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
             updateHeader();
-            refreshMonth();
+            resizeMonthDetailPanel();
+            UiUtils.visible(dayDetailPanel, false);
+            preloadMonthWindow(visibleMonth);
+            monthPagerAdapter.setSelectedDate(selectedDate);
+            monthPagerAdapter.setMonthDetailVisible(false);
+            notifyMonthPages(previousMonth, visibleMonth);
             syncMonthPager(true);
             return;
-        } else if (mode == MODE_WEEK) {
+        }
+        if (mode == MODE_DAY) {
+            if (dayPager != null) {
+                dayPager.setCurrentItem(dayPager.getCurrentItem() + direction, true);
+            }
+            return;
+        }
+        animatePeriodSwipe(direction);
+    }
+
+    private void animatePeriodSwipe(int direction) {
+        if (periodTransitionRunning) {
+            return;
+        }
+        View container = weekContainer;
+        View[] targets = new View[]{container};
+        View measurementTarget = container;
+        if (measurementTarget == null || measurementTarget.getWidth() <= 0) {
+            applyPeriodShift(direction);
+            refresh();
+            return;
+        }
+        periodTransitionRunning = true;
+        float distance = Math.max(measurementTarget.getWidth() * 0.28f, UiUtils.dp(requireContext(), 92));
+        float exitTranslation = direction > 0 ? -distance : distance;
+        float enterTranslation = -exitTranslation;
+        for (View target : targets) {
+            if (target == null) {
+                continue;
+            }
+            target.animate().cancel();
+            target.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            target.animate()
+                    .translationX(exitTranslation)
+                    .alpha(0.8f)
+                    .setDuration(170L)
+                    .setInterpolator(new AccelerateInterpolator(1.15f))
+                    .setListener(null)
+                    .start();
+        }
+        measurementTarget.postDelayed(() -> {
+            if (!isAdded()) {
+                periodTransitionRunning = false;
+                clearSwipeTargets(targets);
+                return;
+            }
+            applyPeriodShift(direction);
+            refresh();
+            for (View target : targets) {
+                if (target == null) {
+                    continue;
+                }
+                target.animate().cancel();
+                target.setTranslationX(enterTranslation);
+                target.setAlpha(0.84f);
+                target.animate()
+                        .translationX(0f)
+                        .alpha(1f)
+                        .setDuration(250L)
+                        .setInterpolator(new DecelerateInterpolator(1.55f))
+                        .setListener(null)
+                        .start();
+            }
+            measurementTarget.postDelayed(() -> {
+                periodTransitionRunning = false;
+                clearSwipeTargets(targets);
+            }, 250L);
+        }, 170L);
+    }
+
+    private void clearSwipeTargets(View[] targets) {
+        for (View target : targets) {
+            if (target == null) {
+                continue;
+            }
+            target.setLayerType(View.LAYER_TYPE_NONE, null);
+            target.setTranslationX(0f);
+            target.setAlpha(1f);
+        }
+    }
+
+    private void applyPeriodShift(int direction) {
+        if (mode == MODE_WEEK) {
             selectedDate = selectedDate.plusWeeks(direction);
         } else {
             selectedDate = selectedDate.plusDays(direction);
         }
         ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
-        refresh();
     }
 
     private void refresh() {
@@ -355,6 +594,7 @@ public class CalendarFragment extends Fragment {
     }
 
     private void refreshMonth() {
+        preloadMonthWindow(visibleMonth);
         monthPagerAdapter.setSelectedDate(selectedDate);
         monthPagerAdapter.setMonthDetailVisible(monthDetailVisible);
         monthPagerAdapter.notifyDataSetChanged();
@@ -362,46 +602,74 @@ public class CalendarFragment extends Fragment {
         syncMonthPager(false);
         UiUtils.visible(dayDetailPanel, monthDetailVisible);
         if (monthDetailVisible) {
-            selectedDateLabel.setText(DateTimeUtils.formatDateWithDow(selectedDate));
-            selectedEventAdapter.submit(calendarRepository.getEventsForDate(selectedDate));
-            selectedTodoAdapter.submit(todoRepository.getTodosForDate(selectedDate));
-            dayDetailScroll.post(dayDetailScroll::requestLayout);
+            updateMonthDetailContent(false);
         }
     }
 
+    private void updateMonthDetailContent(boolean resetScroll) {
+        selectedDateLabel.setText(DateTimeUtils.formatDateWithDow(selectedDate));
+        selectedEventAdapter.submit(calendarRepository.getEventsForDate(selectedDate));
+        selectedTodoAdapter.submit(todoRepository.getTodosForDate(selectedDate));
+        dayDetailScroll.post(() -> {
+            if (resetScroll) {
+                dayDetailScroll.scrollTo(0, 0);
+            }
+            dayDetailScroll.requestLayout();
+        });
+    }
+
     private List<CalendarDayCell> buildMonthCells(LocalDate monthStart) {
-        LocalDate gridStart = getMonthGridStart(monthStart);
+        YearMonth cacheKey = YearMonth.from(monthStart);
+        List<CalendarDayCell> cachedCells = monthCellCache.get(cacheKey);
+        if (cachedCells != null) {
+            return cachedCells;
+        }
+        LocalDate monthFirstDay = cacheKey.atDay(1);
+        LocalDate gridStart = getMonthGridStart(monthFirstDay);
         LocalDate gridEnd = gridStart.plusDays(42);
         List<CalendarEvent> events = calendarRepository.getEventsBetween(gridStart.atStartOfDay(), gridEnd.atStartOfDay());
         Map<LocalDate, List<CalendarEvent>> eventsByDate = groupEventsByDate(events);
         List<CalendarDayCell> cells = new ArrayList<>();
         for (int i = 0; i < 42; i++) {
             LocalDate date = gridStart.plusDays(i);
-            CalendarDayCell cell = new CalendarDayCell(date, date.getMonth().equals(monthStart.getMonth()));
+            CalendarDayCell cell = new CalendarDayCell(date, YearMonth.from(date).equals(cacheKey));
             List<CalendarEvent> dayEvents = eventsByDate.get(date);
             if (dayEvents != null) {
                 cell.getEvents().addAll(dayEvents);
             }
             cells.add(cell);
         }
+        monthCellCache.put(cacheKey, cells);
         return cells;
     }
 
     private void refreshWeek() {
         LocalDate weekStart = getWeekStart(selectedDate);
         List<LocalDate> days = buildWeekDays(weekStart);
-        weekDayAdapter.submit(days, selectedDate);
+        weekMonthBadge.setText(getString(R.string.week_month_year_badge, selectedDate.getMonthValue(), selectedDate.getYear()));
+        weekDayAdapter.submit(days);
+        weekJournalAdapter.submit(days);
         List<CalendarEvent> events = calendarRepository.getEventsBetween(weekStart.atStartOfDay(), weekStart.plusDays(7).atStartOfDay());
-        weekHourAdapter.submit(days, events);
-        weekTimelineRecycler.post(() -> weekTimelineRecycler.scrollToPosition(6));
+        weekTimelineView.submit(days, events);
+        weekTopStripView.submit(days, weekTimelineView.getStripItems());
+        UiUtils.visible(weekTopEventRow, true);
+        if (lastWeekTimelineStart == null || !lastWeekTimelineStart.equals(weekStart)) {
+            lastWeekTimelineStart = weekStart;
+            weekTimelineScroll.post(() -> weekTimelineScroll.scrollTo(0, weekTimelineView.getScrollYForHour(6)));
+        }
     }
 
     private void refreshDay() {
-        LocalDate weekStart = getWeekStart(selectedDate);
-        List<LocalDate> days = buildWeekDays(weekStart);
-        dayStripAdapter.submit(days, selectedDate);
-        dayEventAdapter.submit(calendarRepository.getEventsForDate(selectedDate));
-        dayTodoAdapter.submit(todoRepository.getTodosForDate(selectedDate));
+        dayMonthBadge.setText(getString(R.string.day_month_year_badge, selectedDate.getMonthValue(), selectedDate.getYear()));
+        dayStripAdapter.submit(buildWeekDays(getWeekStart(selectedDate)), selectedDate);
+        if (dayPagerAdapter != null) {
+            dayPagerAdapter.setCenterDate(selectedDate);
+        }
+        if (dayPager != null && dayPager.getCurrentItem() != 1) {
+            dayPagerRecentering = true;
+            dayPager.setCurrentItem(1, false);
+            dayPagerRecentering = false;
+        }
     }
 
     private EventListAdapter.Listener eventActions() {
@@ -415,6 +683,7 @@ public class CalendarFragment extends Fragment {
             public void onDelete(CalendarEvent event) {
                 UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_event), () -> {
                     calendarRepository.deleteEvent(event.getId());
+                    invalidateMonthCache();
                     refresh();
                 });
             }
@@ -441,7 +710,7 @@ public class CalendarFragment extends Fragment {
 
             @Override
             public void onDelete(TodoItem item) {
-                UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_event), () -> {
+                UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_todo), () -> {
                     todoRepository.deleteTodo(item.getId());
                     refresh();
                 });
@@ -450,11 +719,93 @@ public class CalendarFragment extends Fragment {
     }
 
     private void onMonthDateClicked(LocalDate date) {
+        boolean wasDetailVisible = monthDetailVisible;
+        LocalDate previousMonth = visibleMonth;
         selectedDate = date;
         visibleMonth = date.withDayOfMonth(1);
         monthDetailVisible = true;
         ((MainActivity) requireActivity()).setSelectedDate(date);
-        refresh();
+        updateHeader();
+        resizeMonthDetailPanel();
+        dayDetailPanel.animate().cancel();
+        updateMonthDetailContent(!wasDetailVisible);
+        monthPagerAdapter.setSelectedDate(selectedDate);
+        monthPagerAdapter.setMonthDetailVisible(true);
+        preloadMonthWindow(visibleMonth);
+        int targetPosition = monthPagerAdapter.getPositionForMonth(visibleMonth);
+        anchorMonthDetailPanelToBottom(targetPosition);
+        showMonthDetailPanel(wasDetailVisible);
+        if (previousMonth.equals(visibleMonth)) {
+            monthPagerAdapter.updateVisibleMonthSelection(monthPager, targetPosition, selectedDate, true);
+            revealSelectedDateAbovePanel(targetPosition);
+        } else {
+            syncMonthPager(false);
+            monthPagerAdapter.notifyItemChanged(targetPosition);
+            monthPager.post(() -> revealSelectedDateAbovePanel(targetPosition));
+        }
+    }
+
+    private void showMonthDetailPanel(boolean wasDetailVisible) {
+        int animationGeneration = ++monthPanelAnimationGeneration;
+        UiUtils.visible(dayDetailPanel, true);
+        dayDetailPanel.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        if (wasDetailVisible && dayDetailPanel.getAlpha() > 0f) {
+            dayDetailPanel.setTranslationY(0f);
+            dayDetailPanel.setAlpha(1f);
+            dayDetailPanel.setLayerType(View.LAYER_TYPE_NONE, null);
+            return;
+        }
+        dayDetailPanel.post(() -> {
+            if (animationGeneration != monthPanelAnimationGeneration || !monthDetailVisible) {
+                return;
+            }
+            float startTranslation = Math.max(dayDetailPanel.getHeight(), monthBody.getHeight() - getMonthDetailPanelTop());
+            dayDetailPanel.setTranslationY(startTranslation);
+            dayDetailPanel.setAlpha(0.96f);
+            dayDetailPanel.animate()
+                    .translationY(0f)
+                    .alpha(1f)
+                    .setDuration(MONTH_PANEL_OPEN_DURATION_MS)
+                    .setInterpolator(new DecelerateInterpolator(1.8f))
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            if (animationGeneration == monthPanelAnimationGeneration) {
+                                dayDetailPanel.setLayerType(View.LAYER_TYPE_NONE, null);
+                            }
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+                            dayDetailPanel.setLayerType(View.LAYER_TYPE_NONE, null);
+                        }
+                    })
+                    .start();
+        });
+    }
+
+    private void revealSelectedDateAbovePanel(int targetPosition) {
+        if (monthPager == null || monthPagerAdapter == null) {
+            return;
+        }
+        dayDetailPanel.post(() -> {
+            anchorMonthDetailPanelToBottom(targetPosition);
+            monthPagerAdapter.setMonthDetailPanelHeight(dayDetailPanel.getHeight());
+            monthPagerAdapter.setMonthDetailPanelTop(getMonthDetailPanelTop());
+            monthPagerAdapter.revealDateAbovePanel(monthPager, targetPosition, selectedDate);
+            monthPager.postDelayed(() -> {
+                anchorMonthDetailPanelToBottom(targetPosition);
+                monthPagerAdapter.setMonthDetailPanelHeight(dayDetailPanel.getHeight());
+                monthPagerAdapter.setMonthDetailPanelTop(getMonthDetailPanelTop());
+                monthPagerAdapter.revealDateAbovePanel(monthPager, targetPosition, selectedDate);
+            }, 32);
+            monthPager.postDelayed(() -> {
+                anchorMonthDetailPanelToBottom(targetPosition);
+                monthPagerAdapter.setMonthDetailPanelHeight(dayDetailPanel.getHeight());
+                monthPagerAdapter.setMonthDetailPanelTop(getMonthDetailPanelTop());
+                monthPagerAdapter.revealDateAbovePanel(monthPager, targetPosition, selectedDate);
+            }, 260);
+        });
     }
 
     private void syncMonthPager(boolean smooth) {
@@ -496,24 +847,108 @@ public class CalendarFragment extends Fragment {
         if (newMonth.equals(visibleMonth)) {
             return;
         }
+        LocalDate previousMonth = visibleMonth;
         visibleMonth = newMonth;
         selectedDate = visibleMonth.withDayOfMonth(Math.min(selectedDate.getDayOfMonth(), visibleMonth.lengthOfMonth()));
         monthDetailVisible = false;
+        monthDetailPanelTop = RecyclerView.NO_POSITION;
         ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
         updateHeader();
-        refreshMonth();
+        resizeMonthDetailPanel();
+        UiUtils.visible(dayDetailPanel, false);
+        preloadMonthWindow(visibleMonth);
+        monthPagerAdapter.setSelectedDate(selectedDate);
+        monthPagerAdapter.setMonthDetailVisible(false);
+        notifyMonthPages(previousMonth, visibleMonth);
+    }
+
+    private void notifyMonthPages(LocalDate previousMonth, LocalDate nextMonth) {
+        if (monthPagerAdapter == null) {
+            return;
+        }
+        int previousPosition = previousMonth == null ? RecyclerView.NO_POSITION : monthPagerAdapter.getPositionForMonth(previousMonth);
+        int nextPosition = nextMonth == null ? RecyclerView.NO_POSITION : monthPagerAdapter.getPositionForMonth(nextMonth);
+        if (previousPosition != RecyclerView.NO_POSITION) {
+            monthPagerAdapter.notifyItemChanged(previousPosition);
+        }
+        if (nextPosition != RecyclerView.NO_POSITION && nextPosition != previousPosition) {
+            monthPagerAdapter.notifyItemChanged(nextPosition);
+        }
     }
 
     private void resizeMonthDetailPanel() {
         if (monthBody == null || dayDetailPanel == null || monthBody.getHeight() <= 0) {
             return;
         }
-        ViewGroup.LayoutParams params = dayDetailPanel.getLayoutParams();
-        int targetHeight = monthBody.getHeight() / 2;
-        if (params.height != targetHeight) {
-            params.height = targetHeight;
+        int targetHeight = Math.round(monthBody.getHeight() * MONTH_DETAIL_PANEL_RATIO);
+        int maxTop = Math.max(0, monthBody.getHeight() - targetHeight);
+        setMonthDetailPanelFrame(maxTop, targetHeight);
+    }
+
+    private int anchorMonthDetailPanelToBottom(int targetPosition) {
+        if (monthBody == null || dayDetailPanel == null || monthBody.getHeight() <= 0) {
+            return RecyclerView.NO_POSITION;
+        }
+        int panelHeight = Math.round(monthBody.getHeight() * MONTH_DETAIL_PANEL_RATIO);
+        int maxTop = Math.max(0, monthBody.getHeight() - panelHeight);
+        setMonthDetailPanelFrame(maxTop, panelHeight);
+        if (monthPagerAdapter != null) {
+            monthPagerAdapter.updateVisibleMonthSelection(monthPager, targetPosition, selectedDate, monthDetailVisible);
+        }
+        return maxTop;
+    }
+
+    private void setMonthDetailPanelFrame(int top, int height) {
+        ViewGroup.LayoutParams rawParams = dayDetailPanel.getLayoutParams();
+        if (!(rawParams instanceof FrameLayout.LayoutParams)) {
+            rawParams.height = height;
+            dayDetailPanel.setLayoutParams(rawParams);
+            monthDetailPanelTop = top;
+            return;
+        }
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) rawParams;
+        boolean changed = params.height != height || params.topMargin != 0 || params.gravity != Gravity.BOTTOM;
+        params.height = height;
+        params.topMargin = 0;
+        params.gravity = Gravity.BOTTOM;
+        if (changed) {
             dayDetailPanel.setLayoutParams(params);
         }
+        monthDetailPanelTop = top;
+        if (monthPagerAdapter != null) {
+            monthPagerAdapter.setMonthDetailPanelHeight(height);
+            monthPagerAdapter.setMonthDetailPanelTop(top);
+        }
+    }
+
+    private int getMonthDetailPanelTop() {
+        if (monthDetailPanelTop != RecyclerView.NO_POSITION) {
+            return monthDetailPanelTop;
+        }
+        if (dayDetailPanel != null && dayDetailPanel.getTop() > 0) {
+            return dayDetailPanel.getTop();
+        }
+        if (monthBody != null && dayDetailPanel != null && monthBody.getHeight() > 0) {
+            int panelHeight = dayDetailPanel.getHeight() > 0
+                    ? dayDetailPanel.getHeight()
+                    : Math.round(monthBody.getHeight() * MONTH_DETAIL_PANEL_RATIO);
+            return Math.max(0, monthBody.getHeight() - panelHeight);
+        }
+        return 0;
+    }
+
+    private void preloadMonthWindow(LocalDate monthStart) {
+        if (monthStart == null) {
+            return;
+        }
+        LocalDate normalizedMonth = monthStart.withDayOfMonth(1);
+        for (int offset = -1; offset <= 1; offset++) {
+            buildMonthCells(normalizedMonth.plusMonths(offset));
+        }
+    }
+
+    private void invalidateMonthCache() {
+        monthCellCache.clear();
     }
 
     private Map<LocalDate, List<CalendarEvent>> groupEventsByDate(List<CalendarEvent> events) {
@@ -551,7 +986,7 @@ public class CalendarFragment extends Fragment {
         GestureDetector detector = new GestureDetector(requireContext(), new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                if (mode == MODE_MONTH || e1 == null || e2 == null || Math.abs(velocityX) < Math.abs(velocityY)) {
+                if (mode != MODE_WEEK || periodTransitionRunning || e1 == null || e2 == null || Math.abs(velocityX) < Math.abs(velocityY)) {
                     return false;
                 }
                 if (Math.abs(e2.getX() - e1.getX()) > UiUtils.dp(requireContext(), 80)) {
@@ -565,8 +1000,33 @@ public class CalendarFragment extends Fragment {
             detector.onTouchEvent(event);
             return false;
         };
-        view.setOnTouchListener(listener);
-        view.findViewById(R.id.week_timeline_recycler).setOnTouchListener(listener);
-        view.findViewById(R.id.day_event_recycler).setOnTouchListener(listener);
+        view.findViewById(R.id.week_day_recycler).setOnTouchListener(listener);
+        view.findViewById(R.id.week_journal_recycler).setOnTouchListener(listener);
+        view.findViewById(R.id.week_top_event_strip).setOnTouchListener(listener);
+        view.findViewById(R.id.week_timeline_scroll).setOnTouchListener(listener);
+    }
+
+    private static class SmoothMonthLayoutManager extends LinearLayoutManager {
+        SmoothMonthLayoutManager(Context context) {
+            super(context, LinearLayoutManager.HORIZONTAL, false);
+            setInitialPrefetchItemCount(3);
+        }
+
+        @Override
+        public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
+            LinearSmoothScroller scroller = new LinearSmoothScroller(recyclerView.getContext()) {
+                @Override
+                protected float calculateSpeedPerPixel(DisplayMetrics displayMetrics) {
+                    return 90f / displayMetrics.densityDpi;
+                }
+
+                @Override
+                protected int calculateTimeForScrolling(int dx) {
+                    return Math.min(360, Math.max(180, super.calculateTimeForScrolling(dx) * 4));
+                }
+            };
+            scroller.setTargetPosition(position);
+            startSmoothScroll(scroller);
+        }
     }
 }

@@ -127,6 +127,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void finishFullScreenOrHome() {
+        FragmentManager manager = getSupportFragmentManager();
+        if (manager.getBackStackEntryCount() > 0) {
+            manager.popBackStack();
+        } else {
+            finishToHome();
+        }
+    }
+
     public void finishToHome() {
         getSupportFragmentManager().popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         if (currentTabId == R.id.nav_todo) {
