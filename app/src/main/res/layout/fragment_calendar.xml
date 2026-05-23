@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/surface"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="59dp"
+        android:layout_height="48dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="18dp"
@@ -67,13 +70,17 @@
         android:id="@+id/calendar_nav_row"
         android:layout_width="match_parent"
         android:layout_height="40dp"
+        android:layout_marginBottom="4dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="4dp"
         android:gravity="center"
         android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/btn_previous"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/month"
             android:src="@drawable/ic_arrow_left" />
@@ -81,17 +88,18 @@
         <TextView
             android:id="@+id/tv_period_title"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
             android:textColor="@color/text_primary"
-            android:textSize="20sp"
+            android:textSize="17sp"
             android:textStyle="normal" />
 
         <ImageButton
             android:id="@+id/btn_next"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/month"
             android:src="@drawable/ic_arrow_right" />
@@ -103,20 +111,6 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="31dp"
-            android:orientation="horizontal">
-
-            <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_monday" />
-            <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_tuesday" />
-            <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_wednesday" />
-            <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_thursday" />
-            <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_friday" />
-            <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_saturday" />
-            <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_sunday" />
-        </LinearLayout>
 
         <FrameLayout
             android:id="@+id/month_body"
@@ -197,6 +191,7 @@
                             android:gravity="center_vertical"
                             android:text="@string/calendar"
                             android:textColor="@color/text_primary"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <androidx.recyclerview.widget.RecyclerView
@@ -212,6 +207,7 @@
                             android:gravity="center_vertical"
                             android:text="@string/todo"
                             android:textColor="@color/text_primary"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <androidx.recyclerview.widget.RecyclerView
@@ -234,38 +230,108 @@
         android:orientation="vertical"
         android:visibility="gone">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/week_day_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:clipToPadding="false"
-            android:paddingStart="52dp"
-            android:overScrollMode="never" />
-
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="32dp"
+            android:layout_height="54dp"
             android:orientation="horizontal">
 
-            <View
-                android:layout_width="52dp"
-                android:layout_height="match_parent" />
-
             <TextView
-                android:id="@+id/journal_placeholder"
+                android:id="@+id/tv_week_month_badge"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:clickable="true"
+                android:fontFamily="sans-serif-medium"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="0dp"
+                android:maxLines="2"
+                android:paddingTop="6dp"
+                android:paddingBottom="4dp"
+                android:textAlignment="center"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                tools:text="Th5&#10;2026" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/week_day_recycler"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:gravity="center"
-                android:textColor="@color/text_muted" />
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never" />
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/week_timeline_recycler"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="45dp"
+                android:layout_height="match_parent" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/week_journal_recycler"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/week_top_event_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/line" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/line" />
+            </LinearLayout>
+
+            <com.example.finalproject.ui.calendar.WeekTopStripLayout
+                android:id="@+id/week_top_event_strip"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/week_timeline_scroll"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:overScrollMode="never" />
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:paddingBottom="92dp">
+
+            <com.example.finalproject.ui.calendar.WeekTimelineLayout
+                android:id="@+id/week_timeline_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </androidx.core.widget.NestedScrollView>
     </LinearLayout>
 
     <LinearLayout
@@ -276,46 +342,39 @@
         android:orientation="vertical"
         android:visibility="gone">
 
+        <TextView
+            android:id="@+id/tv_day_month_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center_vertical"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            tools:text="Th5 2026" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/day_strip_recycler"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:overScrollMode="never" />
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:nestedScrollingEnabled="false"
+            android:overScrollMode="never"
+            android:paddingStart="11dp"
+            android:paddingTop="2dp"
+            android:paddingEnd="11dp"
+            android:paddingBottom="4dp" />
 
-        <TextView
-            android:id="@+id/day_journal_placeholder"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/day_pager"
             android:layout_width="match_parent"
-            android:layout_height="78dp"
-            android:gravity="center"
-            android:textColor="@color/text_muted" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="28dp"
-            android:gravity="center_vertical"
-            android:text="@string/calendar"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/day_event_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:overScrollMode="never" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="28dp"
-            android:gravity="center_vertical"
-            android:text="@string/todo"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/day_todo_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="160dp"
+            android:layout_height="match_parent"
             android:overScrollMode="never" />
     </LinearLayout>
 </LinearLayout>
