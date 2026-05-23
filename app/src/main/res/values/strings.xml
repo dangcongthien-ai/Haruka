@@ -125,9 +125,9 @@
     <string name="day_month_year_badge">Th%1$d %2$d</string>
     <string name="default_one">1</string>
     <string name="ellipsis">...</string>
-    <string name="all_day_short">C&#x1EA3; ng&#x00E0;y</string>
-    <string name="delete_dialog_title">X&#x00F3;a m&#x1EE5;c n&#x00E0;y?</string>
-    <string name="delete_confirm_todo">B&#x1EA1;n c&#x00F3; ch&#x1EAF;c ch&#x1EAF;n mu&#x1ED1;n x&#x00F3;a vi&#x1EC7;c c&#x1EA7;n l&#x00E0;m n&#x00E0;y?</string>
+    <string name="all_day_short">Cả ngày</string>
+    <string name="delete_dialog_title">Xóa mục này?</string>
+    <string name="delete_confirm_todo">Bạn có chắc chắn muốn xóa việc cần làm này?</string>
     <string name="journal_photo_slot">Chọn ảnh nhật ký</string>
     <string name="journal_photo_remove">Xóa ảnh nhật ký</string>
     <string name="journal_photo_limit_error">Mỗi nhật ký chỉ chọn tối đa 3 ảnh</string>
@@ -240,17 +240,16 @@
     <string name="add_another_reminder">+ Thêm thông báo</string>
     <string name="reminder_count_value">%1$d thông báo</string>
     <string name="remove_reminder">Xóa thông báo</string>
-    <string name="monthly_on_day">H&#x1EB1;ng th&#x00E1;ng v&#x00E0;o ng&#x00E0;y %1$d</string>
-    <string name="repeat_count_times">L&#x1EB7;p l&#x1EA1;i %1$d l&#x1EA7;n</string>
+    <string name="monthly_on_day">Hàng tháng vào ngày %1$d</string>
+    <string name="repeat_count_times">Lặp lại %1$d lần</string>
     <string-array name="recurrence_units">
-        <item>ng&#x00E0;y</item>
-        <item>tu&#x1EA7;n</item>
-        <item>th&#x00E1;ng</item>
-        <item>n&#x0103;m</item>
+        <item>ngày</item>
+        <item>tuần</item>
+        <item>tháng</item>
+        <item>năm</item>
     </string-array>
     <string name="date_picker_selected_format">%1$d Th%2$d, %3$d</string>
-    <string name="date_picker_month_year">th&#x00E1;ng %1$d n&#x0103;m %2$d</string>
-    <string name="month_chip_format">Th&#x00E1;ng %1$d</string>
-    <string name="repeat_count_title">L&#x1EB7;p l&#x1EA1;i x l&#x1EA7;n</string>
+    <string name="date_picker_month_year">tháng %1$d năm %2$d</string>
+    <string name="month_chip_format">Tháng %1$d</string>
+    <string name="repeat_count_title">Lặp lại số lần</string>
 </resources>
-
