@@ -248,8 +248,4 @@
         <item>tháng</item>
         <item>năm</item>
     </string-array>
-    <string name="date_picker_selected_format">%1$d Th%2$d, %3$d</string>
-    <string name="date_picker_month_year">tháng %1$d năm %2$d</string>
-    <string name="month_chip_format">Tháng %1$d</string>
-    <string name="repeat_count_title">Lặp lại số lần</string>
 </resources>
