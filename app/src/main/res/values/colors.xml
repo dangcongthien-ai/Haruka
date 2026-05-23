@@ -12,6 +12,8 @@
     <color name="brand_orange">#EB9B54</color>
     <color name="brand_orange_dark">#C97932</color>
     <color name="brand_orange_light">#FFE1C2</color>
+    <color name="journal_editor_background">#1AEB9B54</color>
+    <color name="journal_placeholder">#D9D9D9</color>
     <color name="switch_off_thumb">#BDBDBD</color>
     <color name="switch_off_track">#E5E5E5</color>
     <color name="todo_pink">#FADDE2</color>
