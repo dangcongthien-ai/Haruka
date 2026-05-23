@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="344dp"
     android:layout_height="272dp"
-    android:background="@drawable/bg_surface_rounded"
+    android:background="@drawable/bg_dialog_soft"
     android:orientation="vertical"
     android:paddingStart="18dp"
     android:paddingTop="14dp"

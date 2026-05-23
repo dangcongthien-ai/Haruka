@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -158,6 +159,11 @@ public class ReminderFragment extends Fragment {
         dialog.setContentView(view);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(UiUtils.dp(requireContext(), 336), ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
+            attributes.dimAmount = 0.28f;
+            dialog.getWindow().setAttributes(attributes);
         }
         EditText amount = view.findViewById(R.id.edit_reminder_amount);
         RadioGroup unitGroup = view.findViewById(R.id.reminder_unit_group);
@@ -173,6 +179,7 @@ public class ReminderFragment extends Fragment {
         } else {
             unitGroup.check(R.id.radio_minutes);
         }
+        view.findViewById(R.id.btn_custom_reminder_cancel).setOnClickListener(v -> dialog.dismiss());
         view.findViewById(R.id.btn_custom_reminder_done).setOnClickListener(v -> {
             int value = parseAmount(amount);
             String unit = "MINUTE";
