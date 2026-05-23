@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_journal_layout_dialog"
+    android:elevation="18dp"
+    android:paddingStart="8dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="16dp">
+
+    <TextView
+        android:id="@+id/tv_journal_layout_title"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:text="@string/journal_layout_title"
+        android:textColor="@color/text_primary"
+        android:textSize="22sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/btn_journal_layout_save"
+        android:layout_width="68dp"
+        android:layout_height="36dp"
+        android:background="@drawable/bg_journal_layout_save"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="@string/save"
+        android:textColor="@color/surface"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btn_journal_layout_prev"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/previous"
+        android:padding="4dp"
+        android:src="@drawable/ic_arrow_left"
+        app:layout_constraintBottom_toBottomOf="@id/layout_journal_preview_frame"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/layout_journal_preview_frame" />
+
+    <FrameLayout
+        android:id="@+id/layout_journal_preview_frame"
+        android:layout_width="210dp"
+        android:layout_height="320dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_journal_layout_preview_frame"
+        android:clipToOutline="true"
+        android:padding="1dp"
+        app:layout_constraintEnd_toStartOf="@id/btn_journal_layout_next"
+        app:layout_constraintStart_toEndOf="@id/btn_journal_layout_prev"
+        app:layout_constraintTop_toBottomOf="@id/tv_journal_layout_title">
+
+        <ImageView
+            android:id="@+id/img_journal_layout_preview_pattern"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <View
+            android:id="@+id/view_journal_layout_preview_page"
+            android:layout_width="142dp"
+            android:layout_height="254dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_journal_editor_page" />
+    </FrameLayout>
+
+    <ImageButton
+        android:id="@+id/btn_journal_layout_next"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/next"
+        android:padding="4dp"
+        android:src="@drawable/ic_arrow_right"
+        app:layout_constraintBottom_toBottomOf="@id/layout_journal_preview_frame"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/layout_journal_preview_frame" />
+</androidx.constraintlayout.widget.ConstraintLayout>
