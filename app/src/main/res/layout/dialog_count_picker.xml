@@ -1,45 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="312dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="336dp"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_dialog_confirmation"
+    android:background="@drawable/bg_dialog_soft"
     android:orientation="vertical"
-    android:paddingTop="10dp"
-    android:paddingBottom="8dp">
+    android:paddingStart="20dp"
+    android:paddingTop="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/repeat_count_title"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <NumberPicker
         android:id="@+id/picker_repeat_count"
         android:layout_width="match_parent"
-        android:layout_height="168dp" />
+        android:layout_height="180dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:gravity="center_vertical"
+        android:layout_height="wrap_content"
+        android:gravity="end"
         android:orientation="horizontal"
-        android:paddingStart="18dp"
-        android:paddingEnd="18dp">
+        android:paddingTop="2dp">
 
-        <TextView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_count_cancel"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginEnd="10dp"
             android:layout_weight="1"
-            android:gravity="center"
             android:text="@string/cancel"
+            android:textAllCaps="false"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            app:backgroundTint="@color/surface"
+            app:cornerRadius="21dp"
+            app:strokeColor="@color/line"
+            app:strokeWidth="1dp" />
 
-        <TextView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_count_ok"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:gravity="center"
             android:text="@string/agree"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/brand_orange"
+            app:cornerRadius="21dp" />
     </LinearLayout>
 </LinearLayout>

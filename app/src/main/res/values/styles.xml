@@ -112,8 +112,8 @@
 
     <style name="Caliary.OptionRowSmall" parent="Caliary.OptionRow">
         <item name="android:layout_height">42dp</item>
-        <item name="android:paddingStart">0dp</item>
-        <item name="android:paddingEnd">0dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
     </style>
 
     <style name="Caliary.OptionLabel">
