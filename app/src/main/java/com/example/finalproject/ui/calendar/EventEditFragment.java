@@ -57,27 +57,14 @@ public class EventEditFragment extends Fragment {
             R.color.palette_pink_1,
             R.color.palette_pink_2,
             R.color.palette_lilac_1,
-            R.color.palette_lilac_2,
             R.color.palette_blue_1,
-            R.color.palette_sky_1,
             R.color.palette_sky_2,
-            R.color.palette_cyan_1,
-            R.color.palette_teal_1,
             R.color.palette_green_1,
-            R.color.palette_lime_1,
-            R.color.palette_lime_2,
-            R.color.palette_yellow_1,
             R.color.palette_orange_1,
-            R.color.palette_red_1,
-            R.color.palette_magenta_1,
-            R.color.palette_magenta_2,
-            R.color.palette_purple_1,
-            R.color.palette_purple_2,
-            R.color.palette_blue_2,
-            R.color.palette_blue_3,
+            R.color.palette_yellow_1,
+            R.color.brand_orange,
             R.color.palette_green_2,
-            R.color.palette_amber_1,
-            R.color.palette_orange_2
+            R.color.palette_blue_2
     };
 
     private CalendarRepository repository;
@@ -294,7 +281,7 @@ public class EventEditFragment extends Fragment {
     private View createPresetSwatch(int colorInt, boolean selected) {
         FrameLayout frame = buildSwatchFrame(selected);
         View dot = new View(requireContext());
-        FrameLayout.LayoutParams dotParams = new FrameLayout.LayoutParams(dp(20), dp(20), Gravity.CENTER);
+        FrameLayout.LayoutParams dotParams = new FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER);
         dot.setLayoutParams(dotParams);
         dot.setBackground(circleDrawable(colorInt, 0, 0));
         frame.addView(dot);
@@ -310,12 +297,12 @@ public class EventEditFragment extends Fragment {
         FrameLayout frame = buildSwatchFrame(customSelected);
         if (customSelected) {
             View dot = new View(requireContext());
-            dot.setLayoutParams(new FrameLayout.LayoutParams(dp(20), dp(20), Gravity.CENTER));
+            dot.setLayoutParams(new FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER));
             dot.setBackground(circleDrawable(Color.parseColor(normalizeColor(selectedColor)), requireContext().getColor(R.color.line), 1));
             frame.addView(dot);
         } else {
             View ring = new View(requireContext());
-            ring.setLayoutParams(new FrameLayout.LayoutParams(dp(20), dp(20), Gravity.CENTER));
+            ring.setLayoutParams(new FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER));
             ring.setBackground(circleDrawable(requireContext().getColor(R.color.surface), requireContext().getColor(R.color.line), 1));
             frame.addView(ring);
         }
@@ -325,8 +312,8 @@ public class EventEditFragment extends Fragment {
 
     private FrameLayout buildSwatchFrame(boolean selected) {
         FrameLayout frame = new FrameLayout(requireContext());
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(32), dp(32));
-        params.setMargins(dp(4), 0, dp(4), 0);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(28), dp(28));
+        params.setMargins(dp(5), 0, dp(5), 0);
         frame.setLayoutParams(params);
         frame.setBackground(circleDrawable(
                 Color.TRANSPARENT,
