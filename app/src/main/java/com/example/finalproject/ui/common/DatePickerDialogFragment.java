@@ -86,6 +86,8 @@ public class DatePickerDialogFragment extends DialogFragment {
         RecyclerView recyclerView = view.findViewById(R.id.dialog_date_recycler);
         recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 7));
         recyclerView.setAdapter(adapter);
+        recyclerView.setNestedScrollingEnabled(false);
+        recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         ImageButton previous = view.findViewById(R.id.btn_dialog_prev);
         ImageButton next = view.findViewById(R.id.btn_dialog_next);

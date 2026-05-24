@@ -52,4 +52,7 @@
     <color name="palette_green_2">#48D279</color>
     <color name="palette_amber_1">#FFC125</color>
     <color name="palette_orange_2">#FF6F41</color>
+    <color name="channel_red">#F26868</color>
+    <color name="channel_green">#57B96A</color>
+    <color name="channel_blue">#5D8CF8</color>
 </resources>

@@ -9,12 +9,12 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="72dp"
-        android:background="@color/form_background_soft"
+        android:layout_height="48dp"
+        android:background="@color/surface"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="10dp"
-        android:paddingEnd="8dp">
+        android:paddingEnd="10dp">
 
         <ImageButton
             android:id="@+id/btn_back"
@@ -52,12 +52,17 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:overScrollMode="never"
-        android:paddingBottom="28dp">
+        android:paddingBottom="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:background="@color/form_background_soft" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -66,6 +71,7 @@
                 android:orientation="vertical">
 
                 <LinearLayout
+                    android:id="@+id/title_row"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:gravity="center_vertical"
@@ -98,7 +104,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
@@ -226,7 +232,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
@@ -263,7 +269,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
@@ -341,7 +347,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
@@ -409,6 +415,7 @@
                 android:orientation="vertical">
 
                 <LinearLayout
+                    android:id="@+id/location_row"
                     android:layout_width="match_parent"
                     android:layout_height="46dp"
                     android:gravity="center_vertical"
@@ -440,10 +447,11 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
+                    android:id="@+id/url_row"
                     android:layout_width="match_parent"
                     android:layout_height="46dp"
                     android:gravity="center_vertical"
@@ -475,10 +483,11 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
+                    android:id="@+id/notes_row"
                     android:layout_width="match_parent"
                     android:layout_height="88dp"
                     android:gravity="top"
@@ -511,6 +520,12 @@
                         android:textCursorDrawable="@drawable/cursor_primary"
                         android:textSize="14sp" />
                 </LinearLayout>
+
+                <View
+                    android:id="@+id/event_edit_keyboard_spacer"
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:background="@color/form_background_soft" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
