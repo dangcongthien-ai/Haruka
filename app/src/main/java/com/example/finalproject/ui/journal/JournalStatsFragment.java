@@ -12,6 +12,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -84,6 +85,9 @@ public class JournalStatsFragment extends Fragment {
         if (selectedDate == null) {
             selectedDate = LocalDate.now();
         }
+        if (selectedDate.isAfter(LocalDate.now())) {
+            selectedDate = LocalDate.now();
+        }
         bind(view);
         setupClicks(view);
         render();
@@ -123,9 +127,22 @@ public class JournalStatsFragment extends Fragment {
             render();
         });
         view.findViewById(R.id.btn_journal_stats_next).setOnClickListener(v -> {
-            selectedDate = yearMode ? selectedDate.plusYears(1) : selectedDate.plusMonths(1);
+            LocalDate nextDate = yearMode ? selectedDate.plusYears(1) : selectedDate.plusMonths(1);
+            if (isFuturePeriod(nextDate)) {
+                Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            selectedDate = nextDate;
             render();
         });
+    }
+
+    private boolean isFuturePeriod(LocalDate date) {
+        LocalDate today = LocalDate.now();
+        if (yearMode) {
+            return date.getYear() > today.getYear();
+        }
+        return date.withDayOfMonth(1).isAfter(today.withDayOfMonth(1));
     }
 
     private void render() {

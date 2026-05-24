@@ -4,8 +4,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -57,7 +57,7 @@ public final class UiUtils {
     }
 
     public static void setCheck(TextView view, boolean checked) {
-        view.setText(checked ? "✓" : "");
+        view.setText(checked ? "\u2713" : "");
     }
 
     public static void visible(View view, boolean visible) {
@@ -65,13 +65,19 @@ public final class UiUtils {
     }
 
     public static void showDeleteDialog(Context context, String message, Runnable onConfirm) {
+        showConfirmDialog(context, message, context.getString(R.string.delete), onConfirm);
+    }
+
+    public static void showConfirmDialog(Context context, String message, String confirmText, Runnable onConfirm) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(context).inflate(R.layout.dialog_delete_confirmation, null, false);
         TextView messageView = content.findViewById(R.id.tv_delete_message);
+        TextView confirmButton = content.findViewById(R.id.btn_delete_confirm);
         messageView.setText(message);
+        confirmButton.setText(confirmText);
         content.findViewById(R.id.btn_delete_cancel).setOnClickListener(v -> dialog.dismiss());
-        content.findViewById(R.id.btn_delete_confirm).setOnClickListener(v -> {
+        confirmButton.setOnClickListener(v -> {
             dialog.dismiss();
             onConfirm.run();
         });

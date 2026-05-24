@@ -1,9 +1,11 @@
 package com.example.finalproject.ui.habit;
 
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -24,7 +26,7 @@ public class HabitPrioritySheet extends BottomSheetDialogFragment {
     public static final String RESULT_KEY = "habit_priority_picker_result";
     public static final String RESULT_PRIORITY_ID = "priority_id";
     private static final String ARG_SELECTED_ID = "selected_id";
-    private static final int PRIORITY_CHIP_WIDTH_DP = 188;
+    private static final int PRIORITY_CHIP_WIDTH_DP = 168;
 
     private HabitRepository repository;
     private long selectedPriorityId;
@@ -47,13 +49,12 @@ public class HabitPrioritySheet extends BottomSheetDialogFragment {
         itemsContainer = view.findViewById(R.id.layout_priority_items);
         ImageButton close = view.findViewById(R.id.btn_close_priority_sheet);
         close.setOnClickListener(v -> dismiss());
-        view.findViewById(R.id.btn_save_priority_picker).setOnClickListener(v -> saveSelection());
         view.findViewById(R.id.btn_add_priority).setOnClickListener(v ->
                 HabitPriorityEditorSheet.newInstance(0).show(getParentFragmentManager(), "HabitPriorityEditor"));
 
         getParentFragmentManager().setFragmentResultListener(HabitPriorityEditorSheet.RESULT_KEY, this, (requestKey, result) -> {
             selectedPriorityId = result.getLong(HabitPriorityEditorSheet.RESULT_PRIORITY_ID, selectedPriorityId);
-            renderPriorities();
+            publishSelection(selectedPriorityId);
         });
 
         renderPriorities();
@@ -91,20 +92,18 @@ public class HabitPrioritySheet extends BottomSheetDialogFragment {
     }
 
     private View createPriorityRow(HabitPriority priority) {
-        LinearLayout row = new LinearLayout(requireContext());
+        FrameLayout row = new FrameLayout(requireContext());
         row.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                UiUtils.dp(requireContext(), 54)
+                UiUtils.dp(requireContext(), 60)
         ));
-        row.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        row.setOrientation(LinearLayout.HORIZONTAL);
 
         TextView check = new TextView(requireContext());
-        LinearLayout.LayoutParams checkParams = new LinearLayout.LayoutParams(
+        FrameLayout.LayoutParams checkParams = new FrameLayout.LayoutParams(
                 UiUtils.dp(requireContext(), 24),
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        checkParams.setMargins(0, 0, UiUtils.dp(requireContext(), 8), 0);
+        checkParams.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
         check.setLayoutParams(checkParams);
         check.setTextSize(18);
         check.setTextColor(requireContext().getColor(R.color.brand_orange));
@@ -112,17 +111,28 @@ public class HabitPrioritySheet extends BottomSheetDialogFragment {
         row.addView(check);
 
         TextView chip = new TextView(requireContext());
-        LinearLayout.LayoutParams chipParams = new LinearLayout.LayoutParams(
+        FrameLayout.LayoutParams chipParams = new FrameLayout.LayoutParams(
                 UiUtils.dp(requireContext(), PRIORITY_CHIP_WIDTH_DP),
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        chipParams.setMargins(0, 0, UiUtils.dp(requireContext(), 12), 0);
+        chipParams.gravity = Gravity.CENTER;
         chip.setLayoutParams(chipParams);
-        chip.setPadding(UiUtils.dp(requireContext(), 12), UiUtils.dp(requireContext(), 6), UiUtils.dp(requireContext(), 12), UiUtils.dp(requireContext(), 6));
-        chip.setGravity(android.view.Gravity.CENTER);
+        chip.setPadding(UiUtils.dp(requireContext(), 12), UiUtils.dp(requireContext(), 7), UiUtils.dp(requireContext(), 12), UiUtils.dp(requireContext(), 7));
+        chip.setGravity(Gravity.CENTER);
         chip.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         HabitUiHelper.stylePriorityChip(chip, priority.getName(), priority.getColor());
+        chip.setTextSize(16);
         row.addView(chip);
+
+        LinearLayout actionRow = new LinearLayout(requireContext());
+        FrameLayout.LayoutParams actionParams = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        actionParams.gravity = Gravity.END | Gravity.CENTER_VERTICAL;
+        actionRow.setLayoutParams(actionParams);
+        actionRow.setGravity(Gravity.CENTER_VERTICAL);
+        actionRow.setOrientation(LinearLayout.HORIZONTAL);
 
         ImageView edit = new ImageView(requireContext());
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(
@@ -135,7 +145,7 @@ public class HabitPrioritySheet extends BottomSheetDialogFragment {
         edit.setOnClickListener(v ->
                 HabitPriorityEditorSheet.newInstance(priority.getId())
                         .show(getParentFragmentManager(), "HabitPriorityEditor"));
-        row.addView(edit);
+        actionRow.addView(edit);
 
         ImageView delete = new ImageView(requireContext());
         LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
@@ -157,16 +167,18 @@ public class HabitPrioritySheet extends BottomSheetDialogFragment {
                     renderPriorities();
                 }
         ));
-        row.addView(delete);
+        actionRow.addView(delete);
+        row.addView(actionRow);
 
         row.setOnClickListener(v -> {
             selectedPriorityId = priority.getId();
-            renderPriorities();
+            publishSelection(selectedPriorityId);
         });
         return row;
     }
 
-    private void saveSelection() {
+    private void publishSelection(long priorityId) {
+        selectedPriorityId = priorityId;
         Bundle result = new Bundle();
         result.putLong(RESULT_PRIORITY_ID, selectedPriorityId);
         getParentFragmentManager().setFragmentResult(RESULT_KEY, result);

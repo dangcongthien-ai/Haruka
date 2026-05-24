@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,7 @@ import com.example.finalproject.ui.calendar.EventEditFragment;
 import com.example.finalproject.ui.common.PlaceholderFragment;
 import com.example.finalproject.ui.habit.HabitEditFragment;
 import com.example.finalproject.ui.habit.HabitFragment;
+import com.example.finalproject.ui.habit.HabitStatsFragment;
 import com.example.finalproject.ui.journal.JournalEditFragment;
 import com.example.finalproject.ui.journal.JournalFragment;
 import com.example.finalproject.ui.journal.JournalStatsFragment;
@@ -117,7 +119,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void openHabitEditor(long habitId) {
         LocalDate today = selectedDate == null ? LocalDate.now() : selectedDate;
+        if (habitId <= 0 && today.isAfter(LocalDate.now())) {
+            Toast.makeText(this, R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+            return;
+        }
         openFullScreen(HabitEditFragment.newInstance(habitId, today));
+    }
+
+    public void openHabitStats(LocalDate date) {
+        openFullScreen(HabitStatsFragment.newInstance(date == null ? selectedDate : date));
     }
 
     public void finishFullScreen() {
@@ -202,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showHabits() {
-        replaceHome(HabitFragment.newInstance());
+        replaceHome(HabitFragment.newInstance(selectedDate));
     }
 
     private void showPlaceholder(String message) {
@@ -235,6 +245,10 @@ public class MainActivity extends AppCompatActivity {
             Fragment current = manager.findFragmentById(R.id.fragment_container);
             if (current instanceof JournalEditFragment) {
                 ((JournalEditFragment) current).handleBackPressed();
+                return;
+            }
+            if (current instanceof HabitEditFragment) {
+                ((HabitEditFragment) current).handleBackPressed();
                 return;
             }
             manager.popBackStack();
