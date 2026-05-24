@@ -235,6 +235,9 @@
     <string name="habit_target_unit_hint">trang</string>
     <string name="custom_color">Màu tùy chỉnh</string>
     <string name="custom_color_hint">Nhập mã màu HEX, ví dụ #EB9B54</string>
+    <string name="custom_color_channel_red">R</string>
+    <string name="custom_color_channel_green">G</string>
+    <string name="custom_color_channel_blue">B</string>
     <string name="apply">Áp dụng</string>
     <string name="custom_color_invalid">Màu không hợp lệ</string>
     <string name="add_another_reminder">+ Thêm thông báo</string>
@@ -248,4 +251,11 @@
         <item>tháng</item>
         <item>năm</item>
     </string-array>
+    <string name="date_picker_selected_format">%1$d Th%2$d, %3$d</string>
+    <string name="date_picker_month_year">tháng %1$d năm %2$d</string>
+    <string name="month_chip_format">Tháng %1$d</string>
+    <string name="repeat_count_title">Số lần lặp lại</string>
+    <string name="monthly_on_weekday_ordinal">Hàng tháng vào %1$s %2$s</string>
+    <string name="ordinal_last">cuối cùng</string>
+    <string name="ordinal_number">thứ %1$d</string>
 </resources>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/form_background_soft"
@@ -9,7 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="72dp"
-        android:background="@color/form_background_soft"
+        android:background="@color/surface"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="10dp"
@@ -74,7 +75,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
@@ -92,7 +93,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
@@ -110,7 +111,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
@@ -128,7 +129,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
@@ -146,7 +147,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="0.5dp"
                     android:background="@color/line" />
 
                 <LinearLayout
@@ -167,33 +168,35 @@
                 android:id="@+id/custom_panel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:background="@drawable/bg_surface_card_soft"
+                android:layout_marginTop="12dp"
+                android:background="@color/surface"
                 android:orientation="vertical"
-                android:paddingStart="24dp"
-                android:paddingTop="18dp"
-                android:paddingEnd="24dp"
-                android:paddingBottom="18dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="8dp"
                 android:visibility="gone">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
                     android:text="@string/repeat_every"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="10sp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp">
 
                     <EditText
                         android:id="@+id/edit_interval"
-                        android:layout_width="58dp"
-                        android:layout_height="42dp"
-                        android:background="@drawable/bg_chip_outline"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_habit_input_box"
                         android:gravity="center"
                         android:inputType="number"
                         android:text="@string/default_one"
@@ -201,12 +204,27 @@
                         android:textCursorDrawable="@drawable/cursor_primary"
                         android:textSize="14sp" />
 
-                    <Spinner
-                        android:id="@+id/spinner_freq_unit"
-                        android:layout_width="112dp"
-                        android:layout_height="42dp"
+                    <AutoCompleteTextView
+                        android:id="@+id/input_freq_unit"
+                        android:layout_width="88dp"
+                        android:layout_height="40dp"
                         android:layout_marginStart="10dp"
-                        android:background="@drawable/bg_chip_outline" />
+                        android:background="@drawable/bg_habit_input_box"
+                        android:completionThreshold="0"
+                        android:dropDownWidth="88dp"
+                        android:dropDownAnchor="@id/input_freq_unit"
+                        android:dropDownHorizontalOffset="0dp"
+                        android:dropDownVerticalOffset="0dp"
+                        android:drawableEnd="@drawable/ic_arrow_down"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="8dp"
+                        android:singleLine="true"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_muted"
+                        android:textCursorDrawable="@drawable/cursor_primary"
+                        android:textSize="14sp" />
                 </LinearLayout>
 
                 <TextView
@@ -214,46 +232,63 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
                     android:text="@string/repeat_on"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:visibility="gone" />
 
                 <LinearLayout
                     android:id="@+id/weekly_days"
                     android:layout_width="match_parent"
-                    android:layout_height="46dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:visibility="gone" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_monthly_pattern"
-                    android:layout_width="wrap_content"
+                <AutoCompleteTextView
+                    android:id="@+id/input_monthly_pattern"
+                    android:layout_width="240dp"
                     android:layout_height="40dp"
                     android:layout_marginTop="10dp"
-                    android:textAllCaps="false"
+                    android:layout_marginStart="24dp"
+                    android:dropDownWidth="240dp"
+                    android:background="@drawable/bg_habit_input_box"
+                    android:completionThreshold="0"
+                    android:dropDownAnchor="@id/input_monthly_pattern"
+                    android:dropDownHorizontalOffset="0dp"
+                    android:dropDownVerticalOffset="0dp"
+                    android:drawableEnd="@drawable/ic_arrow_down"
+                    android:drawablePadding="6dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp"
+                    android:singleLine="true"
                     android:textColor="@color/text_primary"
+                    android:textCursorDrawable="@drawable/cursor_primary"
+                    android:textSize="14sp"
                     android:visibility="gone"
-                    app:backgroundTint="@color/surface"
-                    app:cornerRadius="8dp"
-                    app:strokeColor="@color/line"
-                    app:strokeWidth="1dp" />
+                    tools:text="Hàng tháng vào ngày 28" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
                     android:text="@string/finish"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="10sp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_surface_card_soft"
+                    android:background="@color/surface"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -271,7 +306,7 @@
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="1dp"
+                        android:layout_height="0.5dp"
                         android:background="@color/line" />
 
                     <LinearLayout
@@ -289,7 +324,7 @@
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="1dp"
+                        android:layout_height="0.5dp"
                         android:background="@color/line" />
 
                     <LinearLayout
