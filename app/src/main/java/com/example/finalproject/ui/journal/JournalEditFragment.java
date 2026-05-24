@@ -78,6 +78,7 @@ public class JournalEditFragment extends Fragment {
     private boolean suppressAutoSave;
     private boolean shouldAutoShowMoodPicker;
     private boolean initialMoodPickerShown;
+    private String initialSnapshot;
     private LocalDate journalDate;
     private String title = "";
     private String caption = "";
@@ -148,7 +149,7 @@ public class JournalEditFragment extends Fragment {
         getParentFragmentManager().setFragmentResultListener(RESULT_DATE, this, (requestKey, result) -> {
             LocalDate picked = DateTimeUtils.isoToDate(result.getString(DatePickerDialogFragment.RESULT_DATE));
             if (picked != null) {
-                journalDate = picked;
+                journalDate = clampFutureDate(picked);
                 ((MainActivity) requireActivity()).setSelectedDate(journalDate);
                 bindValues();
             }
@@ -167,6 +168,9 @@ public class JournalEditFragment extends Fragment {
         setupClicks(view);
         setupSystemInsets(view);
         bindValues();
+        if (initialSnapshot == null) {
+            initialSnapshot = currentInputSnapshot();
+        }
         maybeShowInitialMoodPicker(view);
         return view;
     }
@@ -231,6 +235,9 @@ public class JournalEditFragment extends Fragment {
         journalDate = DateTimeUtils.isoToDate(requireArguments().getString(ARG_DATE));
         if (journalDate == null) {
             journalDate = LocalDate.now();
+        }
+        if (journalId <= 0) {
+            journalDate = clampFutureDate(journalDate);
         }
         if (journalId > 0) {
             JournalEntry entry = repository.getJournalEntry(journalId);
@@ -1145,15 +1152,27 @@ public class JournalEditFragment extends Fragment {
 
     private void moveDay(int amount) {
         captureInput();
-        journalDate = journalDate.plusDays(amount);
+        LocalDate nextDate = journalDate.plusDays(amount);
+        if (nextDate.isAfter(LocalDate.now())) {
+            Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        journalDate = nextDate;
         ((MainActivity) requireActivity()).setSelectedDate(journalDate);
         bindValues();
     }
 
     public void handleBackPressed() {
-        saveDraftIfNeeded();
-        suppressAutoSave = true;
-        ((MainActivity) requireActivity()).finishToHome();
+        if (hasUnsavedChanges()) {
+            UiUtils.showConfirmDialog(
+                    requireContext(),
+                    getString(R.string.unsaved_changes_confirm),
+                    getString(R.string.discard_changes),
+                    this::exitWithoutSaving
+            );
+            return;
+        }
+        exitWithoutSaving();
     }
 
     private void save() {
@@ -1165,6 +1184,11 @@ public class JournalEditFragment extends Fragment {
         saveCurrentEntry();
         suppressAutoSave = true;
         ((MainActivity) requireActivity()).setSelectedDate(journalDate);
+        ((MainActivity) requireActivity()).finishToHome();
+    }
+
+    private void exitWithoutSaving() {
+        suppressAutoSave = true;
         ((MainActivity) requireActivity()).finishToHome();
     }
 
@@ -1202,6 +1226,31 @@ public class JournalEditFragment extends Fragment {
             }
         }
         return false;
+    }
+
+    private boolean hasUnsavedChanges() {
+        return initialSnapshot != null && !initialSnapshot.equals(currentInputSnapshot());
+    }
+
+    private String currentInputSnapshot() {
+        captureInput();
+        return DateTimeUtils.dateToIso(journalDate) + "|"
+                + selectedLayoutId + "|"
+                + captionTextSizeSp + "|"
+                + contentTextSizeSp + "|"
+                + valueOrEmpty(caption) + "|"
+                + valueOrEmpty(content) + "|"
+                + imageUris.toString() + "|"
+                + selectedMoodResourceNames().toString();
+    }
+
+    private LocalDate clampFutureDate(LocalDate date) {
+        LocalDate today = LocalDate.now();
+        if (date.isAfter(today)) {
+            Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+            return today;
+        }
+        return date;
     }
 
     private void applyStoredMoods(List<String> moodResourceNames) {
