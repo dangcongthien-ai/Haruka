@@ -2,7 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="70dp"
+    android:layout_marginBottom="8dp"
+    android:minHeight="62dp"
     android:orientation="horizontal"
     android:paddingTop="6dp"
     android:paddingBottom="6dp">
@@ -18,6 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:includeFontPadding="false"
             android:textColor="@color/text_primary"
             android:textSize="13sp" />
 
@@ -26,6 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:includeFontPadding="false"
             android:textColor="@color/text_primary"
             android:textSize="13sp" />
     </LinearLayout>
@@ -56,7 +59,8 @@
         android:layout_gravity="center_vertical"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/edit"
-        android:src="@drawable/ic_edit" />
+        android:src="@drawable/ic_edit"
+        android:tint="@color/brand_orange" />
 
     <ImageButton
         android:id="@+id/btn_event_delete"
@@ -65,5 +69,6 @@
         android:layout_gravity="center_vertical"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/delete"
-        android:src="@drawable/ic_delete" />
+        android:src="@drawable/ic_delete"
+        android:tint="@color/brand_orange" />
 </LinearLayout>

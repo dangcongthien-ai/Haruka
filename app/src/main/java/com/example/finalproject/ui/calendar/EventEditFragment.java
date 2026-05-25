@@ -1,16 +1,11 @@
 package com.example.finalproject.ui.calendar;
 
-import android.app.Dialog;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +25,8 @@ import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.ui.todo.TodoEditFragment;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -186,7 +183,7 @@ public class EventEditFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishToHome());
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreenOrHome());
         view.findViewById(R.id.btn_save_event).setOnClickListener(v -> save());
         startDateText.setOnClickListener(v -> openDatePicker(RESULT_START_DATE, startDate));
         endDateText.setOnClickListener(v -> openDatePicker(RESULT_END_DATE, endDate));
@@ -330,7 +327,7 @@ public class EventEditFragment extends Fragment {
         event.setReminders(reminders);
         repository.saveEvent(event);
         ((MainActivity) requireActivity()).setSelectedDate(startDate);
-        ((MainActivity) requireActivity()).finishToHome();
+        ((MainActivity) requireActivity()).finishFullScreenOrHome();
     }
 
     private void openDatePicker(String resultKey, LocalDate date) {
@@ -342,43 +339,22 @@ public class EventEditFragment extends Fragment {
 
     private void openTimePicker(boolean start) {
         LocalTime initial = start ? startTime : endTime;
-        Dialog dialog = new Dialog(requireContext());
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_time_picker, null, false);
-        dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-        NumberPicker hourPicker = content.findViewById(R.id.picker_hour);
-        NumberPicker minutePicker = content.findViewById(R.id.picker_minute);
-        NumberPicker amPmPicker = content.findViewById(R.id.picker_ampm);
-        hourPicker.setMinValue(1);
-        hourPicker.setMaxValue(12);
-        minutePicker.setMinValue(0);
-        minutePicker.setMaxValue(59);
-        minutePicker.setFormatter(value -> String.format("%02d", value));
-        amPmPicker.setMinValue(0);
-        amPmPicker.setMaxValue(1);
-        amPmPicker.setDisplayedValues(new String[]{"SA", "CH"});
-        int hour = initial.getHour();
-        amPmPicker.setValue(hour >= 12 ? 1 : 0);
-        int hour12 = hour % 12;
-        hourPicker.setValue(hour12 == 0 ? 12 : hour12);
-        minutePicker.setValue(initial.getMinute());
-        content.findViewById(R.id.btn_time_cancel).setOnClickListener(v -> dialog.dismiss());
-        content.findViewById(R.id.btn_time_ok).setOnClickListener(v -> {
-            int pickedHour = hourPicker.getValue() % 12;
-            if (amPmPicker.getValue() == 1) {
-                pickedHour += 12;
-            }
+        MaterialTimePicker picker = new MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_12H)
+                .setHour(initial.getHour())
+                .setMinute(initial.getMinute())
+                .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
+                .setTitleText(R.string.set_time)
+                .build();
+        picker.addOnPositiveButtonClickListener(v -> {
+            LocalTime pickedTime = LocalTime.of(picker.getHour(), picker.getMinute());
             if (start) {
-                startTime = LocalTime.of(pickedHour, minutePicker.getValue());
+                startTime = pickedTime;
             } else {
-                endTime = LocalTime.of(pickedHour, minutePicker.getValue());
+                endTime = pickedTime;
             }
             bindValues();
-            dialog.dismiss();
         });
-        dialog.show();
+        picker.show(getParentFragmentManager(), start ? "start_time_picker" : "end_time_picker");
     }
 }
