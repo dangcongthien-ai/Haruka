@@ -225,6 +225,7 @@ public class DatePickerDialogFragment extends DialogFragment {
         picker.setMaxValue(maxYear);
         picker.setValue(selectedYear);
         picker.setWrapSelectorWheel(false);
+        UiUtils.styleNumberPicker(picker, requireContext());
 
         content.findViewById(R.id.btn_year_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_year_ok).setOnClickListener(v -> {

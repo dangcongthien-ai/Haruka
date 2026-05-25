@@ -51,6 +51,7 @@ import com.example.finalproject.model.CalendarEvent;
 import com.example.finalproject.model.TodoItem;
 import com.example.finalproject.repository.CalendarRepository;
 import com.example.finalproject.repository.TodoRepository;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
 
 import java.time.LocalDate;
@@ -62,7 +63,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class CalendarFragment extends Fragment {
+public class CalendarFragment extends Fragment implements ScreenBackHandler {
     public static final int MODE_MONTH = 0;
     public static final int MODE_WEEK = 1;
     public static final int MODE_DAY = 2;
@@ -228,14 +229,14 @@ public class CalendarFragment extends Fragment {
                 selectedDate = event.getDate();
                 ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
             }
-            ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
+            ((MainActivity) requireActivity()).openEventDetail(event.getId(), selectedDate);
         });
         weekTopStripView.setListener(event -> {
             if (event.getDate() != null) {
                 selectedDate = event.getDate();
                 ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
             }
-            ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
+            ((MainActivity) requireActivity()).openEventDetail(event.getId(), selectedDate);
         });
 
         dayStripAdapter = new DaySelectorAdapter(date -> {
@@ -445,6 +446,7 @@ public class CalendarFragment extends Fragment {
         picker.setMaxValue(maxYear);
         picker.setValue(selectedYear);
         picker.setWrapSelectorWheel(false);
+        UiUtils.styleNumberPicker(picker, requireContext());
 
         content.findViewById(R.id.btn_year_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_year_ok).setOnClickListener(v -> {
@@ -715,6 +717,11 @@ public class CalendarFragment extends Fragment {
     private EventListAdapter.Listener eventActions() {
         return new EventListAdapter.Listener() {
             @Override
+            public void onClick(CalendarEvent event) {
+                ((MainActivity) requireActivity()).openEventDetail(event.getId(), event.getDate());
+            }
+
+            @Override
             public void onEdit(CalendarEvent event) {
                 ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
             }
@@ -728,6 +735,15 @@ public class CalendarFragment extends Fragment {
                 });
             }
         };
+    }
+
+    @Override
+    public boolean onHandleBackPressed() {
+        if (mode == MODE_MONTH && monthDetailVisible) {
+            closeMonthDetailPanel();
+            return true;
+        }
+        return false;
     }
 
     private TodoListAdapter.Listener todoActions() {

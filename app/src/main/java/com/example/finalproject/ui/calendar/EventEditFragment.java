@@ -679,7 +679,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         }
         UiUtils.showConfirmationDialog(
                 requireContext(),
-                R.drawable.ic_close,
+                R.drawable.ic_close_centered,
                 getString(R.string.discard_changes_title),
                 getString(R.string.discard_changes_message),
                 getString(R.string.discard),
@@ -954,7 +954,8 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             anchor.getLocationOnScreen(location);
             int anchorTopOnScreen = location[1];
             int anchorBottomOnScreen = anchorTopOnScreen + anchor.getHeight();
-            int desiredBottom = visibleFrame.bottom - dp(18);
+            int desiredBottomInset = anchor == notesEdit ? dp(60) : dp(18);
+            int desiredBottom = visibleFrame.bottom - desiredBottomInset;
 
             if (anchorBottomOnScreen <= desiredBottom) {
                 return;

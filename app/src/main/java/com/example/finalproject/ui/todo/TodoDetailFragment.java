@@ -67,7 +67,7 @@ public class TodoDetailFragment extends Fragment implements ScreenBackHandler {
         view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.btn_edit_todo).setOnClickListener(v -> {
             if (item != null) {
-                ((MainActivity) requireActivity()).switchFullScreen(TodoEditFragment.newInstance(item.getId(), item.getTodoDate()));
+                ((MainActivity) requireActivity()).openTodoEditor(item.getId(), item.getTodoDate());
             }
         });
     }

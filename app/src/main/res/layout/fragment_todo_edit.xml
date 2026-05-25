@@ -67,6 +67,7 @@
                 android:hint="@string/title_hint"
                 android:inputType="textCapSentences"
                 android:textColor="@color/text_primary"
+                android:textColorHighlight="@color/brand_orange_highlight"
                 android:textColorHint="@color/brand_orange"
                 android:textCursorDrawable="@drawable/cursor_primary"
                 android:textSize="18sp"
@@ -103,7 +104,8 @@
                 style="@style/Caliary.PlainEdit"
                 android:hint="@string/description_hint"
                 android:inputType="textMultiLine|textCapSentences"
-                android:minHeight="72dp" />
+                android:minHeight="72dp"
+                android:textColorHighlight="@color/brand_orange_highlight" />
 
             <LinearLayout
                 android:id="@+id/todo_date_row"
