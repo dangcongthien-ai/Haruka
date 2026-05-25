@@ -175,10 +175,10 @@ public class TodoEditFragment extends Fragment implements ScreenBackHandler {
 
     private void openReminderPicker() {
         captureInput();
-        getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, ReminderFragment.newInstance(RESULT_REMINDER, Reminder.none()))
-                .addToBackStack("Reminder")
-                .commit();
+        ((MainActivity) requireActivity()).pushFullScreenFragment(
+                ReminderFragment.newInstance(RESULT_REMINDER, Reminder.none()),
+                "Reminder"
+        );
     }
 
     private void bindValues() {

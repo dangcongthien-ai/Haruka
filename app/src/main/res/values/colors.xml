@@ -16,6 +16,7 @@
     <color name="brand_orange_light">#FFE1C2</color>
     <color name="brand_orange_highlight">#5CEB9B54</color>
     <color name="brand_orange_hint">#99EB9B54</color>
+    <color name="ripple_neutral">#30202124</color>
     <color name="switch_off_thumb">#BDBDBD</color>
     <color name="switch_off_track">#E5E5E5</color>
     <color name="todo_pink">#FADDE2</color>
@@ -43,6 +44,7 @@
     <color name="palette_lime_2">#DFE47A</color>
     <color name="palette_yellow_1">#FFF07C</color>
     <color name="palette_orange_1">#FFCA79</color>
+    <color name="palette_neutral_1">#FFFFFF</color>
     <color name="palette_red_1">#FF2A17</color>
     <color name="palette_magenta_1">#FF0F8C</color>
     <color name="palette_magenta_2">#EE83F1</color>

@@ -13,6 +13,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.example.finalproject.ui.calendar.CalendarFragment;
 import com.example.finalproject.ui.calendar.EventDetailFragment;
@@ -156,10 +157,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void switchFullScreen(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        applyFullScreenAnimations(transaction);
+        transaction.replace(R.id.fragment_container, fragment).commit();
     }
 
     private void setupNavigation() {
@@ -236,11 +236,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openFullScreen(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .addToBackStack(fragment.getClass().getSimpleName())
+        pushFullScreenFragment(fragment, fragment.getClass().getSimpleName());
+    }
+
+    public void pushFullScreenFragment(Fragment fragment, String backStackName) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        applyFullScreenAnimations(transaction);
+        transaction.replace(R.id.fragment_container, fragment)
+                .addToBackStack(backStackName)
                 .commit();
+    }
+
+    private void applyFullScreenAnimations(FragmentTransaction transaction) {
+        transaction.setCustomAnimations(
+                R.anim.fullscreen_slide_in_right,
+                R.anim.fullscreen_slide_out_left,
+                R.anim.fullscreen_slide_in_left,
+                R.anim.fullscreen_slide_out_right
+        );
     }
 
     public void handleActivityBackPressed() {
