@@ -35,7 +35,8 @@
             android:textAllCaps="false"
             android:textColor="@color/white"
             app:backgroundTint="@color/brand_orange"
-            app:cornerRadius="22dp" />
+            app:cornerRadius="22dp"
+            app:rippleColor="@color/ripple_orange_pressed" />
     </LinearLayout>
 
     <ScrollView

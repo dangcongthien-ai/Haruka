@@ -15,9 +15,12 @@ import com.example.finalproject.MainActivity;
 import com.example.finalproject.R;
 import com.example.finalproject.adapter.HabitAdapter;
 import com.example.finalproject.repository.HabitRepository;
+import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.UiUtils;
 
-public class HabitFragment extends Fragment {
+import java.time.LocalDate;
+
+public class HabitFragment extends Fragment implements HomeDataRefreshable {
     private HabitRepository repository;
     private HabitAdapter adapter;
     private RecyclerView recyclerView;
@@ -44,6 +47,11 @@ public class HabitFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        refresh();
+    }
+
+    @Override
+    public void onHomeDataRefresh(LocalDate selectedDate) {
         refresh();
     }
 

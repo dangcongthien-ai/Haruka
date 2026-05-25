@@ -805,6 +805,8 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
                 .setMinute(initial.getMinute())
                 .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
                 .setTitleText(R.string.set_time)
+                .setNegativeButtonText(R.string.cancel)
+                .setPositiveButtonText(R.string.agree)
                 .build();
         timePickerShowing = true;
         picker.addOnPositiveButtonClickListener(v -> {
@@ -818,6 +820,36 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         });
         picker.addOnDismissListener(dialog -> timePickerShowing = false);
         picker.show(getParentFragmentManager(), tag);
+        getParentFragmentManager().executePendingTransactions();
+        styleTimePickerActions(picker);
+    }
+
+    private void styleTimePickerActions(MaterialTimePicker picker) {
+        if (picker == null || picker.getDialog() == null) {
+            return;
+        }
+        Runnable styleButtons = () -> {
+            Dialog dialog = picker.getDialog();
+            if (dialog == null) {
+                return;
+            }
+            int actionColor = requireContext().getColor(R.color.text_primary);
+            TextView cancelButton = dialog.findViewById(com.google.android.material.R.id.material_timepicker_cancel_button);
+            TextView okButton = dialog.findViewById(com.google.android.material.R.id.material_timepicker_ok_button);
+            if (cancelButton != null) {
+                cancelButton.setTextColor(actionColor);
+                cancelButton.setText(getString(R.string.cancel));
+            }
+            if (okButton != null) {
+                okButton.setTextColor(actionColor);
+                okButton.setText(getString(R.string.agree));
+            }
+        };
+        styleButtons.run();
+        Window window = picker.getDialog().getWindow();
+        if (window != null && window.getDecorView() != null) {
+            window.getDecorView().post(styleButtons);
+        }
     }
 
     private void updateTimeVisibility(boolean animate) {

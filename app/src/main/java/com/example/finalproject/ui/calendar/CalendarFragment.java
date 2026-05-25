@@ -52,6 +52,7 @@ import com.example.finalproject.model.CalendarEvent;
 import com.example.finalproject.model.TodoItem;
 import com.example.finalproject.repository.CalendarRepository;
 import com.example.finalproject.repository.TodoRepository;
+import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
 
@@ -64,7 +65,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class CalendarFragment extends Fragment implements ScreenBackHandler {
+public class CalendarFragment extends Fragment implements ScreenBackHandler, HomeDataRefreshable {
     public static final int MODE_MONTH = 0;
     public static final int MODE_WEEK = 1;
     public static final int MODE_DAY = 2;
@@ -137,6 +138,21 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
     @Override
     public void onResume() {
         super.onResume();
+        invalidateMonthCache();
+        refresh();
+    }
+
+    @Override
+    public void onHomeDataRefresh(LocalDate hostSelectedDate) {
+        if (!isAdded()) {
+            return;
+        }
+        if (hostSelectedDate != null) {
+            selectedDate = hostSelectedDate;
+            if (mode == MODE_MONTH) {
+                visibleMonth = selectedDate.withDayOfMonth(1);
+            }
+        }
         invalidateMonthCache();
         refresh();
     }
