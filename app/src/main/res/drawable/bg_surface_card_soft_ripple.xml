@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/brand_orange_light">
+    android:color="@color/ripple_neutral"
+    android:radius="36dp">
 
     <item android:drawable="@drawable/bg_surface_card_soft" />
 

@@ -17,8 +17,8 @@
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/cancel"
             android:src="@drawable/ic_back" />
@@ -44,6 +44,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
         android:overScrollMode="never">
 
         <LinearLayout
@@ -133,9 +135,7 @@
                 android:orientation="vertical">
 
                 <LinearLayout
-                    style="@style/Caliary.FormRow"
-                    android:clickable="false"
-                    android:focusable="false">
+                    style="@style/Caliary.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -152,7 +152,8 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_start"
-                        style="@style/Caliary.FormValue" />
+                        style="@style/Caliary.DetailValue"
+                        android:textAlignment="viewEnd" />
                 </LinearLayout>
 
                 <View
@@ -161,9 +162,7 @@
                     android:background="@color/line" />
 
                 <LinearLayout
-                    style="@style/Caliary.FormRow"
-                    android:clickable="false"
-                    android:focusable="false">
+                    style="@style/Caliary.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -180,7 +179,8 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_end"
-                        style="@style/Caliary.FormValue" />
+                        style="@style/Caliary.DetailValue"
+                        android:textAlignment="viewEnd" />
                 </LinearLayout>
 
                 <View
@@ -189,9 +189,7 @@
                     android:background="@color/line" />
 
                 <LinearLayout
-                    style="@style/Caliary.FormRow"
-                    android:clickable="false"
-                    android:focusable="false">
+                    style="@style/Caliary.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -208,7 +206,8 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_repeat"
-                        style="@style/Caliary.FormValueMuted" />
+                        style="@style/Caliary.DetailValueMuted"
+                        android:textAlignment="viewEnd" />
                 </LinearLayout>
 
                 <View
@@ -217,9 +216,7 @@
                     android:background="@color/line" />
 
                 <LinearLayout
-                    style="@style/Caliary.FormRow"
-                    android:clickable="false"
-                    android:focusable="false">
+                    style="@style/Caliary.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -236,7 +233,8 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_reminder"
-                        style="@style/Caliary.FormValueMuted" />
+                        style="@style/Caliary.DetailValueMuted"
+                        android:textAlignment="viewEnd" />
                 </LinearLayout>
 
                 <View
@@ -246,9 +244,7 @@
 
                 <LinearLayout
                     android:id="@+id/event_detail_location_row"
-                    style="@style/Caliary.FormRow"
-                    android:clickable="false"
-                    android:focusable="false">
+                    style="@style/Caliary.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -265,7 +261,8 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_location"
-                        style="@style/Caliary.FormValue" />
+                        style="@style/Caliary.DetailValue"
+                        android:textAlignment="viewEnd" />
                 </LinearLayout>
 
                 <View
@@ -275,9 +272,7 @@
 
                 <LinearLayout
                     android:id="@+id/event_detail_url_row"
-                    style="@style/Caliary.FormRow"
-                    android:clickable="false"
-                    android:focusable="false">
+                    style="@style/Caliary.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -294,8 +289,9 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_url"
-                        style="@style/Caliary.FormValue"
-                        android:autoLink="web" />
+                        style="@style/Caliary.DetailValue"
+                        android:autoLink="web"
+                        android:textAlignment="viewEnd" />
                 </LinearLayout>
             </LinearLayout>
 

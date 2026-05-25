@@ -66,14 +66,29 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             R.color.palette_pink_1,
             R.color.palette_pink_2,
             R.color.palette_lilac_1,
+            R.color.palette_lilac_2,
             R.color.palette_blue_1,
+            R.color.palette_sky_1,
             R.color.palette_sky_2,
+            R.color.palette_cyan_1,
+            R.color.palette_teal_1,
             R.color.palette_green_1,
-            R.color.palette_orange_1,
+            R.color.palette_lime_1,
+            R.color.palette_lime_2,
             R.color.palette_yellow_1,
+            R.color.palette_orange_1,
             R.color.brand_orange,
+            R.color.palette_neutral_1,
+            R.color.palette_red_1,
+            R.color.palette_magenta_1,
+            R.color.palette_magenta_2,
+            R.color.palette_purple_1,
+            R.color.palette_purple_2,
+            R.color.palette_blue_2,
+            R.color.palette_blue_3,
             R.color.palette_green_2,
-            R.color.palette_blue_2
+            R.color.palette_amber_1,
+            R.color.palette_orange_2
     };
 
     private CalendarRepository repository;
@@ -198,7 +213,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
     @Override
     public void onResume() {
         super.onResume();
-        restoreSoftInputMode();
+        enableKeyboardInputMode();
     }
 
     @Override
@@ -210,6 +225,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
     @Override
     public void onDestroyView() {
         detachKeyboardScrollSupport();
+        restoreSoftInputMode();
         super.onDestroyView();
     }
 
@@ -270,7 +286,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             keyboardInset = desiredInset;
             keyboardVisible = nowVisible;
             int spacerHeight = baseKeyboardSpacerHeight
-                    + (keyboardVisible ? Math.max(dp(36), keyboardInset - dp(56)) : 0);
+                    + (keyboardVisible ? Math.max(dp(44), keyboardInset - dp(48)) : 0);
             updateKeyboardSpacerHeight(spacerHeight);
             if (keyboardVisible) {
                 View focusedAnchor = resolveFocusedAnchor();
@@ -362,10 +378,10 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         endTimeText.setOnClickListener(v -> openTimePicker(false));
         view.findViewById(R.id.repeat_row).setOnClickListener(v -> {
             captureInput();
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, RecurrenceFragment.newInstance(RESULT_RECURRENCE, recurrenceRule, startDate))
-                    .addToBackStack("Recurrence")
-                    .commit();
+            ((MainActivity) requireActivity()).pushFullScreenFragment(
+                    RecurrenceFragment.newInstance(RESULT_RECURRENCE, recurrenceRule, startDate),
+                    "Recurrence"
+            );
         });
         view.findViewById(R.id.reminder_header_row).setOnClickListener(v -> openReminderPicker());
         addReminderButton.setOnClickListener(v -> openReminderPicker());
@@ -382,10 +398,10 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
 
     private void openReminderPicker() {
         captureInput();
-        getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, ReminderFragment.newInstance(RESULT_REMINDER, Reminder.none()))
-                .addToBackStack("Reminder")
-                .commit();
+        ((MainActivity) requireActivity()).pushFullScreenFragment(
+                ReminderFragment.newInstance(RESULT_REMINDER, Reminder.none()),
+                "Reminder"
+        );
     }
 
     private void bindValues() {
@@ -432,9 +448,9 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
     private View createPresetSwatch(int colorInt, boolean selected) {
         FrameLayout frame = buildSwatchFrame(selected);
         View dot = new View(requireContext());
-        FrameLayout.LayoutParams dotParams = new FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER);
+        FrameLayout.LayoutParams dotParams = new FrameLayout.LayoutParams(dp(20), dp(20), Gravity.CENTER);
         dot.setLayoutParams(dotParams);
-        dot.setBackground(circleDrawable(colorInt, 0, 0));
+        dot.setBackground(circleDrawable(colorInt, UiUtils.adaptiveStrokeColor(colorInt, requireContext()), 1));
         frame.addView(dot);
         frame.setOnClickListener(v -> {
             selectedColor = colorIntToHex(colorInt);
@@ -445,8 +461,8 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
 
     private FrameLayout buildSwatchFrame(boolean selected) {
         FrameLayout frame = new FrameLayout(requireContext());
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(28), dp(28));
-        params.setMargins(dp(5), 0, dp(5), 0);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(26), dp(26));
+        params.setMargins(dp(3), 0, dp(3), 0);
         frame.setLayoutParams(params);
         frame.setBackground(circleDrawable(
                 Color.TRANSPARENT,
@@ -912,12 +928,13 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
                 if (keyboardVisible) {
                     requestFieldVisibility(anchor, focusDelayMs, true);
                 }
-            } else {
-                v.post(this::restoreSoftInputModeIfNeeded);
             }
         });
         field.setOnClickListener(v -> {
             enableKeyboardInputMode();
+            if (keyboardVisible && field.hasFocus()) {
+                requestFieldVisibility(anchor, 0L, false);
+            }
         });
         field.addTextChangedListener(new TextWatcher() {
             @Override
@@ -953,8 +970,8 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             int[] location = new int[2];
             anchor.getLocationOnScreen(location);
             int anchorTopOnScreen = location[1];
-            int anchorBottomOnScreen = anchorTopOnScreen + anchor.getHeight();
-            int desiredBottomInset = anchor == notesEdit ? dp(60) : dp(18);
+            int anchorBottomOnScreen = resolveAnchorBottomOnScreen(anchor, anchorTopOnScreen);
+            int desiredBottomInset = resolveDesiredBottomInset(anchor);
             int desiredBottom = visibleFrame.bottom - desiredBottomInset;
 
             if (anchorBottomOnScreen <= desiredBottom) {
@@ -981,6 +998,33 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         }
     }
 
+    private int resolveAnchorBottomOnScreen(View anchor, int anchorTopOnScreen) {
+        if (!(anchor instanceof EditText)) {
+            return anchorTopOnScreen + anchor.getHeight();
+        }
+        EditText editText = (EditText) anchor;
+        if (!editText.hasFocus() || editText.getLayout() == null) {
+            return anchorTopOnScreen + anchor.getHeight();
+        }
+        int safeSelection = Math.max(0, editText.getSelectionStart());
+        int line = editText.getLayout().getLineForOffset(safeSelection);
+        int cursorBottom = anchorTopOnScreen
+                + editText.getTotalPaddingTop()
+                + editText.getLayout().getLineBottom(line)
+                - editText.getScrollY();
+        int minimumVisibleBottom = anchorTopOnScreen + Math.min(editText.getHeight(), dp(44));
+        return Math.max(cursorBottom, minimumVisibleBottom);
+    }
+
+    private int resolveDesiredBottomInset(View anchor) {
+        if (anchor != notesEdit || notesEdit == null) {
+            return dp(22);
+        }
+        int lineHeight = Math.max(notesEdit.getLineHeight(), dp(20));
+        int noteSafeInset = lineHeight + notesEdit.getTotalPaddingBottom() + dp(56);
+        return Math.max(dp(92), noteSafeInset);
+    }
+
     private void cancelPendingKeyboardScroll() {
         if (pendingKeyboardScrollAnchor != null && pendingKeyboardScrollRunnable != null) {
             pendingKeyboardScrollAnchor.removeCallbacks(pendingKeyboardScrollRunnable);
@@ -1003,19 +1047,6 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             return;
         }
         requireActivity().getWindow().setSoftInputMode(previousSoftInputMode);
-    }
-
-    private void restoreSoftInputModeIfNeeded() {
-        if (!isAnyKeyboardFieldFocused()) {
-            restoreSoftInputMode();
-        }
-    }
-
-    private boolean isAnyKeyboardFieldFocused() {
-        return isFieldFocused(titleEdit)
-                || isFieldFocused(locationEdit)
-                || isFieldFocused(urlEdit)
-                || isFieldFocused(notesEdit);
     }
 
     private boolean isFieldFocused(EditText field) {

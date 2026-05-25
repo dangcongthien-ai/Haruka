@@ -8,7 +8,9 @@
         <item name="colorSecondary">@color/brand_orange</item>
         <item name="colorAccent">@color/brand_orange</item>
         <item name="colorControlActivated">@color/brand_orange</item>
+        <item name="colorControlHighlight">@color/ripple_neutral</item>
         <item name="android:colorAccent">@color/brand_orange</item>
+        <item name="android:colorControlHighlight">@color/ripple_neutral</item>
         <item name="android:navigationBarColor">@color/white</item>
     </style>
 </resources>

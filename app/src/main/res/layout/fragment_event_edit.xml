@@ -22,8 +22,8 @@
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/cancel"
             android:src="@drawable/ic_back" />
@@ -124,7 +124,7 @@
                         android:src="@drawable/ic_habit_color" />
 
                     <TextView
-                        android:layout_width="60dp"
+                        android:layout_width="52dp"
                         android:layout_height="wrap_content"
                         android:text="@string/color"
                         android:textColor="@color/text_primary"
@@ -133,7 +133,7 @@
                     <HorizontalScrollView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="2dp"
+                        android:layout_marginStart="0dp"
                         android:layout_weight="1"
                         android:fillViewport="true"
                         android:overScrollMode="never"
@@ -145,23 +145,23 @@
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
                             android:orientation="horizontal"
-                            android:paddingTop="4dp"
-                            android:paddingBottom="4dp" />
+                            android:paddingTop="2dp"
+                            android:paddingBottom="2dp" />
                     </HorizontalScrollView>
 
                     <LinearLayout
                         android:id="@+id/custom_color_trigger"
-                        android:layout_width="96dp"
+                        android:layout_width="88dp"
                         android:layout_height="40dp"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="6dp"
                         android:background="@drawable/bg_surface_card_soft"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackgroundBorderless"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp">
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
 
                         <View
                             android:id="@+id/view_custom_color_trigger_preview"
