@@ -610,7 +610,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
             return;
         }
         updateHeader();
-        UiUtils.visible(calendarNavRow, mode == MODE_MONTH || mode == MODE_DAY);
+        UiUtils.visible(calendarNavRow, mode == MODE_MONTH || mode == MODE_WEEK || mode == MODE_DAY);
         UiUtils.visible(monthContainer, mode == MODE_MONTH);
         UiUtils.visible(weekContainer, mode == MODE_WEEK);
         UiUtils.visible(dayContainer, mode == MODE_DAY);
@@ -645,6 +645,8 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
         boolean visible = false;
         if (mode == MODE_MONTH) {
             visible = !visibleMonth.equals(today.withDayOfMonth(1)) || !selectedDate.equals(today);
+        } else if (mode == MODE_WEEK) {
+            visible = !getWeekStart(selectedDate).equals(getWeekStart(today));
         } else if (mode == MODE_DAY) {
             visible = !selectedDate.equals(today);
         }

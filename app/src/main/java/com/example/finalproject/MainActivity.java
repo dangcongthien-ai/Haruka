@@ -275,8 +275,8 @@ public class MainActivity extends AppCompatActivity {
         transaction.setReorderingAllowed(true);
         transaction.setCustomAnimations(
                 R.anim.fullscreen_slide_in_right,
-                R.anim.fullscreen_slide_out_left,
-                R.anim.fullscreen_slide_in_left,
+                R.anim.fullscreen_hold,
+                R.anim.fullscreen_hold,
                 R.anim.fullscreen_slide_out_right
         );
     }
