@@ -70,7 +70,7 @@ public class ReminderFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreen());
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.reminder_event_time).setOnClickListener(v -> {
             setAtTime();
             saveResult();

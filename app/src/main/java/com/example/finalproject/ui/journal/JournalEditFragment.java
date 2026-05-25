@@ -45,6 +45,7 @@ import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.JournalEntry;
 import com.example.finalproject.repository.JournalRepository;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.util.JournalTextUtils;
 
@@ -52,7 +53,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JournalEditFragment extends Fragment {
+public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     private static final String ARG_JOURNAL_ID = "journal_id";
     private static final String ARG_DATE = "date";
     private static final String RESULT_DATE = "journal_edit_date";
@@ -265,7 +266,7 @@ public class JournalEditFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_journal_back).setOnClickListener(v -> handleBackPressed());
+        view.findViewById(R.id.btn_journal_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.btn_journal_prev_day).setOnClickListener(v -> moveDay(-1));
         view.findViewById(R.id.btn_journal_next_day).setOnClickListener(v -> moveDay(1));
         view.findViewById(R.id.btn_journal_save).setOnClickListener(v -> save());
@@ -1150,10 +1151,12 @@ public class JournalEditFragment extends Fragment {
         bindValues();
     }
 
-    public void handleBackPressed() {
+    @Override
+    public boolean onHandleBackPressed() {
         saveDraftIfNeeded();
         suppressAutoSave = true;
         ((MainActivity) requireActivity()).finishToHome();
+        return true;
     }
 
     private void save() {

@@ -27,6 +27,7 @@ import com.example.finalproject.R;
 import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.RecurrenceRule;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
 
 import java.lang.reflect.Field;
@@ -35,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class RecurrenceFragment extends Fragment {
+public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
     public static final String ARG_RESULT_KEY = "result_key";
     public static final String ARG_RULE = "rule";
     public static final String ARG_BASE_DATE = "base_date";
@@ -209,13 +210,7 @@ public class RecurrenceFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> {
-            if (customMode) {
-                saveResult();
-            } else {
-                ((MainActivity) requireActivity()).finishFullScreen();
-            }
-        });
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.option_none).setOnClickListener(v -> {
             setSimple(RecurrenceRule.FREQ_NONE);
             saveResult();
@@ -252,6 +247,16 @@ public class RecurrenceFragment extends Fragment {
                 .newInstance(END_DATE_RESULT, rule.getEndDate() == null ? baseDate : rule.getEndDate())
                 .show(getParentFragmentManager(), END_DATE_RESULT));
         view.findViewById(R.id.end_count_row).setOnClickListener(v -> showCountDialog());
+    }
+
+    @Override
+    public boolean onHandleBackPressed() {
+        if (customMode) {
+            saveResult();
+        } else {
+            ((MainActivity) requireActivity()).finishFullScreen();
+        }
+        return true;
     }
 
     private void setupDateResult() {
@@ -378,7 +383,6 @@ public class RecurrenceFragment extends Fragment {
         dialog.setContentView(content);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.getWindow().setLayout(UiUtils.dp(requireContext(), 336), ViewGroup.LayoutParams.WRAP_CONTENT);
             dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
             WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
             attributes.dimAmount = 0.28f;

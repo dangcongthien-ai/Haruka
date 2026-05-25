@@ -17,6 +17,7 @@ import androidx.fragment.app.FragmentManager;
 import com.example.finalproject.ui.calendar.CalendarFragment;
 import com.example.finalproject.ui.calendar.EventEditFragment;
 import com.example.finalproject.ui.common.PlaceholderFragment;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.habit.HabitEditFragment;
 import com.example.finalproject.ui.habit.HabitFragment;
 import com.example.finalproject.ui.journal.JournalEditFragment;
@@ -237,19 +238,26 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
+    public void handleActivityBackPressed() {
+        FragmentManager manager = getSupportFragmentManager();
+        Fragment current = manager.findFragmentById(R.id.fragment_container);
+        if (current instanceof ScreenBackHandler && ((ScreenBackHandler) current).onHandleBackPressed()) {
+            return;
+        }
+        if (manager.getBackStackEntryCount() > 0) {
+            manager.popBackStack();
+            return;
+        }
+        if (current != null && !isHomeFragment(current)) {
+            finishToHome();
+            return;
+        }
+        super.onBackPressed();
+    }
+
     @Override
     public void onBackPressed() {
-        FragmentManager manager = getSupportFragmentManager();
-        if (manager.getBackStackEntryCount() > 0) {
-            Fragment current = manager.findFragmentById(R.id.fragment_container);
-            if (current instanceof JournalEditFragment) {
-                ((JournalEditFragment) current).handleBackPressed();
-                return;
-            }
-            manager.popBackStack();
-        } else {
-            super.onBackPressed();
-        }
+        handleActivityBackPressed();
     }
 
     private void updateNavSelection() {
@@ -272,5 +280,13 @@ public class MainActivity extends AppCompatActivity {
         } else {
             fab.setContentDescription(getString(R.string.add_event));
         }
+    }
+
+    private boolean isHomeFragment(Fragment fragment) {
+        return fragment instanceof CalendarFragment
+                || fragment instanceof TodoFragment
+                || fragment instanceof HabitFragment
+                || fragment instanceof JournalFragment
+                || fragment instanceof PlaceholderFragment;
     }
 }

@@ -7,6 +7,7 @@
     <string name="month">Tháng</string>
     <string name="week">Tuần</string>
     <string name="day">Ngày</string>
+    <string name="today">Hôm nay</string>
     <string name="choose">Chọn</string>
     <string name="previous">Trước</string>
     <string name="next">Sau</string>
@@ -19,6 +20,9 @@
     <string name="delete">Xóa</string>
     <string name="delete_confirm_event">Bạn có chắc chắn muốn xóa sự kiện này?</string>
     <string name="cancel">Hủy</string>
+    <string name="discard">Bỏ thay đổi</string>
+    <string name="discard_changes_title">Bỏ thay đổi?</string>
+    <string name="discard_changes_message">Những thay đổi chưa lưu sẽ bị mất.</string>
     <string name="ok">OK</string>
     <string name="done">Xong</string>
     <string name="agree">Đồng ý</string>

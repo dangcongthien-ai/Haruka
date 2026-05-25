@@ -77,7 +77,8 @@ public class CalendarFragment extends Fragment {
     private View modeButton;
     private TextView modeLabel;
     private TextView periodTitle;
-    private LinearLayout calendarNavRow;
+    private View calendarNavRow;
+    private TextView todayButton;
     private LinearLayout monthContainer;
     private View monthBody;
     private LinearLayout weekContainer;
@@ -145,6 +146,7 @@ public class CalendarFragment extends Fragment {
         modeLabel = view.findViewById(R.id.tv_mode_label);
         periodTitle = view.findViewById(R.id.tv_period_title);
         calendarNavRow = view.findViewById(R.id.calendar_nav_row);
+        todayButton = view.findViewById(R.id.btn_today);
         monthContainer = view.findViewById(R.id.month_container);
         monthBody = view.findViewById(R.id.month_body);
         weekContainer = view.findViewById(R.id.week_container);
@@ -284,6 +286,7 @@ public class CalendarFragment extends Fragment {
         ImageButton next = view.findViewById(R.id.btn_next);
         previous.setOnClickListener(v -> movePeriod(-1));
         next.setOnClickListener(v -> movePeriod(1));
+        todayButton.setOnClickListener(v -> jumpToToday());
         periodTitle.setOnClickListener(v -> showMonthPicker());
         weekMonthBadge.setOnClickListener(v -> showMonthPicker());
         dayMonthBadge.setOnClickListener(v -> showMonthPicker());
@@ -567,7 +570,7 @@ public class CalendarFragment extends Fragment {
             return;
         }
         updateHeader();
-        UiUtils.visible(calendarNavRow, mode == MODE_MONTH);
+        UiUtils.visible(calendarNavRow, mode == MODE_MONTH || mode == MODE_DAY);
         UiUtils.visible(monthContainer, mode == MODE_MONTH);
         UiUtils.visible(weekContainer, mode == MODE_WEEK);
         UiUtils.visible(dayContainer, mode == MODE_DAY);
@@ -591,6 +594,21 @@ public class CalendarFragment extends Fragment {
             modeLabel.setText(R.string.day);
             periodTitle.setText(DateTimeUtils.formatDateWithDow(selectedDate));
         }
+        updateTodayButton();
+    }
+
+    private void updateTodayButton() {
+        if (todayButton == null) {
+            return;
+        }
+        LocalDate today = LocalDate.now();
+        boolean visible = false;
+        if (mode == MODE_MONTH) {
+            visible = !visibleMonth.equals(today.withDayOfMonth(1)) || !selectedDate.equals(today);
+        } else if (mode == MODE_DAY) {
+            visible = !selectedDate.equals(today);
+        }
+        UiUtils.visible(todayButton, visible);
     }
 
     private void refreshMonth() {
@@ -657,6 +675,28 @@ public class CalendarFragment extends Fragment {
             lastWeekTimelineStart = weekStart;
             weekTimelineScroll.post(() -> weekTimelineScroll.scrollTo(0, weekTimelineView.getScrollYForHour(6)));
         }
+    }
+
+    private void jumpToToday() {
+        LocalDate today = LocalDate.now();
+        LocalDate previousMonth = visibleMonth;
+        selectedDate = today;
+        visibleMonth = today.withDayOfMonth(1);
+        ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+        if (mode == MODE_MONTH) {
+            monthDetailVisible = false;
+            monthDetailPanelTop = RecyclerView.NO_POSITION;
+            updateHeader();
+            resizeMonthDetailPanel();
+            UiUtils.visible(dayDetailPanel, false);
+            preloadMonthWindow(visibleMonth);
+            monthPagerAdapter.setSelectedDate(selectedDate);
+            monthPagerAdapter.setMonthDetailVisible(false);
+            notifyMonthPages(previousMonth, visibleMonth);
+            syncMonthPager(true);
+            return;
+        }
+        refresh();
     }
 
     private void refreshDay() {
@@ -813,12 +853,14 @@ public class CalendarFragment extends Fragment {
             return;
         }
         int targetPosition = monthPagerAdapter.getPositionForMonth(visibleMonth);
-        if (getCurrentMonthPagerPosition() == targetPosition) {
+        int currentPosition = getCurrentMonthPagerPosition();
+        if (currentPosition == targetPosition) {
             return;
         }
-        if (smooth) {
+        if (smooth && currentPosition != RecyclerView.NO_POSITION && Math.abs(targetPosition - currentPosition) <= 2) {
             monthPager.smoothScrollToPosition(targetPosition);
         } else if (monthPager.getScrollState() == RecyclerView.SCROLL_STATE_IDLE) {
+            monthPager.stopScroll();
             monthPager.scrollToPosition(targetPosition);
         }
     }
