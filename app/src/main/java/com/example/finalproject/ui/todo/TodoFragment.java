@@ -20,13 +20,14 @@ import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.TodoItem;
 import com.example.finalproject.repository.TodoRepository;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.UiUtils;
 import com.google.android.material.button.MaterialButton;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public class TodoFragment extends Fragment {
+public class TodoFragment extends Fragment implements HomeDataRefreshable {
     private static final String ARG_DATE = "date";
     private static final String DATE_RESULT_KEY = "todo_date_result";
 
@@ -69,6 +70,14 @@ public class TodoFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        refresh();
+    }
+
+    @Override
+    public void onHomeDataRefresh(LocalDate hostSelectedDate) {
+        if (hostSelectedDate != null) {
+            selectedDate = hostSelectedDate;
+        }
         refresh();
     }
 

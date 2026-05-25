@@ -18,6 +18,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.finalproject.ui.calendar.CalendarFragment;
 import com.example.finalproject.ui.calendar.EventDetailFragment;
 import com.example.finalproject.ui.calendar.EventEditFragment;
+import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.PlaceholderFragment;
 import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.habit.HabitEditFragment;
@@ -32,7 +33,7 @@ import com.example.finalproject.ui.todo.TodoFragment;
 import java.time.LocalDate;
 
 public class MainActivity extends AppCompatActivity {
-    private static final long FULL_SCREEN_CONTAINER_HIDE_DELAY_MS = 220L;
+    private static final long FULL_SCREEN_CONTAINER_HIDE_DELAY_MS = 520L;
     private View bottomNavigationView;
     private View mainRoot;
     private View fab;
@@ -204,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
             if (fullScreen) {
                 showFullScreenContainer();
             } else {
+                refreshHomeAfterFullScreen();
                 scheduleHideFullScreenContainer();
             }
         });
@@ -296,6 +298,13 @@ public class MainActivity extends AppCompatActivity {
     private void cancelPendingHideFullScreenContainer() {
         if (fullScreenContainer != null) {
             fullScreenContainer.removeCallbacks(hideFullScreenContainerRunnable);
+        }
+    }
+
+    private void refreshHomeAfterFullScreen() {
+        Fragment home = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (home instanceof HomeDataRefreshable) {
+            ((HomeDataRefreshable) home).onHomeDataRefresh(selectedDate);
         }
     }
 

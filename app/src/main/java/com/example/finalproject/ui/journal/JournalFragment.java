@@ -29,6 +29,7 @@ import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.JournalEntry;
 import com.example.finalproject.repository.JournalRepository;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.util.JournalTextUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -40,7 +41,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public class JournalFragment extends Fragment {
+public class JournalFragment extends Fragment implements HomeDataRefreshable {
     private static final String ARG_DATE = "date";
     private static final String DATE_RESULT_KEY = "journal_date_result";
     private static final String MOOD_BUON_NGU = "journal_emo_buon_ngu";
@@ -86,6 +87,14 @@ public class JournalFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        refresh();
+    }
+
+    @Override
+    public void onHomeDataRefresh(LocalDate hostSelectedDate) {
+        if (hostSelectedDate != null) {
+            selectedDate = hostSelectedDate;
+        }
         refresh();
     }
 

@@ -37,7 +37,8 @@
             android:textColor="@color/white"
             android:textSize="15sp"
             app:backgroundTint="@color/brand_orange"
-            app:cornerRadius="20dp" />
+            app:cornerRadius="20dp"
+            app:rippleColor="@color/ripple_orange_pressed" />
     </LinearLayout>
 
     <ScrollView
@@ -307,7 +308,8 @@
                 android:textAllCaps="false"
                 android:textColor="@color/text_primary"
                 app:backgroundTint="@color/brand_orange"
-                app:cornerRadius="20dp" />
+                app:cornerRadius="20dp"
+                app:rippleColor="@color/ripple_orange_pressed" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
