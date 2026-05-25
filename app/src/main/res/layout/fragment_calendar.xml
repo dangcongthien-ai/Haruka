@@ -26,16 +26,15 @@
             android:text="@string/app_name"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
-            android:textStyle="normal" />
+            android:textStyle="bold" />
 
         <FrameLayout
             android:id="@+id/btn_mode"
             android:layout_width="120dp"
             android:layout_height="35dp"
-            android:background="@drawable/bg_dropdown"
+            android:background="@drawable/bg_dropdown_ripple"
             android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
+            android:focusable="true">
 
             <TextView
                 android:id="@+id/tv_mode_label"
@@ -82,10 +81,9 @@
             android:layout_width="wrap_content"
             android:layout_height="30dp"
             android:layout_gravity="start|center_vertical"
-            android:background="@drawable/bg_surface_card_soft"
+            android:background="@drawable/bg_surface_card_soft_ripple"
             android:clickable="true"
             android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
             android:gravity="center"
             android:minWidth="68dp"
             android:paddingStart="12dp"

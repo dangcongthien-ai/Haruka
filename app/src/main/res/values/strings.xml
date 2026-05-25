@@ -255,6 +255,7 @@
     <string name="custom_color_invalid">Màu không hợp lệ</string>
     <string name="add_another_reminder">+ Thêm thông báo</string>
     <string name="reminder_count_value">%1$d thông báo</string>
+    <string name="reminder_count_compact">%2$s +%1$d</string>
     <string name="remove_reminder">Xóa thông báo</string>
     <string name="monthly_on_day">Hàng tháng vào ngày %1$d</string>
     <string name="repeat_count_times">Lặp lại %1$d lần</string>

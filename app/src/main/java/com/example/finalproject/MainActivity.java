@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.example.finalproject.ui.calendar.CalendarFragment;
+import com.example.finalproject.ui.calendar.EventDetailFragment;
 import com.example.finalproject.ui.calendar.EventEditFragment;
 import com.example.finalproject.ui.common.PlaceholderFragment;
 import com.example.finalproject.ui.common.ScreenBackHandler;
@@ -98,6 +99,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void openEventEditor(long eventId, LocalDate date) {
         openFullScreen(EventEditFragment.newInstance(eventId, date == null ? selectedDate : date));
+    }
+
+    public void openEventDetail(long eventId, LocalDate date) {
+        openFullScreen(EventDetailFragment.newInstance(eventId, date == null ? selectedDate : date));
     }
 
     public void openTodoEditor(long todoId, LocalDate date) {

@@ -3,6 +3,7 @@ package com.example.finalproject.ui.common;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
@@ -11,7 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import androidx.annotation.DrawableRes;
@@ -19,6 +22,8 @@ import androidx.core.graphics.ColorUtils;
 
 import com.example.finalproject.R;
 import com.google.android.material.button.MaterialButton;
+
+import java.lang.reflect.Field;
 
 public final class UiUtils {
     private UiUtils() {
@@ -92,6 +97,40 @@ public final class UiUtils {
 
     public static void visible(View view, boolean visible) {
         view.setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+
+    public static void styleNumberPicker(NumberPicker picker, Context context) {
+        if (picker == null) {
+            return;
+        }
+        picker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+        try {
+            Field dividerField = NumberPicker.class.getDeclaredField("mSelectionDivider");
+            dividerField.setAccessible(true);
+            int dividerColor = ColorUtils.setAlphaComponent(context.getColor(R.color.brand_orange_dark), 132);
+            dividerField.set(picker, new ColorDrawable(dividerColor));
+
+            Field heightField = NumberPicker.class.getDeclaredField("mSelectionDividerHeight");
+            heightField.setAccessible(true);
+            heightField.setInt(picker, 1);
+
+            Field paintField = NumberPicker.class.getDeclaredField("mSelectorWheelPaint");
+            paintField.setAccessible(true);
+            Paint paint = (Paint) paintField.get(picker);
+            if (paint != null) {
+                paint.setColor(context.getColor(R.color.text_primary));
+            }
+            for (int i = 0; i < picker.getChildCount(); i++) {
+                View child = picker.getChildAt(i);
+                if (child instanceof EditText) {
+                    EditText editText = (EditText) child;
+                    editText.setTextColor(context.getColor(R.color.text_primary));
+                    editText.setTextSize(24f);
+                }
+            }
+            picker.invalidate();
+        } catch (Exception ignored) {
+        }
     }
 
     public static void showDeleteDialog(Context context, String message, Runnable onConfirm) {

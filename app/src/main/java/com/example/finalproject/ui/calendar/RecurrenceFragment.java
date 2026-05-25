@@ -2,7 +2,6 @@ package com.example.finalproject.ui.calendar;
 
 import android.app.Dialog;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.InputType;
@@ -30,7 +29,6 @@ import com.example.finalproject.ui.common.DatePickerDialogFragment;
 import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
 
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -392,7 +390,7 @@ public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
         picker.setMinValue(1);
         picker.setMaxValue(100);
         picker.setValue(rule.getOccurrenceCount() == null ? 1 : rule.getOccurrenceCount());
-        styleNumberPicker(picker);
+        UiUtils.styleNumberPicker(picker, requireContext());
         content.findViewById(R.id.btn_count_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_count_ok).setOnClickListener(v -> {
             rule.setOccurrenceCount(picker.getValue());
@@ -474,26 +472,6 @@ public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
                 return getString(R.string.weekday_saturday);
             default:
                 return getString(R.string.weekday_sunday);
-        }
-    }
-
-    private void styleNumberPicker(NumberPicker picker) {
-        picker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
-        try {
-            Field dividerField = NumberPicker.class.getDeclaredField("mSelectionDivider");
-            dividerField.setAccessible(true);
-            dividerField.set(picker, new ColorDrawable(requireContext().getColor(R.color.brand_orange)));
-
-            Field heightField = NumberPicker.class.getDeclaredField("mSelectionDividerHeight");
-            heightField.setAccessible(true);
-            heightField.setInt(picker, UiUtils.dp(requireContext(), 1));
-
-            Field paintField = NumberPicker.class.getDeclaredField("mSelectorWheelPaint");
-            paintField.setAccessible(true);
-            Paint paint = (Paint) paintField.get(picker);
-            paint.setColor(requireContext().getColor(R.color.text_primary));
-            picker.invalidate();
-        } catch (Exception ignored) {
         }
     }
 }

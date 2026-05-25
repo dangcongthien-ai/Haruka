@@ -21,6 +21,8 @@ import java.util.List;
 
 public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.EventViewHolder> {
     public interface Listener {
+        void onClick(CalendarEvent event);
+
         void onEdit(CalendarEvent event);
 
         void onDelete(CalendarEvent event);
@@ -71,7 +73,7 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
         holder.colorBar.setBackground(UiUtils.rounded(UiUtils.safeColor(event.getColor(), fallback), 4, holder.itemView.getContext()));
         holder.edit.setVisibility(showActions ? View.VISIBLE : View.GONE);
         holder.delete.setVisibility(showActions ? View.VISIBLE : View.GONE);
-        holder.itemView.setOnClickListener(v -> listener.onEdit(event));
+        holder.itemView.setOnClickListener(v -> listener.onClick(event));
         holder.edit.setOnClickListener(v -> listener.onEdit(event));
         holder.delete.setOnClickListener(v -> listener.onDelete(event));
     }

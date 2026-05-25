@@ -97,6 +97,7 @@
                         android:inputType="textCapSentences"
                         android:padding="0dp"
                         android:textColor="@color/text_primary"
+                        android:textColorHighlight="@color/brand_orange_highlight"
                         android:textColorHint="@color/brand_orange_hint"
                         android:textCursorDrawable="@drawable/cursor_primary"
                         android:textSize="20sp"
@@ -482,6 +483,7 @@
                         android:inputType="textCapSentences"
                         android:padding="0dp"
                         android:textColor="@color/text_primary"
+                        android:textColorHighlight="@color/brand_orange_highlight"
                         android:textColorHint="@color/brand_orange_hint"
                         android:textCursorDrawable="@drawable/cursor_primary"
                         android:textSize="14sp" />
@@ -518,6 +520,7 @@
                         android:inputType="textUri"
                         android:padding="0dp"
                         android:textColor="@color/text_primary"
+                        android:textColorHighlight="@color/brand_orange_highlight"
                         android:textColorHint="@color/brand_orange_hint"
                         android:textCursorDrawable="@drawable/cursor_primary"
                         android:textSize="14sp" />
@@ -531,7 +534,7 @@
                 <LinearLayout
                     android:id="@+id/notes_row"
                     android:layout_width="match_parent"
-                    android:layout_height="88dp"
+                    android:layout_height="wrap_content"
                     android:gravity="top"
                     android:orientation="horizontal"
                     android:paddingStart="24dp"
@@ -548,16 +551,18 @@
                     <EditText
                         android:id="@+id/edit_notes"
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
                         android:background="@android:color/transparent"
                         android:gravity="top|start"
                         android:hint="@string/note_hint"
                         android:inputType="textMultiLine|textCapSentences"
-                        android:minHeight="0dp"
+                        android:minLines="3"
                         android:padding="0dp"
+                        android:scrollbars="none"
                         android:textColor="@color/text_primary"
+                        android:textColorHighlight="@color/brand_orange_highlight"
                         android:textColorHint="@color/brand_orange_hint"
                         android:textCursorDrawable="@drawable/cursor_primary"
                         android:textSize="14sp" />
