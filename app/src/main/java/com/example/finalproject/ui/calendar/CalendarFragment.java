@@ -448,7 +448,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_year_picker, null, false);
         dialog.setContentView(content);
-        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 344), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 248), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
         NumberPicker picker = content.findViewById(R.id.picker_year);
         int minYear = Math.max(1900, selectedYear - 100);
