@@ -169,16 +169,23 @@ public final class UiUtils {
             onConfirm.run();
         });
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.getWindow().setLayout(dp(context, 312), ViewGroup.LayoutParams.WRAP_CONTENT);
-            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
-            attributes.dimAmount = 0.28f;
-            dialog.getWindow().setAttributes(attributes);
-        }
+        styleDialogWindow(dialog, dp(context, 312), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
         dialog.setCanceledOnTouchOutside(true);
         dialog.show();
+    }
+
+    public static void styleDialogWindow(Dialog dialog, int width, int height, float dimAmount) {
+        if (dialog == null || dialog.getWindow() == null) {
+            return;
+        }
+        Window window = dialog.getWindow();
+        window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        window.setLayout(width, height);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        WindowManager.LayoutParams attributes = window.getAttributes();
+        attributes.dimAmount = dimAmount;
+        attributes.windowAnimations = R.style.Caliary_DialogWindowAnimation;
+        window.setAttributes(attributes);
     }
 
     private static double contrastRatio(int colorA, int colorB) {

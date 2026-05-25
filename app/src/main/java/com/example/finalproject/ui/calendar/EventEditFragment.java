@@ -286,7 +286,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             keyboardInset = desiredInset;
             keyboardVisible = nowVisible;
             int spacerHeight = baseKeyboardSpacerHeight
-                    + (keyboardVisible ? Math.max(dp(44), keyboardInset - dp(48)) : 0);
+                    + (keyboardVisible ? Math.max(dp(28), keyboardInset - dp(20)) : 0);
             updateKeyboardSpacerHeight(spacerHeight);
             if (keyboardVisible) {
                 View focusedAnchor = resolveFocusedAnchor();
@@ -495,14 +495,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_custom_color, null, false);
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.getWindow().setLayout(resolveCustomColorDialogWidth(), ViewGroup.LayoutParams.WRAP_CONTENT);
-            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
-            attributes.dimAmount = 0.28f;
-            dialog.getWindow().setAttributes(attributes);
-        }
+        UiUtils.styleDialogWindow(dialog, resolveCustomColorDialogWidth(), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
         View preview = content.findViewById(R.id.view_custom_color_preview);
         View inlinePreview = content.findViewById(R.id.view_custom_color_inline_preview);
@@ -948,7 +941,15 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             @Override
             public void afterTextChanged(Editable s) {
                 if (field.hasFocus() && keyboardVisible) {
-                    requestFieldVisibility(anchor, 0L, false);
+                    long delay = field == notesEdit ? 24L : 0L;
+                    requestFieldVisibility(anchor, delay, false);
+                    if (field == notesEdit) {
+                        anchor.postDelayed(() -> {
+                            if (field.hasFocus() && keyboardVisible) {
+                                requestFieldVisibility(anchor, 0L, false);
+                            }
+                        }, 72L);
+                    }
                 }
             }
         });
@@ -978,6 +979,9 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
                 return;
             }
             int delta = anchorBottomOnScreen - desiredBottom;
+            if (anchor == notesEdit && notesEdit != null) {
+                delta += Math.max(dp(24), notesEdit.getLineHeight());
+            }
             if (delta < dp(6)) {
                 return;
             }
@@ -1011,18 +1015,19 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         int cursorBottom = anchorTopOnScreen
                 + editText.getTotalPaddingTop()
                 + editText.getLayout().getLineBottom(line)
-                - editText.getScrollY();
+                - editText.getScrollY()
+                + Math.max(dp(12), editText.getLineHeight() / 2);
         int minimumVisibleBottom = anchorTopOnScreen + Math.min(editText.getHeight(), dp(44));
         return Math.max(cursorBottom, minimumVisibleBottom);
     }
 
     private int resolveDesiredBottomInset(View anchor) {
         if (anchor != notesEdit || notesEdit == null) {
-            return dp(22);
+            return dp(24);
         }
         int lineHeight = Math.max(notesEdit.getLineHeight(), dp(20));
-        int noteSafeInset = lineHeight + notesEdit.getTotalPaddingBottom() + dp(56);
-        return Math.max(dp(92), noteSafeInset);
+        int noteSafeInset = (lineHeight * 2) + notesEdit.getTotalPaddingBottom() + dp(76);
+        return Math.max(dp(144), noteSafeInset);
     }
 
     private void cancelPendingKeyboardScroll() {

@@ -331,21 +331,23 @@ public class HabitEditFragment extends Fragment {
 
     private void openRecurrencePicker() {
         captureInput();
-        getParentFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, RecurrenceFragment.newInstance(RESULT_RECURRENCE, recurrenceRule, startDate))
-                .addToBackStack("HabitRecurrence")
-                .commit();
+        if (requireActivity() instanceof MainActivity) {
+            ((MainActivity) requireActivity()).pushFullScreenFragment(
+                    RecurrenceFragment.newInstance(RESULT_RECURRENCE, recurrenceRule, startDate),
+                    "HabitRecurrence"
+            );
+        }
     }
 
     private void openReminderPicker() {
         captureInput();
         Reminder current = reminders.isEmpty() ? Reminder.none() : reminders.get(0);
-        getParentFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, ReminderFragment.newInstance(RESULT_REMINDER, current))
-                .addToBackStack("HabitReminder")
-                .commit();
+        if (requireActivity() instanceof MainActivity) {
+            ((MainActivity) requireActivity()).pushFullScreenFragment(
+                    ReminderFragment.newInstance(RESULT_REMINDER, current),
+                    "HabitReminder"
+            );
+        }
     }
 
     private void bindValues() {

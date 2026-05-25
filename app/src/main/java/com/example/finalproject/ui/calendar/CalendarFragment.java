@@ -19,6 +19,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.GridLayout;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
@@ -77,6 +78,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
     private TodoRepository todoRepository;
     private View modeButton;
     private TextView modeLabel;
+    private ImageView modeArrow;
     private TextView periodTitle;
     private View calendarNavRow;
     private TextView todayButton;
@@ -114,6 +116,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
     private boolean dayPagerRecentering = false;
     private int monthPanelAnimationGeneration = 0;
     private int monthDetailPanelTop = RecyclerView.NO_POSITION;
+    private PopupWindow modePopupWindow;
     private final Map<YearMonth, List<CalendarDayCell>> monthCellCache = new HashMap<>();
     private final DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("'Tháng' MM/yyyy", Locale.US);
 
@@ -145,6 +148,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
     private void bindViews(View view) {
         modeButton = view.findViewById(R.id.btn_mode);
         modeLabel = view.findViewById(R.id.tv_mode_label);
+        modeArrow = view.findViewById(R.id.iv_mode_arrow);
         periodTitle = view.findViewById(R.id.tv_period_title);
         calendarNavRow = view.findViewById(R.id.calendar_nav_row);
         todayButton = view.findViewById(R.id.btn_today);
@@ -332,6 +336,10 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void showModeMenu() {
+        if (modePopupWindow != null && modePopupWindow.isShowing()) {
+            modePopupWindow.dismiss();
+            return;
+        }
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.popup_calendar_mode, null, false);
         PopupWindow popupWindow = new PopupWindow(
                 content,
@@ -339,8 +347,14 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 true
         );
+        modePopupWindow = popupWindow;
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popupWindow.setOutsideTouchable(true);
+        popupWindow.setAnimationStyle(R.style.Caliary_PopupWindowAnimation);
+        popupWindow.setOnDismissListener(() -> {
+            modePopupWindow = null;
+            animateModeArrow(false);
+        });
         content.findViewById(R.id.popup_mode_month).setOnClickListener(v -> {
             mode = MODE_MONTH;
             popupWindow.dismiss();
@@ -356,6 +370,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
             popupWindow.dismiss();
             refresh();
         });
+        animateModeArrow(true);
         popupWindow.showAsDropDown(modeButton, 0, 0);
     }
 
@@ -364,9 +379,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_month_picker, null, false);
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 320), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
         TextView yearLabel = content.findViewById(R.id.tv_picker_year);
         GridLayout monthGrid = content.findViewById(R.id.month_picker_grid);
@@ -435,9 +448,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_year_picker, null, false);
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 344), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
         NumberPicker picker = content.findViewById(R.id.picker_year);
         int minYear = Math.max(1900, selectedYear - 100);
@@ -454,6 +465,17 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler {
             dialog.dismiss();
         });
         dialog.show();
+    }
+
+    private void animateModeArrow(boolean expanded) {
+        if (modeArrow == null) {
+            return;
+        }
+        modeArrow.animate()
+                .rotation(expanded ? 180f : 0f)
+                .setDuration(220L)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
     }
 
     private interface YearPickerListener {
