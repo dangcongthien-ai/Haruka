@@ -125,7 +125,9 @@ public class WeekTopStripLayout extends ViewGroup {
     private View createStripView(StripPlacement placement) {
         TextView view = new TextView(getContext());
         view.setText(placement.item.getLabel());
-        view.setTextColor(getContext().getColor(R.color.text_primary));
+        int fallback = getContext().getColor(R.color.event_blue);
+        int fill = UiUtils.safeColor(placement.item.getEvent().getColor(), fallback);
+        view.setTextColor(UiUtils.readableTextColor(fill, getContext()));
         view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f);
         view.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         view.setSingleLine(true);
@@ -134,9 +136,7 @@ public class WeekTopStripLayout extends ViewGroup {
         int horizontalPadding = UiUtils.dp(getContext(), STRIP_TEXT_HORIZONTAL_PADDING_DP);
         int verticalPadding = UiUtils.dp(getContext(), STRIP_TEXT_VERTICAL_PADDING_DP);
         view.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
-        int fallback = getContext().getColor(R.color.event_blue);
-        int fill = UiUtils.safeColor(placement.item.getEvent().getColor(), fallback);
-        view.setBackground(UiUtils.rounded(fill, 9, getContext()));
+        view.setBackground(UiUtils.adaptiveEventBackground(fill, 9, getContext()));
         view.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onEventClick(placement.item.getEvent());

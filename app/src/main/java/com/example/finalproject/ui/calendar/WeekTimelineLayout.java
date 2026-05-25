@@ -279,7 +279,9 @@ public class WeekTimelineLayout extends ViewGroup {
     private View createEventView(EventPlacement placement) {
         TextView view = new TextView(getContext());
         view.setText(placement.event.getTitle());
-        view.setTextColor(getContext().getColor(R.color.text_primary));
+        int fallback = getContext().getColor(R.color.event_blue);
+        int fill = UiUtils.safeColor(placement.event.getColor(), fallback);
+        view.setTextColor(UiUtils.readableTextColor(fill, getContext()));
         view.setTextSize(TypedValue.COMPLEX_UNIT_SP, placement.laneCount > 1 ? 9f : 10f);
         view.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         view.setGravity(Gravity.START | Gravity.TOP);
@@ -290,8 +292,7 @@ public class WeekTimelineLayout extends ViewGroup {
         view.setLineSpacing(0f, 1f);
         view.setMaxLines(4);
         view.setEllipsize(TextUtils.TruncateAt.END);
-        int fallback = getContext().getColor(R.color.event_blue);
-        view.setBackground(UiUtils.rounded(UiUtils.safeColor(placement.event.getColor(), fallback), 10, getContext()));
+        view.setBackground(UiUtils.adaptiveEventBackground(fill, 10, getContext()));
         view.setElevation(dp(1));
         view.setOnClickListener(v -> {
             if (listener != null) {

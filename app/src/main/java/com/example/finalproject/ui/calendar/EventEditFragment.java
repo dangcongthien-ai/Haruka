@@ -20,9 +20,7 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.SeekBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,7 +36,10 @@ import com.example.finalproject.model.CalendarEvent;
 import com.example.finalproject.model.RecurrenceRule;
 import com.example.finalproject.model.Reminder;
 import com.example.finalproject.repository.CalendarRepository;
+import com.example.finalproject.ui.common.AlphaSliderView;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.HueSliderView;
+import com.example.finalproject.ui.common.SpectrumColorView;
 import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.ui.todo.TodoEditFragment;
 import com.google.android.material.button.MaterialButton;
@@ -114,6 +115,10 @@ public class EventEditFragment extends Fragment {
     private View startTimeContainer;
     private View endTimeContainer;
     private LinearLayout colorPalette;
+    private View customColorTrigger;
+    private View customColorTriggerPreview;
+    private View customColorTriggerCheck;
+    private TextView customColorTriggerLabel;
     private MaterialButton eventTypeButton;
     private MaterialButton todoTypeButton;
     private boolean timePickerShowing;
@@ -231,6 +236,10 @@ public class EventEditFragment extends Fragment {
         reminderList = view.findViewById(R.id.reminder_list);
         typeSegment = view.findViewById(R.id.type_segment);
         colorPalette = view.findViewById(R.id.color_palette);
+        customColorTrigger = view.findViewById(R.id.custom_color_trigger);
+        customColorTriggerPreview = view.findViewById(R.id.view_custom_color_trigger_preview);
+        customColorTriggerCheck = view.findViewById(R.id.iv_custom_color_trigger_check);
+        customColorTriggerLabel = view.findViewById(R.id.tv_custom_color_trigger_label);
         eventTypeButton = view.findViewById(R.id.btn_event_type);
         todoTypeButton = view.findViewById(R.id.btn_todo_type);
     }
@@ -361,6 +370,7 @@ public class EventEditFragment extends Fragment {
             captureInput();
             ((MainActivity) requireActivity()).switchFullScreen(TodoEditFragment.newInstance(0, startDate));
         });
+        customColorTrigger.setOnClickListener(v -> showCustomColorDialog());
         attachKeyboardFieldBehavior(titleEdit, titleEdit, 60L);
         attachKeyboardFieldBehavior(locationEdit, locationEdit, 90L);
         attachKeyboardFieldBehavior(urlEdit, urlEdit, 90L);
@@ -413,7 +423,7 @@ public class EventEditFragment extends Fragment {
             String hex = colorIntToHex(colorInt);
             colorPalette.addView(createPresetSwatch(colorInt, normalizeColor(selectedColor).equals(hex)));
         }
-        colorPalette.addView(createCustomSwatch());
+        updateCustomColorTrigger();
     }
 
     private View createPresetSwatch(int colorInt, boolean selected) {
@@ -430,24 +440,6 @@ public class EventEditFragment extends Fragment {
         return frame;
     }
 
-    private View createCustomSwatch() {
-        boolean customSelected = !isPresetColor(selectedColor);
-        FrameLayout frame = buildSwatchFrame(customSelected);
-        if (customSelected) {
-            View dot = new View(requireContext());
-            dot.setLayoutParams(new FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER));
-            dot.setBackground(circleDrawable(Color.parseColor(normalizeColor(selectedColor)), requireContext().getColor(R.color.line), 1));
-            frame.addView(dot);
-        } else {
-            View ring = new View(requireContext());
-            ring.setLayoutParams(new FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER));
-            ring.setBackground(circleDrawable(requireContext().getColor(R.color.surface), requireContext().getColor(R.color.line), 1));
-            frame.addView(ring);
-        }
-        frame.setOnClickListener(v -> showCustomColorDialog());
-        return frame;
-    }
-
     private FrameLayout buildSwatchFrame(boolean selected) {
         FrameLayout frame = new FrameLayout(requireContext());
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(28), dp(28));
@@ -461,6 +453,24 @@ public class EventEditFragment extends Fragment {
         return frame;
     }
 
+    private void updateCustomColorTrigger() {
+        boolean customSelected = !isPresetColor(selectedColor);
+        int fillColor = Color.parseColor(normalizeColor(selectedColor));
+        int surface = requireContext().getColor(R.color.surface);
+        int line = requireContext().getColor(R.color.line);
+        customColorTrigger.setBackground(customSelected
+                ? UiUtils.roundedStroke(requireContext().getColor(R.color.brand_orange_light), requireContext().getColor(R.color.brand_orange), 18, requireContext())
+                : UiUtils.roundedStroke(surface, line, 18, requireContext()));
+        customColorTriggerPreview.setBackground(circleDrawable(
+                customSelected ? fillColor : surface,
+                customSelected ? UiUtils.adaptiveStrokeColor(fillColor, requireContext()) : line,
+                1
+        ));
+        customColorTriggerLabel.setTextColor(requireContext().getColor(customSelected ? R.color.brand_orange_dark : R.color.text_secondary));
+        customColorTriggerLabel.setText(R.string.custom);
+        customColorTriggerCheck.setVisibility(customSelected ? View.VISIBLE : View.GONE);
+    }
+
     private void showCustomColorDialog() {
         Dialog dialog = new Dialog(requireContext());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -468,7 +478,7 @@ public class EventEditFragment extends Fragment {
         dialog.setContentView(content);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.getWindow().setLayout(dp(336), ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().setLayout(resolveCustomColorDialogWidth(), ViewGroup.LayoutParams.WRAP_CONTENT);
             dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
             WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
             attributes.dimAmount = 0.28f;
@@ -476,137 +486,106 @@ public class EventEditFragment extends Fragment {
         }
 
         View preview = content.findViewById(R.id.view_custom_color_preview);
-        EditText hexInput = content.findViewById(R.id.edit_custom_color_hex);
-        SeekBar redSeek = content.findViewById(R.id.seek_custom_color_red);
-        SeekBar greenSeek = content.findViewById(R.id.seek_custom_color_green);
-        SeekBar blueSeek = content.findViewById(R.id.seek_custom_color_blue);
-        TextView redValue = content.findViewById(R.id.tv_custom_color_red_value);
-        TextView greenValue = content.findViewById(R.id.tv_custom_color_green_value);
-        TextView blueValue = content.findViewById(R.id.tv_custom_color_blue_value);
+        View inlinePreview = content.findViewById(R.id.view_custom_color_inline_preview);
+        SpectrumColorView spectrumView = content.findViewById(R.id.view_custom_color_spectrum);
+        HueSliderView hueSliderView = content.findViewById(R.id.view_custom_color_hue);
+        AlphaSliderView alphaSliderView = content.findViewById(R.id.view_custom_color_alpha);
+        EditText hexEdit = content.findViewById(R.id.edit_custom_color_hex);
+        TextView opacityValue = content.findViewById(R.id.tv_custom_color_opacity);
         String initial = normalizeColor(selectedColor);
-        final boolean[] syncing = {false};
         int initialColor = Color.parseColor(initial);
-        bindCustomColorInputs(
-                preview,
-                hexInput,
-                redSeek,
-                greenSeek,
-                blueSeek,
-                redValue,
-                greenValue,
-                blueValue,
-                initialColor,
-                syncing
-        );
-        hexInput.addTextChangedListener(new TextWatcher() {
+        final int[] alphaHolder = {Color.alpha(initialColor)};
+        final int[] rgbHolder = {Color.rgb(Color.red(initialColor), Color.green(initialColor), Color.blue(initialColor))};
+        final boolean[] syncingHex = {false};
+
+        Runnable syncViews = () -> {
+            int combined = Color.argb(alphaHolder[0], Color.red(rgbHolder[0]), Color.green(rgbHolder[0]), Color.blue(rgbHolder[0]));
+            updateColorPreview(preview, combined);
+            updateColorPreview(inlinePreview, combined);
+            alphaSliderView.setBaseColor(rgbHolder[0]);
+            alphaSliderView.setAlphaValue(alphaHolder[0]);
+            opacityValue.setText(getString(R.string.custom_color_opacity_value, Math.round(alphaHolder[0] * 100f / 255f)));
+            String rgbHex = String.format(Locale.US, "#%06X", (0xFFFFFF & rgbHolder[0]));
+            String currentText = hexEdit.getText() == null ? "" : hexEdit.getText().toString();
+            if (!rgbHex.equalsIgnoreCase(currentText)) {
+                syncingHex[0] = true;
+                hexEdit.setText(rgbHex);
+                hexEdit.setSelection(rgbHex.length());
+                syncingHex[0] = false;
+            }
+        };
+
+        spectrumView.setOnColorSelectedListener(color -> {
+            rgbHolder[0] = Color.rgb(Color.red(color), Color.green(color), Color.blue(color));
+            syncViews.run();
+        });
+        hueSliderView.setOnHueChangeListener(hue -> {
+            spectrumView.setHue(hue);
+            int updated = spectrumView.getSelectedColor();
+            rgbHolder[0] = Color.rgb(Color.red(updated), Color.green(updated), Color.blue(updated));
+            syncViews.run();
+        });
+        alphaSliderView.setOnAlphaChangeListener(alpha -> {
+            alphaHolder[0] = alpha;
+            syncViews.run();
+        });
+        hexEdit.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (syncing[0]) {
-                    return;
-                }
-                String candidate = tryNormalizeColor(s == null ? "" : s.toString().trim());
-                if (candidate != null) {
-                    bindCustomColorInputs(
-                            preview,
-                            hexInput,
-                            redSeek,
-                            greenSeek,
-                            blueSeek,
-                            redValue,
-                            greenValue,
-                            blueValue,
-                            Color.parseColor(candidate),
-                            syncing
-                    );
-                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-            }
-        });
-        SeekBar.OnSeekBarChangeListener sliderListener = new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (syncing[0]) {
+                if (syncingHex[0]) {
                     return;
                 }
-                int color = Color.rgb(redSeek.getProgress(), greenSeek.getProgress(), blueSeek.getProgress());
-                bindCustomColorInputs(
-                        preview,
-                        hexInput,
-                        redSeek,
-                        greenSeek,
-                        blueSeek,
-                        redValue,
-                        greenValue,
-                        blueValue,
-                        color,
-                        syncing
-                );
+                String normalized = normalizeRgbHex(s == null ? null : s.toString());
+                if (normalized == null) {
+                    return;
+                }
+                int parsedColor = Color.parseColor(normalized);
+                rgbHolder[0] = Color.rgb(Color.red(parsedColor), Color.green(parsedColor), Color.blue(parsedColor));
+                float[] hsv = new float[3];
+                Color.colorToHSV(rgbHolder[0], hsv);
+                hueSliderView.setHue(hsv[0]);
+                spectrumView.setSelectedColor(rgbHolder[0]);
+                syncViews.run();
             }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        };
-        redSeek.setOnSeekBarChangeListener(sliderListener);
-        greenSeek.setOnSeekBarChangeListener(sliderListener);
-        blueSeek.setOnSeekBarChangeListener(sliderListener);
+        });
+        spectrumView.post(() -> {
+            float[] hsv = new float[3];
+            Color.colorToHSV(rgbHolder[0], hsv);
+            hueSliderView.setHue(hsv[0]);
+            spectrumView.setSelectedColor(rgbHolder[0]);
+            alphaSliderView.setBaseColor(rgbHolder[0]);
+            alphaSliderView.setAlphaValue(alphaHolder[0]);
+            syncViews.run();
+        });
         content.findViewById(R.id.btn_custom_color_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_custom_color_apply).setOnClickListener(v -> {
-            String normalized = tryNormalizeColor(hexInput.getText().toString().trim());
-            if (normalized == null) {
-                Toast.makeText(requireContext(), R.string.custom_color_invalid, Toast.LENGTH_SHORT).show();
-                return;
-            }
-            selectedColor = normalized;
+            selectedColor = colorIntToHex(Color.argb(alphaHolder[0], Color.red(rgbHolder[0]), Color.green(rgbHolder[0]), Color.blue(rgbHolder[0])));
             buildColorPalette();
             dialog.dismiss();
         });
         dialog.show();
     }
 
-    private void bindCustomColorInputs(View preview,
-                                       EditText hexInput,
-                                       SeekBar redSeek,
-                                       SeekBar greenSeek,
-                                       SeekBar blueSeek,
-                                       TextView redValue,
-                                       TextView greenValue,
-                                       TextView blueValue,
-                                       int color,
-                                       boolean[] syncing) {
-        syncing[0] = true;
-        String normalized = colorIntToHex(color);
-        updateColorPreview(preview, normalized);
-        if (!normalized.equals(hexInput.getText().toString())) {
-            hexInput.setText(normalized);
-            hexInput.setSelection(normalized.length());
-        }
-        updateChannel(redSeek, redValue, Color.red(color));
-        updateChannel(greenSeek, greenValue, Color.green(color));
-        updateChannel(blueSeek, blueValue, Color.blue(color));
-        syncing[0] = false;
-    }
-
-    private void updateChannel(SeekBar seekBar, TextView valueView, int value) {
-        if (seekBar.getProgress() != value) {
-            seekBar.setProgress(value);
-        }
-        valueView.setText(String.valueOf(value));
-    }
-
     private void updateColorPreview(View preview, String hexColor) {
         int color = Color.parseColor(normalizeColor(hexColor));
+        updateColorPreview(preview, color);
+    }
+
+    private void updateColorPreview(View preview, int color) {
+        if (preview instanceof TextView) {
+            TextView chip = (TextView) preview;
+            chip.setTextColor(UiUtils.readableTextColor(color, requireContext()));
+            chip.setBackground(UiUtils.adaptiveEventBackground(color, 16, requireContext()));
+            return;
+        }
         preview.setBackground(circleDrawable(color, requireContext().getColor(R.color.line), 1));
     }
 
@@ -987,6 +966,25 @@ public class EventEditFragment extends Fragment {
         return normalized == null ? colorIntToHex(requireContext().getColor(R.color.palette_blue_1)) : normalized;
     }
 
+    private String normalizeRgbHex(String color) {
+        if (color == null || color.trim().isEmpty()) {
+            return null;
+        }
+        String candidate = color.trim().toUpperCase(Locale.US);
+        if (!candidate.startsWith("#")) {
+            candidate = "#" + candidate;
+        }
+        if (candidate.length() != 7) {
+            return null;
+        }
+        try {
+            Color.parseColor(candidate);
+            return candidate;
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
     private String tryNormalizeColor(String color) {
         if (color == null || color.trim().isEmpty()) {
             return null;
@@ -1004,7 +1002,9 @@ public class EventEditFragment extends Fragment {
     }
 
     private String colorIntToHex(int color) {
-        return String.format(Locale.US, "#%06X", (0xFFFFFF & color));
+        return Color.alpha(color) < 255
+                ? String.format(Locale.US, "#%08X", color)
+                : String.format(Locale.US, "#%06X", (0xFFFFFF & color));
     }
 
     private GradientDrawable circleDrawable(int fillColor, int strokeColor, int strokeWidthDp) {
@@ -1024,6 +1024,11 @@ public class EventEditFragment extends Fragment {
     private int hairline() {
         float density = requireContext().getResources().getDisplayMetrics().density;
         return Math.max(1, Math.round(0.5f * density));
+    }
+
+    private int resolveCustomColorDialogWidth() {
+        int screenWidth = requireContext().getResources().getDisplayMetrics().widthPixels;
+        return Math.min(dp(372), screenWidth - dp(24));
     }
 
     private int clamp(int value, int min, int max) {

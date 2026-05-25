@@ -2,13 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/form_background_soft"
+    android:background="@color/surface_soft"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="56dp"
         android:background="@color/surface"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="10dp"
@@ -16,8 +20,8 @@
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/cancel"
             android:src="@drawable/ic_back" />
@@ -50,7 +54,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:background="@color/form_background_soft" />
+                android:background="@color/surface_soft" />
 
             <LinearLayout
                 android:layout_width="match_parent"
