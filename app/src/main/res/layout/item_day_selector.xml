@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/day_selector_root"
-    android:layout_width="45dp"
+    android:layout_width="match_parent"
     android:layout_height="50dp"
-    android:layout_marginEnd="6dp"
+    android:layout_marginStart="3dp"
+    android:layout_marginEnd="3dp"
     android:background="@drawable/bg_chip_outline"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingTop="3dp"
+    android:paddingBottom="3dp">
 
     <TextView
         android:id="@+id/tv_day_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
         android:textColor="@color/text_primary"
         android:textSize="13sp" />
 
@@ -21,6 +25,7 @@
         android:id="@+id/tv_day_number"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
         android:textColor="@color/text_primary"
         android:textSize="18sp"
         android:textStyle="bold" />

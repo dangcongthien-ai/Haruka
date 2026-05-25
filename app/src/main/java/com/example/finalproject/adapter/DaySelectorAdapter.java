@@ -47,14 +47,16 @@ public class DaySelectorAdapter extends RecyclerView.Adapter<DaySelectorAdapter.
     public void onBindViewHolder(@NonNull DayViewHolder holder, int position) {
         LocalDate date = dates.get(position);
         boolean selected = date.equals(selectedDate);
+        boolean today = date.equals(LocalDate.now());
         holder.root.setBackground(selected
                 ? UiUtils.rounded(holder.itemView.getContext().getColor(R.color.brand_orange), 8, holder.itemView.getContext())
                 : UiUtils.roundedStroke(holder.itemView.getContext().getColor(R.color.surface), holder.itemView.getContext().getColor(R.color.brand_orange), 8, holder.itemView.getContext()));
         holder.name.setText(dayName(date));
         holder.number.setText(String.valueOf(date.getDayOfMonth()));
-        holder.name.setTextColor(selected ? holder.itemView.getContext().getColor(R.color.white) : holder.itemView.getContext().getColor(R.color.text_primary));
-        holder.number.setTextColor(selected ? holder.itemView.getContext().getColor(R.color.white) : holder.itemView.getContext().getColor(R.color.text_primary));
-        holder.number.setTypeface(selected ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        int defaultColor = holder.itemView.getContext().getColor(today ? R.color.brand_orange : R.color.text_primary);
+        holder.name.setTextColor(selected ? holder.itemView.getContext().getColor(R.color.white) : defaultColor);
+        holder.number.setTextColor(selected ? holder.itemView.getContext().getColor(R.color.white) : defaultColor);
+        holder.number.setTypeface(Typeface.DEFAULT_BOLD);
         holder.itemView.setOnClickListener(v -> listener.onDaySelected(date));
     }
 

@@ -101,7 +101,7 @@ public class TodoFragment extends Fragment {
 
             @Override
             public void onDelete(TodoItem item) {
-                UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_event), () -> {
+                UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_todo), () -> {
                     repository.deleteTodo(item.getId());
                     refresh();
                 });
