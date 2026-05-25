@@ -67,15 +67,21 @@ public final class UiUtils {
     }
 
     public static void showDeleteDialog(Context context, String message, Runnable onConfirm) {
+        showConfirmDialog(context, message, context.getString(R.string.delete), onConfirm);
+    }
+
+    public static void showConfirmDialog(Context context, String message, String confirmText, Runnable onConfirm) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(context).inflate(R.layout.dialog_delete_confirmation, null, false);
         TextView titleView = content.findViewById(R.id.tv_delete_title);
         TextView messageView = content.findViewById(R.id.tv_delete_message);
+        TextView confirmButton = content.findViewById(R.id.btn_delete_confirm);
         titleView.setText(R.string.delete_dialog_title);
         messageView.setText(message);
+        confirmButton.setText(confirmText);
         content.findViewById(R.id.btn_delete_cancel).setOnClickListener(v -> dialog.dismiss());
-        content.findViewById(R.id.btn_delete_confirm).setOnClickListener(v -> {
+        confirmButton.setOnClickListener(v -> {
             dialog.dismiss();
             onConfirm.run();
         });

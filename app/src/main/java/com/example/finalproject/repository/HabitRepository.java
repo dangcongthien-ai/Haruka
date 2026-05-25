@@ -10,6 +10,7 @@ import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.data.DbContract;
 import com.example.finalproject.model.HabitCategory;
 import com.example.finalproject.model.HabitItem;
+import com.example.finalproject.model.HabitLog;
 import com.example.finalproject.model.HabitPriority;
 import com.example.finalproject.model.RecurrenceRule;
 import com.example.finalproject.model.Reminder;
@@ -69,6 +70,88 @@ public class HabitRepository {
             }
             return loadHabitDetails(mapHabit(cursor));
         }
+    }
+
+    public HabitLog getHabitLog(long habitId, LocalDate date) {
+        if (date == null) {
+            return null;
+        }
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        try (Cursor cursor = db.query(
+                DbContract.HabitLog.TABLE,
+                null,
+                DbContract.HabitLog.HABIT_ID + " = ? AND " + DbContract.HabitLog.LOG_DATE + " = ?",
+                new String[]{String.valueOf(habitId), DateTimeUtils.dateToIso(date)},
+                null,
+                null,
+                DbContract.HabitLog.HABIT_LOG_ID + " DESC"
+        )) {
+            return cursor.moveToFirst() ? mapHabitLog(cursor) : null;
+        }
+    }
+
+    public List<HabitLog> getHabitLogsInRange(LocalDate startDate, LocalDate endDate) {
+        List<HabitLog> logs = new ArrayList<>();
+        if (startDate == null || endDate == null) {
+            return logs;
+        }
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        try (Cursor cursor = db.query(
+                DbContract.HabitLog.TABLE,
+                null,
+                DbContract.HabitLog.LOG_DATE + " >= ? AND " + DbContract.HabitLog.LOG_DATE + " <= ?",
+                new String[]{DateTimeUtils.dateToIso(startDate), DateTimeUtils.dateToIso(endDate)},
+                null,
+                null,
+                DbContract.HabitLog.LOG_DATE + " ASC, " + DbContract.HabitLog.HABIT_ID + " ASC"
+        )) {
+            while (cursor.moveToNext()) {
+                logs.add(mapHabitLog(cursor));
+            }
+        }
+        return logs;
+    }
+
+    public void saveHabitLog(long habitId, LocalDate date, boolean completed, Double actualValue) {
+        if (date == null) {
+            return;
+        }
+        if (!completed && actualValue == null) {
+            deleteHabitLog(habitId, date);
+            return;
+        }
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        HabitLog existing = getHabitLog(habitId, date);
+        String now = DateTimeUtils.nowIso();
+        ContentValues values = new ContentValues();
+        values.put(DbContract.HabitLog.HABIT_ID, habitId);
+        values.put(DbContract.HabitLog.LOG_DATE, DateTimeUtils.dateToIso(date));
+        values.put(DbContract.HabitLog.IS_COMPLETED, completed ? 1 : 0);
+        putDouble(values, DbContract.HabitLog.ACTUAL_VALUE, actualValue);
+        values.put(DbContract.HabitLog.UPDATED_AT, now);
+        if (existing == null) {
+            values.put(DbContract.HabitLog.CREATED_AT, now);
+            db.insertOrThrow(DbContract.HabitLog.TABLE, null, values);
+            return;
+        }
+        db.update(
+                DbContract.HabitLog.TABLE,
+                values,
+                DbContract.HabitLog.HABIT_LOG_ID + " = ?",
+                new String[]{String.valueOf(existing.getId())}
+        );
+    }
+
+    public void deleteHabitLog(long habitId, LocalDate date) {
+        if (date == null) {
+            return;
+        }
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.delete(
+                DbContract.HabitLog.TABLE,
+                DbContract.HabitLog.HABIT_ID + " = ? AND " + DbContract.HabitLog.LOG_DATE + " = ?",
+                new String[]{String.valueOf(habitId), DateTimeUtils.dateToIso(date)}
+        );
     }
 
     public long saveHabit(HabitItem habit) {
@@ -525,6 +608,18 @@ public class HabitRepository {
         reminder.setTimeOfDay(DateTimeUtils.isoToTime(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.HabitReminder.TIME_OF_DAY))));
         reminder.setEnabled(cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.HabitReminder.IS_ENABLED)) == 1);
         return reminder;
+    }
+
+    private HabitLog mapHabitLog(Cursor cursor) {
+        HabitLog log = new HabitLog();
+        log.setId(cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.HabitLog.HABIT_LOG_ID)));
+        log.setHabitId(cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.HabitLog.HABIT_ID)));
+        log.setLogDate(DateTimeUtils.isoToDate(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.HabitLog.LOG_DATE))));
+        log.setCompleted(cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.HabitLog.IS_COMPLETED)) == 1);
+        log.setActualValue(getNullableDouble(cursor, DbContract.HabitLog.ACTUAL_VALUE));
+        log.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.HabitLog.CREATED_AT)));
+        log.setUpdatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.HabitLog.UPDATED_AT)));
+        return log;
     }
 
     private Long getNullableLong(Cursor cursor, String column) {
