@@ -379,13 +379,7 @@ public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_count_picker, null, false);
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
-            attributes.dimAmount = 0.28f;
-            dialog.getWindow().setAttributes(attributes);
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 248), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
         NumberPicker picker = content.findViewById(R.id.picker_repeat_count);
         picker.setMinValue(1);
         picker.setMaxValue(100);

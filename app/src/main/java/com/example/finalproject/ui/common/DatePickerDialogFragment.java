@@ -56,14 +56,7 @@ public class DatePickerDialogFragment extends DialogFragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_date_picker, null, false);
         dialog.setContentView(view);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.getWindow().setLayout(UiUtils.dp(requireContext(), 344), ViewGroup.LayoutParams.WRAP_CONTENT);
-            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
-            attributes.dimAmount = 0.28f;
-            dialog.getWindow().setAttributes(attributes);
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 344), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
         setup(view);
         return dialog;
     }
@@ -141,9 +134,7 @@ public class DatePickerDialogFragment extends DialogFragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_month_picker, null, false);
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 320), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
         TextView yearLabel = content.findViewById(R.id.tv_picker_year);
         GridLayout monthGrid = content.findViewById(R.id.month_picker_grid);
@@ -214,9 +205,7 @@ public class DatePickerDialogFragment extends DialogFragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_year_picker, null, false);
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 344), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
         NumberPicker picker = content.findViewById(R.id.picker_year);
         int minYear = Math.max(1900, selectedYear - 100);

@@ -157,14 +157,7 @@ public class ReminderFragment extends Fragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_custom_reminder, null, false);
         dialog.setContentView(view);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.getWindow().setLayout(UiUtils.dp(requireContext(), 336), ViewGroup.LayoutParams.WRAP_CONTENT);
-            dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
-            attributes.dimAmount = 0.28f;
-            dialog.getWindow().setAttributes(attributes);
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 336), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
         EditText amount = view.findViewById(R.id.edit_reminder_amount);
         RadioGroup unitGroup = view.findViewById(R.id.reminder_unit_group);
         if (reminder.getOffsetValue() != null) {

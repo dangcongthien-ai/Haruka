@@ -109,20 +109,12 @@
 
         <TextView
             android:id="@+id/btn_dialog_cancel"
-            android:layout_width="70dp"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/cancel"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
+            style="@style/Caliary.DialogTextAction"
+            android:text="@string/cancel" />
 
         <TextView
             android:id="@+id/btn_dialog_ok"
-            android:layout_width="70dp"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/ok"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
+            style="@style/Caliary.DialogTextAction"
+            android:text="@string/ok" />
     </LinearLayout>
 </LinearLayout>
