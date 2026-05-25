@@ -23,7 +23,7 @@
     <string name="discard">Bỏ thay đổi</string>
     <string name="discard_changes_title">Bỏ thay đổi?</string>
     <string name="discard_changes_message">Những thay đổi chưa lưu sẽ bị mất.</string>
-    <string name="ok">OK</string>
+    <string name="ok">Đồng ý</string>
     <string name="done">Xong</string>
     <string name="agree">Đồng ý</string>
     <string name="title_hint">Tiêu đề</string>

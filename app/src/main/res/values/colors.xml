@@ -16,6 +16,7 @@
     <color name="brand_orange_light">#FFE1C2</color>
     <color name="brand_orange_highlight">#5CEB9B54</color>
     <color name="brand_orange_hint">#99EB9B54</color>
+    <color name="ripple_orange_pressed">#40C97932</color>
     <color name="ripple_neutral">#30202124</color>
     <color name="switch_off_thumb">#BDBDBD</color>
     <color name="switch_off_track">#E5E5E5</color>
