@@ -15,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -55,6 +56,7 @@ public class JournalFragment extends Fragment {
     private TextView monthLabel;
     private TextView emptyLabel;
     private RecyclerView recyclerView;
+    private ImageButton nextMonthButton;
     private final List<JournalEntry> currentEntries = new ArrayList<>();
     private boolean newestFirst;
 
@@ -75,6 +77,7 @@ public class JournalFragment extends Fragment {
         if (selectedDate == null) {
             selectedDate = LocalDate.now();
         }
+        selectedDate = clampFutureDate(selectedDate);
         bind(view);
         setupAdapter();
         setupClicks(view);
@@ -104,11 +107,19 @@ public class JournalFragment extends Fragment {
 
             @Override
             public void onEdit(JournalEntry entry) {
+                if (isFutureDate(entry.getJournalDate())) {
+                    Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 openEditor(entry.getId());
             }
 
             @Override
             public void onDelete(JournalEntry entry) {
+                if (isFutureDate(entry.getJournalDate())) {
+                    Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_journal), () -> {
                     repository.deleteJournalEntry(entry.getId());
                     refresh();
@@ -121,9 +132,9 @@ public class JournalFragment extends Fragment {
 
     private void setupClicks(View view) {
         ImageButton previous = view.findViewById(R.id.btn_journal_prev_day);
-        ImageButton next = view.findViewById(R.id.btn_journal_next_day);
+        nextMonthButton = view.findViewById(R.id.btn_journal_next_day);
         previous.setOnClickListener(v -> moveMonth(-1));
-        next.setOnClickListener(v -> moveMonth(1));
+        nextMonthButton.setOnClickListener(v -> moveMonth(1));
         monthLabel.setOnClickListener(v -> DatePickerDialogFragment
                 .newInstance(DATE_RESULT_KEY, selectedDate)
                 .show(getParentFragmentManager(), DATE_RESULT_KEY));
@@ -139,7 +150,7 @@ public class JournalFragment extends Fragment {
         getParentFragmentManager().setFragmentResultListener(DATE_RESULT_KEY, getViewLifecycleOwner(), (requestKey, result) -> {
             LocalDate picked = DateTimeUtils.isoToDate(result.getString(DatePickerDialogFragment.RESULT_DATE));
             if (picked != null) {
-                selectedDate = picked;
+                selectedDate = clampFutureDate(picked);
                 ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
                 refresh();
             }
@@ -147,7 +158,12 @@ public class JournalFragment extends Fragment {
     }
 
     private void moveMonth(int amount) {
-        selectedDate = selectedDate.plusMonths(amount);
+        LocalDate nextDate = selectedDate.plusMonths(amount);
+        if (isFutureMonth(nextDate)) {
+            Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        selectedDate = nextDate;
         ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
         refresh();
     }
@@ -156,6 +172,7 @@ public class JournalFragment extends Fragment {
         if (!isAdded()) {
             return;
         }
+        updateDateNavigation();
         monthLabel.setText(getString(R.string.journal_month_format, selectedDate.getMonthValue(), selectedDate.getYear()));
         List<JournalEntry> entries = repository.getEntriesForMonth(selectedDate);
         if (newestFirst) {
@@ -170,6 +187,32 @@ public class JournalFragment extends Fragment {
 
     private void openEditor(long journalId) {
         ((MainActivity) requireActivity()).openJournalEditor(journalId, selectedDate);
+    }
+
+    private LocalDate clampFutureDate(LocalDate date) {
+        LocalDate today = LocalDate.now();
+        if (date != null && date.isAfter(today)) {
+            Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+            return today;
+        }
+        return date == null ? today : date;
+    }
+
+    private boolean isFutureDate(LocalDate date) {
+        return date != null && date.isAfter(LocalDate.now());
+    }
+
+    private boolean isFutureMonth(LocalDate date) {
+        return date != null && date.withDayOfMonth(1).isAfter(LocalDate.now().withDayOfMonth(1));
+    }
+
+    private void updateDateNavigation() {
+        if (nextMonthButton == null) {
+            return;
+        }
+        boolean canMoveForward = selectedDate.withDayOfMonth(1).isBefore(LocalDate.now().withDayOfMonth(1));
+        nextMonthButton.setEnabled(canMoveForward);
+        nextMonthButton.setAlpha(canMoveForward ? 1f : 0.35f);
     }
 
     private void showEntryDetail(JournalEntry initialEntry) {
@@ -196,15 +239,25 @@ public class JournalFragment extends Fragment {
             bindEntryDetail(detailView, visibleEntry[0]);
         });
         detailView.findViewById(R.id.btn_journal_detail_edit).setOnClickListener(v -> {
+            if (isFutureDate(visibleEntry[0].getJournalDate())) {
+                Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+                return;
+            }
             dialog.dismiss();
             openEditor(visibleEntry[0].getId());
         });
         detailView.findViewById(R.id.btn_journal_detail_delete).setOnClickListener(v ->
-                UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_journal), () -> {
+                {
+                    if (isFutureDate(visibleEntry[0].getJournalDate())) {
+                        Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_journal), () -> {
                     repository.deleteJournalEntry(visibleEntry[0].getId());
                     dialog.dismiss();
                     refresh();
-                }));
+                    });
+                });
         dialog.setOnShowListener(dialogInterface -> expandDetailSheet(dialog));
         dialog.show();
     }

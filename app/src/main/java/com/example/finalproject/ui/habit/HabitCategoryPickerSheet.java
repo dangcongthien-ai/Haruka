@@ -47,13 +47,12 @@ public class HabitCategoryPickerSheet extends BottomSheetDialogFragment {
         itemsContainer = view.findViewById(R.id.layout_category_items);
         ImageButton close = view.findViewById(R.id.btn_close_category_picker);
         close.setOnClickListener(v -> dismiss());
-        view.findViewById(R.id.btn_save_category_picker).setOnClickListener(v -> saveSelection());
         view.findViewById(R.id.btn_add_category).setOnClickListener(v ->
                 HabitCategoryEditorSheet.newInstance(0).show(getParentFragmentManager(), "HabitCategoryEditor"));
 
         getParentFragmentManager().setFragmentResultListener(HabitCategoryEditorSheet.RESULT_KEY, this, (requestKey, result) -> {
             selectedCategoryId = result.getLong(HabitCategoryEditorSheet.RESULT_CATEGORY_ID, selectedCategoryId);
-            renderCategories();
+            publishSelection(selectedCategoryId);
         });
 
         renderCategories();
@@ -174,12 +173,13 @@ public class HabitCategoryPickerSheet extends BottomSheetDialogFragment {
 
         row.setOnClickListener(v -> {
             selectedCategoryId = category.getId();
-            renderCategories();
+            publishSelection(selectedCategoryId);
         });
         return row;
     }
 
-    private void saveSelection() {
+    private void publishSelection(long categoryId) {
+        selectedCategoryId = categoryId;
         Bundle result = new Bundle();
         result.putLong(RESULT_CATEGORY_ID, selectedCategoryId);
         getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
