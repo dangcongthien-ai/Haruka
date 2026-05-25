@@ -13,6 +13,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 
+import androidx.core.graphics.ColorUtils;
+
 import com.example.finalproject.R;
 import com.google.android.material.button.MaterialButton;
 
@@ -45,6 +47,30 @@ public final class UiUtils {
         drawable.setCornerRadius(dp(context, radiusDp));
         drawable.setStroke(dp(context, 1), stroke);
         return drawable;
+    }
+
+    public static GradientDrawable adaptiveEventBackground(int fill, int radiusDp, Context context) {
+        int stroke = adaptiveStrokeColor(fill, context);
+        return stroke == Color.TRANSPARENT
+                ? rounded(fill, radiusDp, context)
+                : roundedStroke(fill, stroke, radiusDp, context);
+    }
+
+    public static int readableTextColor(int backgroundColor, Context context) {
+        int effectiveBackground = compositeOverSurface(backgroundColor, context);
+        int darkText = context.getColor(R.color.text_primary);
+        int lightText = context.getColor(R.color.white);
+        return contrastRatio(effectiveBackground, lightText) >= contrastRatio(effectiveBackground, darkText)
+                ? lightText
+                : darkText;
+    }
+
+    public static int adaptiveStrokeColor(int fill, Context context) {
+        int surface = context.getColor(R.color.surface);
+        int effectiveFill = compositeOverSurface(fill, context);
+        return contrastRatio(effectiveFill, surface) < 1.25d
+                ? context.getColor(R.color.line)
+                : Color.TRANSPARENT;
     }
 
     public static void selectSegment(Context context, MaterialButton selected, MaterialButton... others) {
@@ -90,5 +116,31 @@ public final class UiUtils {
         }
         dialog.setCanceledOnTouchOutside(true);
         dialog.show();
+    }
+
+    private static double contrastRatio(int colorA, int colorB) {
+        double luminanceA = relativeLuminance(colorA);
+        double luminanceB = relativeLuminance(colorB);
+        double lighter = Math.max(luminanceA, luminanceB);
+        double darker = Math.min(luminanceA, luminanceB);
+        return (lighter + 0.05d) / (darker + 0.05d);
+    }
+
+    private static int compositeOverSurface(int color, Context context) {
+        return Color.alpha(color) < 255
+                ? ColorUtils.compositeColors(color, context.getColor(R.color.surface))
+                : color;
+    }
+
+    private static double relativeLuminance(int color) {
+        return 0.2126d * linearizedChannel(Color.red(color) / 255d)
+                + 0.7152d * linearizedChannel(Color.green(color) / 255d)
+                + 0.0722d * linearizedChannel(Color.blue(color) / 255d);
+    }
+
+    private static double linearizedChannel(double channel) {
+        return channel <= 0.03928d
+                ? channel / 12.92d
+                : Math.pow((channel + 0.055d) / 1.055d, 2.4d);
     }
 }

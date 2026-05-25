@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="336dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_dialog_soft"
     android:orientation="vertical"
@@ -19,143 +19,141 @@
         android:textSize="18sp"
         android:textStyle="bold" />
 
-    <View
-        android:id="@+id/view_custom_color_preview"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="16dp" />
-
-    <EditText
-        android:id="@+id/edit_custom_color_hex"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:background="@drawable/bg_habit_input_box"
-        android:gravity="center_vertical"
-        android:hint="@string/custom_color_hint"
-        android:inputType="textCapCharacters"
-        android:maxLines="1"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:textColor="@color/text_primary"
-        android:textColorHint="@color/text_muted"
-        android:textCursorDrawable="@drawable/cursor_primary"
-        android:textSize="14sp" />
+        android:background="@drawable/bg_surface_card_soft"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/custom_color_preview_label"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/view_custom_color_preview"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:minWidth="96dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/custom_color_preview_chip"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <com.example.finalproject.ui.common.SpectrumColorView
+        android:id="@+id/view_custom_color_spectrum"
+        android:layout_width="match_parent"
+        android:layout_height="208dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_color_spectrum"
+        android:clipToOutline="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/custom_color_hue"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <com.example.finalproject.ui.common.HueSliderView
+        android:id="@+id/view_custom_color_hue"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_color_slider"
+        android:clipToOutline="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/custom_color_opacity_label"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <com.example.finalproject.ui.common.AlphaSliderView
+        android:id="@+id/view_custom_color_alpha"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_color_slider"
+        android:clipToOutline="true" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
-        android:background="@color/surface"
-        android:orientation="vertical"
-        android:paddingTop="8dp"
-        android:paddingBottom="6dp">
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/custom_color_hex_label"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_surface_card_soft"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="10dp"
-            android:paddingEnd="6dp">
+            android:paddingEnd="10dp">
 
-            <TextView
+            <View
+                android:id="@+id/view_custom_color_inline_preview"
                 android:layout_width="22dp"
-                android:layout_height="wrap_content"
-                android:text="@string/custom_color_channel_red"
-                android:textColor="@color/channel_red"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:layout_height="22dp" />
 
-            <SeekBar
-                android:id="@+id/seek_custom_color_red"
+            <EditText
+                android:id="@+id/edit_custom_color_hex"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:layout_weight="1"
-                android:max="255"
-                android:progressTint="@color/channel_red"
-                android:splitTrack="false"
-                android:thumbTint="@color/channel_red" />
-
-            <TextView
-                android:id="@+id/tv_custom_color_red_value"
-                android:layout_width="38dp"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:background="@null"
+                android:digits="#0123456789ABCDEFabcdef"
+                android:inputType="textCapCharacters"
+                android:maxLength="7"
+                android:singleLine="true"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted"
+                android:textCursorDrawable="@null"
+                android:textSize="15sp" />
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="10dp"
-            android:paddingEnd="6dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="@string/custom_color_opacity_short"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
 
-            <TextView
-                android:layout_width="22dp"
-                android:layout_height="wrap_content"
-                android:text="@string/custom_color_channel_green"
-                android:textColor="@color/channel_green"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <SeekBar
-                android:id="@+id/seek_custom_color_green"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:max="255"
-                android:progressTint="@color/channel_green"
-                android:splitTrack="false"
-                android:thumbTint="@color/channel_green" />
-
-            <TextView
-                android:id="@+id/tv_custom_color_green_value"
-                android:layout_width="38dp"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="10dp"
-            android:paddingEnd="6dp">
-
-            <TextView
-                android:layout_width="22dp"
-                android:layout_height="wrap_content"
-                android:text="@string/custom_color_channel_blue"
-                android:textColor="@color/channel_blue"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <SeekBar
-                android:id="@+id/seek_custom_color_blue"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:max="255"
-                android:progressTint="@color/channel_blue"
-                android:splitTrack="false"
-                android:thumbTint="@color/channel_blue" />
-
-            <TextView
-                android:id="@+id/tv_custom_color_blue_value"
-                android:layout_width="38dp"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/tv_custom_color_opacity"
+            android:layout_width="68dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_surface_card_soft"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp" />
     </LinearLayout>
 
     <LinearLayout

@@ -4,13 +4,17 @@
     android:id="@+id/event_edit_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/form_background_soft"
+    android:background="@color/surface_soft"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="56dp"
         android:background="@color/surface"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="10dp"
@@ -18,8 +22,8 @@
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/cancel"
             android:src="@drawable/ic_back" />
@@ -33,9 +37,6 @@
             android:id="@+id/btn_save_event"
             android:layout_width="88dp"
             android:layout_height="40dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="0dp"
             android:text="@string/save"
             android:textAllCaps="false"
             android:textColor="@color/white"
@@ -61,8 +62,8 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:background="@color/form_background_soft" />
+                android:layout_height="40dp"
+                android:background="@color/surface_soft" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -109,11 +110,11 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
+                    android:layout_height="60dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingStart="24dp"
-                    android:paddingEnd="18dp">
+                    android:paddingEnd="16dp">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -122,7 +123,7 @@
                         android:src="@drawable/ic_habit_color" />
 
                     <TextView
-                        android:layout_width="88dp"
+                        android:layout_width="60dp"
                         android:layout_height="wrap_content"
                         android:text="@string/color"
                         android:textColor="@color/text_primary"
@@ -131,7 +132,7 @@
                     <HorizontalScrollView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
+                        android:layout_marginStart="2dp"
                         android:layout_weight="1"
                         android:fillViewport="true"
                         android:overScrollMode="never"
@@ -146,6 +147,47 @@
                             android:paddingTop="4dp"
                             android:paddingBottom="4dp" />
                     </HorizontalScrollView>
+
+                    <LinearLayout
+                        android:id="@+id/custom_color_trigger"
+                        android:layout_width="96dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_surface_card_soft"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp">
+
+                        <View
+                            android:id="@+id/view_custom_color_trigger_preview"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp" />
+
+                        <TextView
+                            android:id="@+id/tv_custom_color_trigger_label"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/custom"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <ImageView
+                            android:id="@+id/iv_custom_color_trigger_check"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_check"
+                            android:visibility="gone"
+                            app:tint="@color/brand_orange_dark" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
@@ -182,7 +224,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:background="@color/form_background_soft" />
+                android:background="@color/surface_soft" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -308,7 +350,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:background="@color/form_background_soft" />
+                android:background="@color/surface_soft" />
 
             <LinearLayout
                 android:id="@+id/reminder_section"
@@ -406,7 +448,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:background="@color/form_background_soft" />
+                android:background="@color/surface_soft" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -525,7 +567,7 @@
                     android:id="@+id/event_edit_keyboard_spacer"
                     android:layout_width="match_parent"
                     android:layout_height="28dp"
-                    android:background="@color/form_background_soft" />
+                    android:background="@color/surface_soft" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

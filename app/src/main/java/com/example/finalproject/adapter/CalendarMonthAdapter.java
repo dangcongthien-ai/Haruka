@@ -199,9 +199,10 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
             if (i < max) {
                 CalendarEvent event = cell.getEvents().get(i);
                 chip.setText(event.getTitle());
-                chip.setTextColor(Color.BLACK);
+                int fillColor = UiUtils.safeColor(event.getColor(), fallback);
+                chip.setTextColor(UiUtils.readableTextColor(fillColor, holder.itemView.getContext()));
                 chip.setTextSize(sizing.chipTextSize);
-                chip.setBackground(UiUtils.rounded(UiUtils.safeColor(event.getColor(), fallback), 4, holder.itemView.getContext()));
+                chip.setBackground(UiUtils.adaptiveEventBackground(fillColor, 4, holder.itemView.getContext()));
                 chip.setVisibility(View.VISIBLE);
             } else {
                 chip.setText("");
