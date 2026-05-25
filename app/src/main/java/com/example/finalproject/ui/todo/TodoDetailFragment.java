@@ -16,8 +16,9 @@ import com.example.finalproject.R;
 import com.example.finalproject.model.Reminder;
 import com.example.finalproject.model.TodoItem;
 import com.example.finalproject.repository.TodoRepository;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 
-public class TodoDetailFragment extends Fragment {
+public class TodoDetailFragment extends Fragment implements ScreenBackHandler {
     private static final String ARG_TODO_ID = "todo_id";
 
     private TodoRepository repository;
@@ -63,12 +64,18 @@ public class TodoDetailFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreenOrHome());
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.btn_edit_todo).setOnClickListener(v -> {
             if (item != null) {
                 ((MainActivity) requireActivity()).switchFullScreen(TodoEditFragment.newInstance(item.getId(), item.getTodoDate()));
             }
         });
+    }
+
+    @Override
+    public boolean onHandleBackPressed() {
+        ((MainActivity) requireActivity()).finishFullScreenOrHome();
+        return true;
     }
 
     private void render() {

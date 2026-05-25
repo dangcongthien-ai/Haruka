@@ -21,6 +21,7 @@ import com.example.finalproject.ui.common.UiUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -44,9 +45,21 @@ public class WeekTimelineLayout extends ViewGroup {
 
     private final Paint linePaint = new Paint();
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint nowLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint nowDotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final List<LocalDate> weekDates = new ArrayList<>();
     private final List<EventPlacement> placements = new ArrayList<>();
     private final List<WeekStripItem> stripItems = new ArrayList<>();
+    private final Runnable nowIndicatorTicker = new Runnable() {
+        @Override
+        public void run() {
+            if (!isAttachedToWindow()) {
+                return;
+            }
+            invalidate();
+            scheduleNowIndicatorTick();
+        }
+    };
     private Listener listener;
 
     public WeekTimelineLayout(@NonNull Context context) {
@@ -79,6 +92,7 @@ public class WeekTimelineLayout extends ViewGroup {
             buildLayoutData(events);
         }
         rebuildEventViews();
+        scheduleNowIndicatorTick();
         requestLayout();
         invalidate();
     }
@@ -101,6 +115,9 @@ public class WeekTimelineLayout extends ViewGroup {
         textPaint.setColor(getContext().getColor(R.color.text_secondary));
         textPaint.setTextSize(sp(11));
         textPaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        nowLinePaint.setColor(getContext().getColor(R.color.brand_orange_dark));
+        nowLinePaint.setStrokeWidth(dp(2));
+        nowDotPaint.setColor(getContext().getColor(R.color.brand_orange_dark));
     }
 
     private void buildLayoutData(List<CalendarEvent> events) {
@@ -327,6 +344,24 @@ public class WeekTimelineLayout extends ViewGroup {
     }
 
     @Override
+    protected void dispatchDraw(android.graphics.Canvas canvas) {
+        super.dispatchDraw(canvas);
+        drawNowIndicator(canvas);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        scheduleNowIndicatorTick();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        removeCallbacks(nowIndicatorTicker);
+        super.onDetachedFromWindow();
+    }
+
+    @Override
     protected LayoutParams generateDefaultLayoutParams() {
         return new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
     }
@@ -399,6 +434,38 @@ public class WeekTimelineLayout extends ViewGroup {
 
     private String formatHour(int hour) {
         return String.format("%02d:00", hour);
+    }
+
+    private void drawNowIndicator(android.graphics.Canvas canvas) {
+        if (weekDates.isEmpty()) {
+            return;
+        }
+        LocalDate today = LocalDate.now();
+        int todayIndex = weekDates.indexOf(today);
+        if (todayIndex < 0) {
+            return;
+        }
+        LocalTime now = LocalTime.now();
+        float hourValue = now.getHour() + (now.getMinute() / 60f) + (now.getSecond() / 3600f);
+        if (hourValue < 0f || hourValue > HOUR_COUNT) {
+            return;
+        }
+        int timeColumnWidth = dp(TIME_COLUMN_WIDTH_DP);
+        float dayColumnWidth = Math.max(1f, (getWidth() - timeColumnWidth) / (float) DAY_COUNT);
+        float columnLeft = timeColumnWidth + (todayIndex * dayColumnWidth);
+        float columnRight = columnLeft + dayColumnWidth;
+        float y = crisp(hourValue * dp(HOUR_ROW_HEIGHT_DP));
+        canvas.drawLine(columnLeft, y, columnRight, y, nowLinePaint);
+        canvas.drawCircle(columnLeft, y, dp(4), nowDotPaint);
+    }
+
+    private void scheduleNowIndicatorTick() {
+        removeCallbacks(nowIndicatorTicker);
+        if (!isAttachedToWindow() || weekDates.indexOf(LocalDate.now()) < 0) {
+            return;
+        }
+        long delayMs = Math.max(1000L, 60000L - (System.currentTimeMillis() % 60000L));
+        postDelayed(nowIndicatorTicker, delayMs);
     }
 
     private int dp(int value) {

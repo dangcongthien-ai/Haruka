@@ -23,6 +23,7 @@ import com.example.finalproject.repository.TodoRepository;
 import com.example.finalproject.ui.calendar.EventEditFragment;
 import com.example.finalproject.ui.calendar.ReminderFragment;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
 import com.google.android.material.button.MaterialButton;
 
@@ -30,7 +31,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TodoEditFragment extends Fragment {
+public class TodoEditFragment extends Fragment implements ScreenBackHandler {
     private static final String ARG_TODO_ID = "todo_id";
     private static final String ARG_DATE = "date";
     private static final String RESULT_REMINDER = "todo_reminder";
@@ -138,7 +139,7 @@ public class TodoEditFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreenOrHome());
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.btn_save_todo).setOnClickListener(v -> save());
         view.findViewById(R.id.todo_date_row).setOnClickListener(v -> {
             captureInput();
@@ -164,6 +165,12 @@ public class TodoEditFragment extends Fragment {
                 ((MainActivity) requireActivity()).finishFullScreenOrHome();
             });
         });
+    }
+
+    @Override
+    public boolean onHandleBackPressed() {
+        ((MainActivity) requireActivity()).finishFullScreenOrHome();
+        return true;
     }
 
     private void openReminderPicker() {

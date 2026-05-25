@@ -109,7 +109,7 @@ public class JournalStatsFragment extends Fragment {
 
     private void setupClicks(View view) {
         ImageButton backButton = view.findViewById(R.id.btn_journal_stats_back);
-        backButton.setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreen());
+        backButton.setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         monthButton.setOnClickListener(v -> {
             yearMode = false;
             render();

@@ -38,6 +38,7 @@ import com.example.finalproject.model.Reminder;
 import com.example.finalproject.repository.CalendarRepository;
 import com.example.finalproject.ui.common.AlphaSliderView;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.HueSliderView;
 import com.example.finalproject.ui.common.SpectrumColorView;
 import com.example.finalproject.ui.common.UiUtils;
@@ -54,7 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class EventEditFragment extends Fragment {
+public class EventEditFragment extends Fragment implements ScreenBackHandler {
     private static final String ARG_EVENT_ID = "event_id";
     private static final String ARG_DATE = "date";
     private static final String RESULT_RECURRENCE = "event_recurrence";
@@ -131,6 +132,7 @@ public class EventEditFragment extends Fragment {
     private boolean keyboardVisible;
     private Runnable pendingKeyboardScrollRunnable;
     private View pendingKeyboardScrollAnchor;
+    private String initialStateSignature;
 
     public static EventEditFragment newInstance(long eventId, LocalDate date) {
         EventEditFragment fragment = new EventEditFragment();
@@ -347,11 +349,12 @@ public class EventEditFragment extends Fragment {
                 reminders.addAll(event.getReminders());
             }
         }
+        initialStateSignature = buildStateSignature();
         initialized = true;
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreenOrHome());
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.btn_save_event).setOnClickListener(v -> save());
         startDateText.setOnClickListener(v -> openDatePicker(RESULT_START_DATE, startDate));
         endDateText.setOnClickListener(v -> openDatePicker(RESULT_END_DATE, endDate));
@@ -662,6 +665,82 @@ public class EventEditFragment extends Fragment {
         url = urlEdit.getText().toString().trim();
         notes = notesEdit.getText().toString().trim();
         allDay = allDaySwitch.isChecked();
+    }
+
+    @Override
+    public boolean onHandleBackPressed() {
+        if (!isAdded()) {
+            return true;
+        }
+        captureInput();
+        if (!hasUnsavedChanges()) {
+            ((MainActivity) requireActivity()).finishFullScreenOrHome();
+            return true;
+        }
+        UiUtils.showConfirmationDialog(
+                requireContext(),
+                R.drawable.ic_close,
+                getString(R.string.discard_changes_title),
+                getString(R.string.discard_changes_message),
+                getString(R.string.discard),
+                () -> ((MainActivity) requireActivity()).finishFullScreenOrHome()
+        );
+        return true;
+    }
+
+    private boolean hasUnsavedChanges() {
+        return !buildStateSignature().equals(initialStateSignature == null ? "" : initialStateSignature);
+    }
+
+    private String buildStateSignature() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(valueOrEmpty(title)).append('|')
+                .append(valueOrEmpty(location)).append('|')
+                .append(valueOrEmpty(url)).append('|')
+                .append(valueOrEmpty(notes)).append('|')
+                .append(normalizeColor(selectedColor)).append('|')
+                .append(allDay).append('|')
+                .append(valueOrEmpty(startDate)).append('|')
+                .append(valueOrEmpty(endDate)).append('|')
+                .append(valueOrEmpty(startTime)).append('|')
+                .append(valueOrEmpty(endTime)).append('|')
+                .append(recurrenceSignature(recurrenceRule)).append('|')
+                .append(reminderSignature(reminders));
+        return builder.toString();
+    }
+
+    private String recurrenceSignature(RecurrenceRule rule) {
+        RecurrenceRule currentRule = rule == null ? RecurrenceRule.none() : rule;
+        return valueOrEmpty(currentRule.getFreq()) + '|'
+                + currentRule.getIntervalValue() + '|'
+                + valueOrEmpty(currentRule.getByDay()) + '|'
+                + valueOrEmpty(currentRule.getByMonthDay()) + '|'
+                + valueOrEmpty(currentRule.getByMonth()) + '|'
+                + valueOrEmpty(currentRule.getBySetPos()) + '|'
+                + valueOrEmpty(currentRule.getMonthlyPatternType()) + '|'
+                + valueOrEmpty(currentRule.getEndType()) + '|'
+                + valueOrEmpty(currentRule.getEndDate()) + '|'
+                + valueOrEmpty(currentRule.getOccurrenceCount());
+    }
+
+    private String reminderSignature(List<Reminder> items) {
+        if (items == null || items.isEmpty()) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (Reminder item : items) {
+            builder.append(valueOrEmpty(item == null ? null : item.getReminderType())).append(':')
+                    .append(valueOrEmpty(item == null ? null : item.getOffsetValue())).append(':')
+                    .append(valueOrEmpty(item == null ? null : item.getOffsetUnit())).append(':')
+                    .append(valueOrEmpty(item == null ? null : item.getTimeOfDay())).append(':')
+                    .append(item != null && item.isEnabled())
+                    .append(';');
+        }
+        return builder.toString();
+    }
+
+    private String valueOrEmpty(Object value) {
+        return value == null ? "" : String.valueOf(value);
     }
 
     private void save() {

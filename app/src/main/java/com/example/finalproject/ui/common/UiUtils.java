@@ -11,8 +11,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
 import androidx.core.graphics.ColorUtils;
 
 import com.example.finalproject.R;
@@ -93,13 +95,35 @@ public final class UiUtils {
     }
 
     public static void showDeleteDialog(Context context, String message, Runnable onConfirm) {
+        showConfirmationDialog(
+                context,
+                R.drawable.ic_delete,
+                context.getString(R.string.delete_dialog_title),
+                message,
+                context.getString(R.string.delete),
+                onConfirm
+        );
+    }
+
+    public static void showConfirmationDialog(
+            Context context,
+            @DrawableRes int iconResId,
+            String title,
+            String message,
+            String confirmText,
+            Runnable onConfirm
+    ) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(context).inflate(R.layout.dialog_delete_confirmation, null, false);
+        ImageView iconView = content.findViewById(R.id.iv_delete_icon);
         TextView titleView = content.findViewById(R.id.tv_delete_title);
         TextView messageView = content.findViewById(R.id.tv_delete_message);
-        titleView.setText(R.string.delete_dialog_title);
+        TextView confirmView = content.findViewById(R.id.btn_delete_confirm);
+        iconView.setImageResource(iconResId);
+        titleView.setText(title);
         messageView.setText(message);
+        confirmView.setText(confirmText);
         content.findViewById(R.id.btn_delete_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_delete_confirm).setOnClickListener(v -> {
             dialog.dismiss();
