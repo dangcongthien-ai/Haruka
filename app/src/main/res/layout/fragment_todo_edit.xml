@@ -90,9 +90,9 @@
                     android:hint="@string/title_hint"
                     android:inputType="textCapSentences"
                     android:padding="0dp"
-                    android:textColor="@color/brand_orange"
+                    android:textColor="@color/text_primary"
                     android:textColorHighlight="@color/brand_orange_highlight"
-                    android:textColorHint="@color/brand_orange"
+                    android:textColorHint="@color/brand_orange_hint"
                     android:textCursorDrawable="@drawable/cursor_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -266,22 +266,6 @@
             <include
                 android:id="@+id/priority_matrix"
                 layout="@layout/include_priority_matrix" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_delete_todo"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="28dp"
-                android:layout_marginEnd="15dp"
-                android:layout_marginBottom="28dp"
-                android:text="@string/delete"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:visibility="gone"
-                app:backgroundTint="@color/brand_orange"
-                app:cornerRadius="20dp"
-                app:rippleColor="@color/ripple_orange_pressed" />
 
             <View
                 android:layout_width="match_parent"

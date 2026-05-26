@@ -54,6 +54,10 @@ public class TodoDayPagerAdapter extends RecyclerView.Adapter<TodoDayPagerAdapte
         notifyDataSetChanged();
     }
 
+    public void reload() {
+        notifyDataSetChanged();
+    }
+
     public LocalDate getDateForPosition(int position) {
         return centerDate.plusDays(position - 1L);
     }

@@ -284,4 +284,7 @@
     <string name="ordinal_number">thứ %1$d</string>
     <string name="todo_filter_pending">Chưa xong</string>
     <string name="todo_filter_done">Xong</string>
+    <string name="exit_app_title">Thoát ứng dụng?</string>
+    <string name="exit_app_message">Haruka sẽ được đóng nếu bạn tiếp tục.</string>
+    <string name="exit_app_confirm">Thoát</string>
 </resources>

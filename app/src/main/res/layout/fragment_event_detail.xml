@@ -70,14 +70,28 @@
                 android:paddingEnd="24dp"
                 android:paddingBottom="16dp">
 
-                <TextView
-                    android:id="@+id/tv_event_detail_title"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:textColor="@color/brand_orange"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_edit"
+                        android:tint="@color/brand_orange" />
+
+                    <TextView
+                        android:id="@+id/tv_event_detail_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textColor="@color/text_primary"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tv_event_detail_summary"
@@ -106,13 +120,27 @@
                 android:paddingEnd="24dp"
                 android:paddingBottom="16dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/note_hint"
-                    android:textColor="@color/brand_orange_hint"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_habit_description"
+                        android:tint="@color/brand_orange" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/note_hint"
+                        android:textColor="@color/brand_orange_hint"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tv_event_detail_notes"
@@ -306,7 +334,7 @@
                 android:layout_marginBottom="28dp"
                 android:text="@string/delete"
                 android:textAllCaps="false"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/white"
                 app:backgroundTint="@color/brand_orange"
                 app:cornerRadius="20dp"
                 app:rippleColor="@color/ripple_orange_pressed" />

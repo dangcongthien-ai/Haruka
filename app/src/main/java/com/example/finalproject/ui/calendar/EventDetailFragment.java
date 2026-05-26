@@ -71,6 +71,21 @@ public class EventDetailFragment extends Fragment implements ScreenBackHandler {
     @Override
     public void onResume() {
         super.onResume();
+        refreshContent();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden) {
+            refreshContent();
+        }
+    }
+
+    private void refreshContent() {
+        if (!isAdded() || getView() == null) {
+            return;
+        }
         loadEvent();
         render();
     }

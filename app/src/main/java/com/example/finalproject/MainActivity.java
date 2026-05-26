@@ -21,6 +21,7 @@ import com.example.finalproject.ui.calendar.EventEditFragment;
 import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.PlaceholderFragment;
 import com.example.finalproject.ui.common.ScreenBackHandler;
+import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.ui.habit.HabitEditFragment;
 import com.example.finalproject.ui.habit.HabitFragment;
 import com.example.finalproject.ui.journal.JournalEditFragment;
@@ -211,10 +212,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectTab(int id) {
+        int previousTabId = currentTabId;
         currentTabId = id;
         if (id == R.id.nav_calendar) {
             showCalendar();
         } else if (id == R.id.nav_todo) {
+            if (previousTabId != R.id.nav_todo) {
+                selectedDate = LocalDate.now();
+            }
             showTodo();
         } else if (id == R.id.nav_habits) {
             showHabits();
@@ -366,7 +371,14 @@ public class MainActivity extends AppCompatActivity {
             finishToHome();
             return;
         }
-        super.onBackPressed();
+        UiUtils.showConfirmationDialog(
+                this,
+                R.drawable.ic_close_centered,
+                getString(R.string.exit_app_title),
+                getString(R.string.exit_app_message),
+                getString(R.string.exit_app_confirm),
+                this::finishAffinity
+        );
     }
 
     @Override

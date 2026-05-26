@@ -100,6 +100,9 @@ public class TodoFragment extends Fragment implements HomeDataRefreshable {
             @Override
             public void onToggle(TodoItem item, boolean completed) {
                 repository.setCompleted(item.getId(), completed);
+                if (pagerAdapter != null) {
+                    pagerAdapter.reload();
+                }
                 refresh();
             }
 
@@ -112,6 +115,9 @@ public class TodoFragment extends Fragment implements HomeDataRefreshable {
             public void onDelete(TodoItem item) {
                 UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_todo), () -> {
                     repository.deleteTodo(item.getId());
+                    if (pagerAdapter != null) {
+                        pagerAdapter.reload();
+                    }
                     refresh();
                 });
             }
