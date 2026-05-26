@@ -47,10 +47,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import java.time.LocalDate;
-
 public class HabitFragment extends Fragment implements HomeDataRefreshable {
-public class HabitFragment extends Fragment {
     private static final String ARG_DATE = "date";
     private static final String DATE_RESULT_KEY = "habit_date_result";
     private static final int SORT_PRIORITY = 0;
@@ -114,6 +111,12 @@ public class HabitFragment extends Fragment {
 
     @Override
     public void onHomeDataRefresh(LocalDate selectedDate) {
+        if (selectedDate != null) {
+            this.selectedDate = clampFutureDate(selectedDate);
+        }
+        refresh();
+    }
+
     private void bind(View view) {
         dateLabel = view.findViewById(R.id.tv_habit_date);
         activeButton = view.findViewById(R.id.btn_habit_active);

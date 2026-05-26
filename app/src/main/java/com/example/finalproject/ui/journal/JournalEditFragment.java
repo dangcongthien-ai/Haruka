@@ -1165,10 +1165,10 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
 
     @Override
     public boolean onHandleBackPressed() {
-        saveDraftIfNeeded();
-        suppressAutoSave = true;
-        ((MainActivity) requireActivity()).finishToHome();
+        handleBackPressed();
         return true;
+    }
+
     public void handleBackPressed() {
         if (hasUnsavedChanges()) {
             UiUtils.showConfirmDialog(

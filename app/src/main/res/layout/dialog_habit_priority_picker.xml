@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_habit_sheet"
@@ -21,7 +22,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_back" />
 
-        <Space
+        <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -42,8 +43,10 @@
             app:backgroundTint="@color/brand_orange"
             app:cornerRadius="20dp"
             app:rippleColor="@color/ripple_orange_pressed" />
-            android:layout_height="1dp"
-            android:layout_weight="1" />
+
+        <Space
+            android:layout_width="46dp"
+            android:layout_height="46dp" />
     </LinearLayout>
 
     <LinearLayout

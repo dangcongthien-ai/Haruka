@@ -152,10 +152,6 @@ public final class UiUtils {
             String confirmText,
             Runnable onConfirm
     ) {
-        showConfirmDialog(context, message, context.getString(R.string.delete), onConfirm);
-    }
-
-    public static void showConfirmDialog(Context context, String message, String confirmText, Runnable onConfirm) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(context).inflate(R.layout.dialog_delete_confirmation, null, false);
@@ -167,12 +163,8 @@ public final class UiUtils {
         titleView.setText(title);
         messageView.setText(message);
         confirmView.setText(confirmText);
-        TextView confirmButton = content.findViewById(R.id.btn_delete_confirm);
-        titleView.setText(R.string.delete_dialog_title);
-        messageView.setText(message);
-        confirmButton.setText(confirmText);
         content.findViewById(R.id.btn_delete_cancel).setOnClickListener(v -> dialog.dismiss());
-        confirmButton.setOnClickListener(v -> {
+        confirmView.setOnClickListener(v -> {
             dialog.dismiss();
             onConfirm.run();
         });
@@ -180,6 +172,17 @@ public final class UiUtils {
         styleDialogWindow(dialog, dp(context, 312), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
         dialog.setCanceledOnTouchOutside(true);
         dialog.show();
+    }
+
+    public static void showConfirmDialog(Context context, String message, String confirmText, Runnable onConfirm) {
+        showConfirmationDialog(
+                context,
+                R.drawable.ic_close_centered,
+                context.getString(R.string.discard_changes_title),
+                message,
+                confirmText,
+                onConfirm
+        );
     }
 
     public static void styleDialogWindow(Dialog dialog, int width, int height, float dimAmount) {

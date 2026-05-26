@@ -374,13 +374,13 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         if (manager.getBackStackEntryCount() > 0) {
-            Fragment current = manager.findFragmentById(R.id.fragment_container);
-            if (current instanceof JournalEditFragment) {
-                ((JournalEditFragment) current).handleBackPressed();
+            Fragment homeFragment = manager.findFragmentById(R.id.fragment_container);
+            if (homeFragment instanceof JournalEditFragment) {
+                ((JournalEditFragment) homeFragment).handleBackPressed();
                 return;
             }
-            if (current instanceof HabitEditFragment) {
-                ((HabitEditFragment) current).handleBackPressed();
+            if (homeFragment instanceof HabitEditFragment) {
+                ((HabitEditFragment) homeFragment).handleBackPressed();
                 return;
             }
             manager.popBackStack();
