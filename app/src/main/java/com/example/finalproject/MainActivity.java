@@ -148,16 +148,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void finishFullScreen() {
         FragmentManager manager = getSupportFragmentManager();
-        if (manager.getBackStackEntryCount() > 1) {
+        if (manager.getBackStackEntryCount() > 0) {
             manager.popBackStack();
-        } else if (manager.getBackStackEntryCount() == 1) {
-            finishToHome();
         }
     }
 
     public void finishFullScreenOrHome() {
         FragmentManager manager = getSupportFragmentManager();
-        if (manager.getBackStackEntryCount() > 1) {
+        if (manager.getBackStackEntryCount() > 0) {
             manager.popBackStack();
         } else {
             finishToHome();

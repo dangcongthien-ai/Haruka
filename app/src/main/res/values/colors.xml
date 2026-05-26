@@ -27,6 +27,10 @@
     <color name="priority_2">#FFEBD7</color>
     <color name="priority_3">#E2F0FF</color>
     <color name="priority_4">#F0F0F0</color>
+    <color name="priority_1_accent">#FF6555</color>
+    <color name="priority_2_accent">#F59A32</color>
+    <color name="priority_3_accent">#4E93F3</color>
+    <color name="priority_4_accent">#8E939B</color>
     <color name="event_blue">#9BC6EF</color>
     <color name="event_pink">#F7A8D7</color>
     <color name="event_green">#A8EE91</color>

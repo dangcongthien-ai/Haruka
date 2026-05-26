@@ -77,6 +77,16 @@
     <string name="priority_2">Ưu tiên 2</string>
     <string name="priority_3">Ưu tiên 3</string>
     <string name="priority_4">Ưu tiên 4</string>
+    <string name="priority_matrix_subtitle">Chọn theo ma trận Eisenhower</string>
+    <string name="priority_selected_format">Đang chọn: %1$s · %2$s</string>
+    <string name="not_urgent">Ít khẩn cấp</string>
+    <string name="not_important">Không quan trọng</string>
+    <string name="priority_schedule_desc">Dành thời gian để lên kế hoạch và thực hiện</string>
+    <string name="priority_do_now_desc">Việc quan trọng và khẩn cần làm ngay</string>
+    <string name="priority_delegate_desc">Giao cho người khác để tiết kiệm thời gian</string>
+    <string name="priority_eliminate_desc">Loại bỏ hoặc hạn chế những việc không cần thiết</string>
+    <string name="priority_hint_footer">Gợi ý: Hãy tập trung vào những việc quan trọng trước, và hạn chế tối đa những việc không quan trọng.</string>
+    <string name="priority_selected_badge">Đã chọn</string>
     <string name="empty_events">Chưa có sự kiện</string>
     <string name="empty_todos">Chưa có việc cần làm</string>
     <string name="journal_today">Nhật ký hôm nay</string>
@@ -272,4 +282,6 @@
     <string name="monthly_on_weekday_ordinal">Hàng tháng vào %1$s %2$s</string>
     <string name="ordinal_last">cuối cùng</string>
     <string name="ordinal_number">thứ %1$d</string>
+    <string name="todo_filter_pending">Chưa xong</string>
+    <string name="todo_filter_done">Xong</string>
 </resources>
