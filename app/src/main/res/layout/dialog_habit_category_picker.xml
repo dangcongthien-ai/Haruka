@@ -43,6 +43,9 @@
             app:backgroundTint="@color/brand_orange"
             app:cornerRadius="20dp"
             app:rippleColor="@color/ripple_orange_pressed" />
+        <Space
+            android:layout_width="46dp"
+            android:layout_height="46dp" />
     </LinearLayout>
 
     <LinearLayout
