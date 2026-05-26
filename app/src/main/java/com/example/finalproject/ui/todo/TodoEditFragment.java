@@ -66,7 +66,6 @@ public class TodoEditFragment extends Fragment implements ScreenBackHandler {
     private View typeSegment;
     private MaterialButton eventTypeButton;
     private MaterialButton todoTypeButton;
-    private MaterialButton deleteButton;
     private TextView addReminderButton;
     private TodoPriorityMatrixController priorityMatrixController;
     private Integer previousSoftInputMode;
@@ -161,7 +160,6 @@ public class TodoEditFragment extends Fragment implements ScreenBackHandler {
         typeSegment = view.findViewById(R.id.type_segment);
         eventTypeButton = view.findViewById(R.id.btn_event_type);
         todoTypeButton = view.findViewById(R.id.btn_todo_type);
-        deleteButton = view.findViewById(R.id.btn_delete_todo);
         addReminderButton = view.findViewById(R.id.btn_add_reminder);
         priorityMatrixController = new TodoPriorityMatrixController(view.findViewById(R.id.priority_matrix));
         priorityMatrixController.setOnPrioritySelectedListener(this::setPriority);
@@ -299,14 +297,6 @@ public class TodoEditFragment extends Fragment implements ScreenBackHandler {
         });
         attachKeyboardFieldBehavior(titleEdit, titleEdit, 60L);
         attachKeyboardFieldBehavior(descriptionEdit, descriptionEdit, 100L);
-        deleteButton.setOnClickListener(v -> {
-            UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_todo), () -> {
-                if (todoId > 0) {
-                    repository.deleteTodo(todoId);
-                }
-                ((MainActivity) requireActivity()).finishFullScreenOrHome();
-            });
-        });
     }
 
     @Override
@@ -344,7 +334,6 @@ public class TodoEditFragment extends Fragment implements ScreenBackHandler {
         dateText.setText(DateTimeUtils.formatDateWithDow(todoDate));
         renderReminders();
         typeSegment.setVisibility(todoId > 0 ? View.GONE : View.VISIBLE);
-        deleteButton.setVisibility(todoId > 0 ? View.VISIBLE : View.GONE);
         UiUtils.selectSegment(requireContext(), todoTypeButton, eventTypeButton);
         priorityMatrixController.setInteractive(true);
         priorityMatrixController.setPriority(priority);
