@@ -74,6 +74,8 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
     private static final long MONTH_PANEL_CLOSE_DURATION_MS = 180L;
     private static final long PERIOD_SWIPE_OUT_DURATION_MS = 140L;
     private static final long PERIOD_SWIPE_IN_DURATION_MS = 220L;
+    private static final long MODE_POPUP_OPEN_DURATION_MS = 180L;
+    private static final long MODE_POPUP_CLOSE_DURATION_MS = 160L;
 
     private CalendarRepository calendarRepository;
     private TodoRepository todoRepository;
@@ -118,6 +120,10 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
     private int monthPanelAnimationGeneration = 0;
     private int monthDetailPanelTop = RecyclerView.NO_POSITION;
     private PopupWindow modePopupWindow;
+    private View modePopupContent;
+    private boolean modePopupClosing;
+    @Nullable
+    private View modePressedOptionView;
     private final Map<YearMonth, List<CalendarDayCell>> monthCellCache = new HashMap<>();
     private final DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("'Tháng' MM/yyyy", Locale.US);
 
@@ -353,7 +359,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
 
     private void showModeMenu() {
         if (modePopupWindow != null && modePopupWindow.isShowing()) {
-            modePopupWindow.dismiss();
+            dismissModeMenu(true, null);
             return;
         }
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.popup_calendar_mode, null, false);
@@ -364,30 +370,136 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
                 true
         );
         modePopupWindow = popupWindow;
+        modePopupContent = content;
+        modePopupClosing = false;
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popupWindow.setOutsideTouchable(true);
-        popupWindow.setAnimationStyle(R.style.Caliary_PopupWindowAnimation);
+        popupWindow.setAnimationStyle(0);
         popupWindow.setOnDismissListener(() -> {
+            if (modePressedOptionView != null) {
+                modePressedOptionView.setPressed(false);
+            }
             modePopupWindow = null;
+            modePopupContent = null;
+            modePopupClosing = false;
+            modePressedOptionView = null;
             animateModeArrow(false);
         });
-        content.findViewById(R.id.popup_mode_month).setOnClickListener(v -> {
-            mode = MODE_MONTH;
-            popupWindow.dismiss();
-            refresh();
-        });
-        content.findViewById(R.id.popup_mode_week).setOnClickListener(v -> {
-            mode = MODE_WEEK;
-            popupWindow.dismiss();
-            refresh();
-        });
-        content.findViewById(R.id.popup_mode_day).setOnClickListener(v -> {
-            mode = MODE_DAY;
-            popupWindow.dismiss();
-            refresh();
-        });
+        bindModeOption(content.findViewById(R.id.popup_mode_month), MODE_MONTH);
+        bindModeOption(content.findViewById(R.id.popup_mode_week), MODE_WEEK);
+        bindModeOption(content.findViewById(R.id.popup_mode_day), MODE_DAY);
         animateModeArrow(true);
         popupWindow.showAsDropDown(modeButton, 0, 0);
+        content.setPivotY(0f);
+        content.setPivotX(content.getResources().getDisplayMetrics().density * 60f);
+        content.setAlpha(0f);
+        content.setScaleX(0.96f);
+        content.setScaleY(0.82f);
+        content.setTranslationY(-UiUtils.dp(requireContext(), 6));
+        content.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .translationY(0f)
+                .setDuration(MODE_POPUP_OPEN_DURATION_MS)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+    }
+
+    private void bindModeOption(View optionView, int targetMode) {
+        optionView.setOnTouchListener((v, event) -> {
+            int action = event.getActionMasked();
+            if (action == MotionEvent.ACTION_DOWN) {
+                if (modePressedOptionView != null && modePressedOptionView != v) {
+                    modePressedOptionView.setPressed(false);
+                }
+                modePressedOptionView = v;
+                v.setPressed(true);
+                return true;
+            }
+            if (action == MotionEvent.ACTION_MOVE) {
+                boolean inside = isTouchInsideView(v, event.getX(), event.getY());
+                v.setPressed(inside);
+                if (inside) {
+                    modePressedOptionView = v;
+                } else if (modePressedOptionView == v) {
+                    modePressedOptionView = null;
+                }
+                return true;
+            }
+            if (action == MotionEvent.ACTION_UP) {
+                boolean inside = isTouchInsideView(v, event.getX(), event.getY());
+                if (!inside) {
+                    if (modePressedOptionView == v) {
+                        modePressedOptionView = null;
+                    }
+                    v.setPressed(false);
+                    return true;
+                }
+                mode = targetMode;
+                modePressedOptionView = v;
+                v.setPressed(true);
+                dismissModeMenu(true, this::refresh);
+                return true;
+            }
+            if (action == MotionEvent.ACTION_CANCEL) {
+                if (modePressedOptionView == v) {
+                    modePressedOptionView = null;
+                }
+                v.setPressed(false);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private boolean isTouchInsideView(View view, float x, float y) {
+        return x >= 0f && x <= view.getWidth() && y >= 0f && y <= view.getHeight();
+    }
+
+    private void dismissModeMenu(boolean animated, @Nullable Runnable afterDismiss) {
+        PopupWindow popupWindow = modePopupWindow;
+        View content = modePopupContent;
+        if (popupWindow == null || !popupWindow.isShowing()) {
+            if (afterDismiss != null) {
+                afterDismiss.run();
+            }
+            return;
+        }
+        if (!animated || content == null || modePopupClosing) {
+            if (modePressedOptionView != null) {
+                modePressedOptionView.setPressed(false);
+                modePressedOptionView = null;
+            }
+            popupWindow.dismiss();
+            if (afterDismiss != null) {
+                afterDismiss.run();
+            }
+            return;
+        }
+        modePopupClosing = true;
+        View pressedView = modePressedOptionView;
+        content.animate().cancel();
+        content.animate()
+                .alpha(0f)
+                .scaleX(0.96f)
+                .scaleY(0.82f)
+                .translationY(-UiUtils.dp(requireContext(), 6))
+                .setDuration(MODE_POPUP_CLOSE_DURATION_MS)
+                .setInterpolator(new AccelerateInterpolator())
+                .withEndAction(() -> {
+                    if (pressedView != null) {
+                        pressedView.setPressed(false);
+                    }
+                    modePressedOptionView = null;
+                    if (popupWindow.isShowing()) {
+                        popupWindow.dismiss();
+                    }
+                    if (afterDismiss != null) {
+                        afterDismiss.run();
+                    }
+                })
+                .start();
     }
 
     private void showMonthPicker() {

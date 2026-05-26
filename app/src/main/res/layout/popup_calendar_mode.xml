@@ -8,15 +8,18 @@
     <TextView
         android:id="@+id/popup_mode_month"
         style="@style/Caliary.PopupMenuItem"
+        android:background="@drawable/bg_popup_item_top_ripple"
         android:text="@string/month" />
 
     <TextView
         android:id="@+id/popup_mode_week"
         style="@style/Caliary.PopupMenuItem"
+        android:background="@drawable/bg_popup_item_middle_ripple"
         android:text="@string/week" />
 
     <TextView
         android:id="@+id/popup_mode_day"
         style="@style/Caliary.PopupMenuItem"
+        android:background="@drawable/bg_popup_item_bottom_ripple"
         android:text="@string/day" />
 </LinearLayout>

@@ -1,13 +1,16 @@
 package com.example.finalproject.adapter;
 
+import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.finalproject.R;
@@ -34,6 +37,7 @@ public class TodoListAdapter extends RecyclerView.Adapter<TodoListAdapter.TodoVi
 
     public TodoListAdapter(Listener listener) {
         this.listener = listener;
+        setHasStableIds(true);
     }
 
     public void submit(List<TodoItem> newItems) {
@@ -56,14 +60,18 @@ public class TodoListAdapter extends RecyclerView.Adapter<TodoListAdapter.TodoVi
     @Override
     public void onBindViewHolder(@NonNull TodoViewHolder holder, int position) {
         TodoItem item = items.get(position);
-        int fallback = holder.itemView.getContext().getColor(R.color.surface_soft);
-        holder.card.setBackground(UiUtils.rounded(UiUtils.safeColor(item.getColor(), fallback), 8, holder.itemView.getContext()));
+        Context context = holder.itemView.getContext();
+        int accent = priorityAccent(item.getPriorityQuadrant(), context);
+        int fill = ColorUtils.setAlphaComponent(accent, item.isCompleted() ? 22 : 28);
+        holder.card.setBackground(UiUtils.rounded(fill, 10, context));
         holder.title.setText(item.getTitle());
+        holder.title.setTextColor(context.getColor(R.color.text_primary));
         holder.description.setText(item.getDescription());
+        holder.description.setTextColor(context.getColor(R.color.text_secondary));
         holder.description.setVisibility(item.getDescription() == null || item.getDescription().isEmpty() ? View.GONE : View.VISIBLE);
-        holder.checkBox.setOnCheckedChangeListener(null);
-        holder.checkBox.setChecked(item.isCompleted());
-        holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> listener.onToggle(item, isChecked));
+        holder.checkIcon.setImageResource(item.isCompleted() ? R.drawable.ic_todo_check_done : R.drawable.ic_todo_check_empty);
+        holder.toggle.setContentDescription(context.getString(item.isCompleted() ? R.string.completed : R.string.active));
+        holder.toggle.setOnClickListener(v -> listener.onToggle(item, !item.isCompleted()));
         holder.edit.setVisibility(showActions ? View.VISIBLE : View.GONE);
         holder.delete.setVisibility(showActions ? View.VISIBLE : View.GONE);
         holder.card.setOnClickListener(v -> listener.onClick(item));
@@ -76,9 +84,31 @@ public class TodoListAdapter extends RecyclerView.Adapter<TodoListAdapter.TodoVi
         return items.size();
     }
 
+    @Override
+    public long getItemId(int position) {
+        return items.get(position).getId();
+    }
+
+    private int priorityAccent(int priority, Context context) {
+        if (priority == 1) {
+            return context.getColor(R.color.priority_1_accent);
+        }
+        if (priority == 2) {
+            return context.getColor(R.color.priority_2_accent);
+        }
+        if (priority == 3) {
+            return context.getColor(R.color.priority_3_accent);
+        }
+        if (priority == 4) {
+            return context.getColor(R.color.priority_4_accent);
+        }
+        return Color.parseColor("#EB9B54");
+    }
+
     static class TodoViewHolder extends RecyclerView.ViewHolder {
         final View card;
-        final CheckBox checkBox;
+        final View toggle;
+        final ImageView checkIcon;
         final TextView title;
         final TextView description;
         final ImageButton edit;
@@ -87,7 +117,8 @@ public class TodoListAdapter extends RecyclerView.Adapter<TodoListAdapter.TodoVi
         TodoViewHolder(@NonNull View itemView) {
             super(itemView);
             card = itemView.findViewById(R.id.todo_card);
-            checkBox = itemView.findViewById(R.id.check_completed);
+            toggle = itemView.findViewById(R.id.btn_toggle_completed);
+            checkIcon = itemView.findViewById(R.id.iv_completed);
             title = itemView.findViewById(R.id.tv_todo_title);
             description = itemView.findViewById(R.id.tv_todo_description);
             edit = itemView.findViewById(R.id.btn_todo_edit);

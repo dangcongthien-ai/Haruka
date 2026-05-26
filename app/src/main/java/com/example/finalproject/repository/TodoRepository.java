@@ -56,7 +56,7 @@ public class TodoRepository {
                 new String[]{DateTimeUtils.dateToIso(date)},
                 null,
                 null,
-                DbContract.Todo.IS_COMPLETED + " ASC, " + DbContract.Todo.PRIORITY_QUADRANT + " ASC, " + DbContract.Todo.CREATED_AT + " DESC"
+                stableTodoOrder()
         )) {
             while (cursor.moveToNext()) {
                 result.add(mapTodo(cursor));
@@ -83,7 +83,7 @@ public class TodoRepository {
                 args.toArray(new String[0]),
                 null,
                 null,
-                DbContract.Todo.IS_COMPLETED + " ASC, " + DbContract.Todo.PRIORITY_QUADRANT + " ASC, " + DbContract.Todo.CREATED_AT + " DESC"
+                stableTodoOrder()
         )) {
             while (cursor.moveToNext()) {
                 result.add(mapTodo(cursor));
@@ -226,6 +226,10 @@ public class TodoRepository {
         item.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.Todo.CREATED_AT)));
         item.setUpdatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.Todo.UPDATED_AT)));
         return item;
+    }
+
+    private String stableTodoOrder() {
+        return DbContract.Todo.CREATED_AT + " ASC, " + DbContract.Todo.TODO_ID + " ASC";
     }
 
     private Reminder mapTodoReminder(Cursor cursor) {
