@@ -92,7 +92,11 @@ public class EventDetailFragment extends Fragment implements ScreenBackHandler {
         view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.btn_edit_event).setOnClickListener(v -> {
             if (event != null) {
-                ((MainActivity) requireActivity()).openEventEditor(event.getId(), event.getDate());
+                ((MainActivity) requireActivity()).pushFullScreenFragment(
+                        EventEditFragment.newInstance(event.getId(), event.getDate()),
+                        EventEditFragment.class.getSimpleName(),
+                        false
+                );
             }
         });
         view.findViewById(R.id.btn_delete_event).setOnClickListener(v -> {
