@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="344dp"
+    android:layout_width="248dp"
     android:layout_height="272dp"
-    android:background="@drawable/bg_surface_rounded"
+    android:background="@drawable/bg_dialog_soft"
     android:orientation="vertical"
     android:paddingStart="18dp"
     android:paddingTop="14dp"
@@ -34,27 +34,13 @@
 
         <TextView
             android:id="@+id/btn_year_cancel"
-            android:layout_width="72dp"
-            android:layout_height="match_parent"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:gravity="center"
-            android:text="@string/cancel"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
+            style="@style/Caliary.DialogTextAction"
+            android:text="@string/cancel" />
 
         <TextView
             android:id="@+id/btn_year_ok"
-            android:layout_width="72dp"
-            android:layout_height="match_parent"
+            style="@style/Caliary.DialogTextAction"
             android:layout_marginStart="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:gravity="center"
-            android:text="@string/ok"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
+            android:text="@string/ok" />
     </LinearLayout>
 </LinearLayout>

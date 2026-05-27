@@ -36,7 +36,8 @@
             android:textColor="@color/white"
             android:textSize="16sp"
             app:backgroundTint="@color/brand_orange"
-            app:cornerRadius="20dp" />
+            app:cornerRadius="20dp"
+            app:rippleColor="@color/ripple_orange_pressed" />
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -51,7 +52,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="28dp">
+            android:paddingBottom="120dp">
 
             <EditText
                 android:id="@+id/edit_habit_title"
@@ -417,7 +418,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:orientation="vertical"
-                android:paddingStart="24dp"
+                android:paddingStart="60dp"
                 android:paddingEnd="24dp"
                 android:visibility="gone">
 

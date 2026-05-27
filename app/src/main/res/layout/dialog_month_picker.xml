@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="320dp"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_surface_rounded"
+    android:background="@drawable/bg_dialog_soft"
     android:orientation="vertical"
     android:paddingStart="16dp"
     android:paddingTop="14dp"
@@ -69,20 +69,12 @@
 
         <TextView
             android:id="@+id/btn_month_picker_cancel"
-            android:layout_width="70dp"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/cancel"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
+            style="@style/Caliary.DialogTextAction"
+            android:text="@string/cancel" />
 
         <TextView
             android:id="@+id/btn_month_picker_ok"
-            android:layout_width="70dp"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/ok"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold" />
+            style="@style/Caliary.DialogTextAction"
+            android:text="@string/ok" />
     </LinearLayout>
 </LinearLayout>

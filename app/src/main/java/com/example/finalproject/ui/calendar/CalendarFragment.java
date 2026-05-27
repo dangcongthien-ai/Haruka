@@ -19,6 +19,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.GridLayout;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
@@ -51,6 +52,8 @@ import com.example.finalproject.model.CalendarEvent;
 import com.example.finalproject.model.TodoItem;
 import com.example.finalproject.repository.CalendarRepository;
 import com.example.finalproject.repository.TodoRepository;
+import com.example.finalproject.ui.common.HomeDataRefreshable;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
 
 import java.time.LocalDate;
@@ -62,7 +65,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class CalendarFragment extends Fragment {
+public class CalendarFragment extends Fragment implements ScreenBackHandler, HomeDataRefreshable {
     public static final int MODE_MONTH = 0;
     public static final int MODE_WEEK = 1;
     public static final int MODE_DAY = 2;
@@ -71,13 +74,17 @@ public class CalendarFragment extends Fragment {
     private static final long MONTH_PANEL_CLOSE_DURATION_MS = 180L;
     private static final long PERIOD_SWIPE_OUT_DURATION_MS = 140L;
     private static final long PERIOD_SWIPE_IN_DURATION_MS = 220L;
+    private static final long MODE_POPUP_OPEN_DURATION_MS = 180L;
+    private static final long MODE_POPUP_CLOSE_DURATION_MS = 160L;
 
     private CalendarRepository calendarRepository;
     private TodoRepository todoRepository;
     private View modeButton;
     private TextView modeLabel;
+    private ImageView modeArrow;
     private TextView periodTitle;
-    private LinearLayout calendarNavRow;
+    private View calendarNavRow;
+    private TextView todayButton;
     private LinearLayout monthContainer;
     private View monthBody;
     private LinearLayout weekContainer;
@@ -112,6 +119,11 @@ public class CalendarFragment extends Fragment {
     private boolean dayPagerRecentering = false;
     private int monthPanelAnimationGeneration = 0;
     private int monthDetailPanelTop = RecyclerView.NO_POSITION;
+    private PopupWindow modePopupWindow;
+    private View modePopupContent;
+    private boolean modePopupClosing;
+    @Nullable
+    private View modePressedOptionView;
     private final Map<YearMonth, List<CalendarDayCell>> monthCellCache = new HashMap<>();
     private final DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("'Tháng' MM/yyyy", Locale.US);
 
@@ -136,6 +148,21 @@ public class CalendarFragment extends Fragment {
         refresh();
     }
 
+    @Override
+    public void onHomeDataRefresh(LocalDate hostSelectedDate) {
+        if (!isAdded()) {
+            return;
+        }
+        if (hostSelectedDate != null) {
+            selectedDate = hostSelectedDate;
+            if (mode == MODE_MONTH) {
+                visibleMonth = selectedDate.withDayOfMonth(1);
+            }
+        }
+        invalidateMonthCache();
+        refresh();
+    }
+
     public LocalDate getSelectedDate() {
         return selectedDate;
     }
@@ -143,8 +170,10 @@ public class CalendarFragment extends Fragment {
     private void bindViews(View view) {
         modeButton = view.findViewById(R.id.btn_mode);
         modeLabel = view.findViewById(R.id.tv_mode_label);
+        modeArrow = view.findViewById(R.id.iv_mode_arrow);
         periodTitle = view.findViewById(R.id.tv_period_title);
         calendarNavRow = view.findViewById(R.id.calendar_nav_row);
+        todayButton = view.findViewById(R.id.btn_today);
         monthContainer = view.findViewById(R.id.month_container);
         monthBody = view.findViewById(R.id.month_body);
         weekContainer = view.findViewById(R.id.week_container);
@@ -226,14 +255,14 @@ public class CalendarFragment extends Fragment {
                 selectedDate = event.getDate();
                 ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
             }
-            ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
+            ((MainActivity) requireActivity()).openEventDetail(event.getId(), selectedDate);
         });
         weekTopStripView.setListener(event -> {
             if (event.getDate() != null) {
                 selectedDate = event.getDate();
                 ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
             }
-            ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
+            ((MainActivity) requireActivity()).openEventDetail(event.getId(), selectedDate);
         });
 
         dayStripAdapter = new DaySelectorAdapter(date -> {
@@ -284,6 +313,7 @@ public class CalendarFragment extends Fragment {
         ImageButton next = view.findViewById(R.id.btn_next);
         previous.setOnClickListener(v -> movePeriod(-1));
         next.setOnClickListener(v -> movePeriod(1));
+        todayButton.setOnClickListener(v -> jumpToToday());
         periodTitle.setOnClickListener(v -> showMonthPicker());
         weekMonthBadge.setOnClickListener(v -> showMonthPicker());
         dayMonthBadge.setOnClickListener(v -> showMonthPicker());
@@ -328,6 +358,10 @@ public class CalendarFragment extends Fragment {
     }
 
     private void showModeMenu() {
+        if (modePopupWindow != null && modePopupWindow.isShowing()) {
+            dismissModeMenu(true, null);
+            return;
+        }
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.popup_calendar_mode, null, false);
         PopupWindow popupWindow = new PopupWindow(
                 content,
@@ -335,24 +369,137 @@ public class CalendarFragment extends Fragment {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 true
         );
+        modePopupWindow = popupWindow;
+        modePopupContent = content;
+        modePopupClosing = false;
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popupWindow.setOutsideTouchable(true);
-        content.findViewById(R.id.popup_mode_month).setOnClickListener(v -> {
-            mode = MODE_MONTH;
-            popupWindow.dismiss();
-            refresh();
+        popupWindow.setAnimationStyle(0);
+        popupWindow.setOnDismissListener(() -> {
+            if (modePressedOptionView != null) {
+                modePressedOptionView.setPressed(false);
+            }
+            modePopupWindow = null;
+            modePopupContent = null;
+            modePopupClosing = false;
+            modePressedOptionView = null;
+            animateModeArrow(false);
         });
-        content.findViewById(R.id.popup_mode_week).setOnClickListener(v -> {
-            mode = MODE_WEEK;
-            popupWindow.dismiss();
-            refresh();
-        });
-        content.findViewById(R.id.popup_mode_day).setOnClickListener(v -> {
-            mode = MODE_DAY;
-            popupWindow.dismiss();
-            refresh();
-        });
+        bindModeOption(content.findViewById(R.id.popup_mode_month), MODE_MONTH);
+        bindModeOption(content.findViewById(R.id.popup_mode_week), MODE_WEEK);
+        bindModeOption(content.findViewById(R.id.popup_mode_day), MODE_DAY);
+        animateModeArrow(true);
         popupWindow.showAsDropDown(modeButton, 0, 0);
+        content.setPivotY(0f);
+        content.setPivotX(content.getResources().getDisplayMetrics().density * 60f);
+        content.setAlpha(0f);
+        content.setScaleX(0.96f);
+        content.setScaleY(0.82f);
+        content.setTranslationY(-UiUtils.dp(requireContext(), 6));
+        content.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .translationY(0f)
+                .setDuration(MODE_POPUP_OPEN_DURATION_MS)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+    }
+
+    private void bindModeOption(View optionView, int targetMode) {
+        optionView.setOnTouchListener((v, event) -> {
+            int action = event.getActionMasked();
+            if (action == MotionEvent.ACTION_DOWN) {
+                if (modePressedOptionView != null && modePressedOptionView != v) {
+                    modePressedOptionView.setPressed(false);
+                }
+                modePressedOptionView = v;
+                v.setPressed(true);
+                return true;
+            }
+            if (action == MotionEvent.ACTION_MOVE) {
+                boolean inside = isTouchInsideView(v, event.getX(), event.getY());
+                v.setPressed(inside);
+                if (inside) {
+                    modePressedOptionView = v;
+                } else if (modePressedOptionView == v) {
+                    modePressedOptionView = null;
+                }
+                return true;
+            }
+            if (action == MotionEvent.ACTION_UP) {
+                boolean inside = isTouchInsideView(v, event.getX(), event.getY());
+                if (!inside) {
+                    if (modePressedOptionView == v) {
+                        modePressedOptionView = null;
+                    }
+                    v.setPressed(false);
+                    return true;
+                }
+                mode = targetMode;
+                modePressedOptionView = v;
+                v.setPressed(true);
+                dismissModeMenu(true, this::refresh);
+                return true;
+            }
+            if (action == MotionEvent.ACTION_CANCEL) {
+                if (modePressedOptionView == v) {
+                    modePressedOptionView = null;
+                }
+                v.setPressed(false);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private boolean isTouchInsideView(View view, float x, float y) {
+        return x >= 0f && x <= view.getWidth() && y >= 0f && y <= view.getHeight();
+    }
+
+    private void dismissModeMenu(boolean animated, @Nullable Runnable afterDismiss) {
+        PopupWindow popupWindow = modePopupWindow;
+        View content = modePopupContent;
+        if (popupWindow == null || !popupWindow.isShowing()) {
+            if (afterDismiss != null) {
+                afterDismiss.run();
+            }
+            return;
+        }
+        if (!animated || content == null || modePopupClosing) {
+            if (modePressedOptionView != null) {
+                modePressedOptionView.setPressed(false);
+                modePressedOptionView = null;
+            }
+            popupWindow.dismiss();
+            if (afterDismiss != null) {
+                afterDismiss.run();
+            }
+            return;
+        }
+        modePopupClosing = true;
+        View pressedView = modePressedOptionView;
+        content.animate().cancel();
+        content.animate()
+                .alpha(0f)
+                .scaleX(0.96f)
+                .scaleY(0.82f)
+                .translationY(-UiUtils.dp(requireContext(), 6))
+                .setDuration(MODE_POPUP_CLOSE_DURATION_MS)
+                .setInterpolator(new AccelerateInterpolator())
+                .withEndAction(() -> {
+                    if (pressedView != null) {
+                        pressedView.setPressed(false);
+                    }
+                    modePressedOptionView = null;
+                    if (popupWindow.isShowing()) {
+                        popupWindow.dismiss();
+                    }
+                    if (afterDismiss != null) {
+                        afterDismiss.run();
+                    }
+                })
+                .start();
     }
 
     private void showMonthPicker() {
@@ -360,9 +507,7 @@ public class CalendarFragment extends Fragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_month_picker, null, false);
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 320), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
         TextView yearLabel = content.findViewById(R.id.tv_picker_year);
         GridLayout monthGrid = content.findViewById(R.id.month_picker_grid);
@@ -431,9 +576,7 @@ public class CalendarFragment extends Fragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_year_picker, null, false);
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 248), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
         NumberPicker picker = content.findViewById(R.id.picker_year);
         int minYear = Math.max(1900, selectedYear - 100);
@@ -442,6 +585,7 @@ public class CalendarFragment extends Fragment {
         picker.setMaxValue(maxYear);
         picker.setValue(selectedYear);
         picker.setWrapSelectorWheel(false);
+        UiUtils.styleNumberPicker(picker, requireContext());
 
         content.findViewById(R.id.btn_year_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_year_ok).setOnClickListener(v -> {
@@ -449,6 +593,17 @@ public class CalendarFragment extends Fragment {
             dialog.dismiss();
         });
         dialog.show();
+    }
+
+    private void animateModeArrow(boolean expanded) {
+        if (modeArrow == null) {
+            return;
+        }
+        modeArrow.animate()
+                .rotation(expanded ? 180f : 0f)
+                .setDuration(220L)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
     }
 
     private interface YearPickerListener {
@@ -567,7 +722,7 @@ public class CalendarFragment extends Fragment {
             return;
         }
         updateHeader();
-        UiUtils.visible(calendarNavRow, mode == MODE_MONTH);
+        UiUtils.visible(calendarNavRow, mode == MODE_MONTH || mode == MODE_WEEK || mode == MODE_DAY);
         UiUtils.visible(monthContainer, mode == MODE_MONTH);
         UiUtils.visible(weekContainer, mode == MODE_WEEK);
         UiUtils.visible(dayContainer, mode == MODE_DAY);
@@ -591,6 +746,23 @@ public class CalendarFragment extends Fragment {
             modeLabel.setText(R.string.day);
             periodTitle.setText(DateTimeUtils.formatDateWithDow(selectedDate));
         }
+        updateTodayButton();
+    }
+
+    private void updateTodayButton() {
+        if (todayButton == null) {
+            return;
+        }
+        LocalDate today = LocalDate.now();
+        boolean visible = false;
+        if (mode == MODE_MONTH) {
+            visible = !visibleMonth.equals(today.withDayOfMonth(1)) || !selectedDate.equals(today);
+        } else if (mode == MODE_WEEK) {
+            visible = !getWeekStart(selectedDate).equals(getWeekStart(today));
+        } else if (mode == MODE_DAY) {
+            visible = !selectedDate.equals(today);
+        }
+        UiUtils.visible(todayButton, visible);
     }
 
     private void refreshMonth() {
@@ -659,6 +831,28 @@ public class CalendarFragment extends Fragment {
         }
     }
 
+    private void jumpToToday() {
+        LocalDate today = LocalDate.now();
+        LocalDate previousMonth = visibleMonth;
+        selectedDate = today;
+        visibleMonth = today.withDayOfMonth(1);
+        ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+        if (mode == MODE_MONTH) {
+            monthDetailVisible = false;
+            monthDetailPanelTop = RecyclerView.NO_POSITION;
+            updateHeader();
+            resizeMonthDetailPanel();
+            UiUtils.visible(dayDetailPanel, false);
+            preloadMonthWindow(visibleMonth);
+            monthPagerAdapter.setSelectedDate(selectedDate);
+            monthPagerAdapter.setMonthDetailVisible(false);
+            notifyMonthPages(previousMonth, visibleMonth);
+            syncMonthPager(true);
+            return;
+        }
+        refresh();
+    }
+
     private void refreshDay() {
         dayMonthBadge.setText(getString(R.string.day_month_year_badge, selectedDate.getMonthValue(), selectedDate.getYear()));
         dayStripAdapter.submit(buildWeekDays(getWeekStart(selectedDate)), selectedDate);
@@ -675,6 +869,11 @@ public class CalendarFragment extends Fragment {
     private EventListAdapter.Listener eventActions() {
         return new EventListAdapter.Listener() {
             @Override
+            public void onClick(CalendarEvent event) {
+                ((MainActivity) requireActivity()).openEventDetail(event.getId(), event.getDate());
+            }
+
+            @Override
             public void onEdit(CalendarEvent event) {
                 ((MainActivity) requireActivity()).openEventEditor(event.getId(), selectedDate);
             }
@@ -688,6 +887,15 @@ public class CalendarFragment extends Fragment {
                 });
             }
         };
+    }
+
+    @Override
+    public boolean onHandleBackPressed() {
+        if (mode == MODE_MONTH && monthDetailVisible) {
+            closeMonthDetailPanel();
+            return true;
+        }
+        return false;
     }
 
     private TodoListAdapter.Listener todoActions() {
@@ -813,12 +1021,14 @@ public class CalendarFragment extends Fragment {
             return;
         }
         int targetPosition = monthPagerAdapter.getPositionForMonth(visibleMonth);
-        if (getCurrentMonthPagerPosition() == targetPosition) {
+        int currentPosition = getCurrentMonthPagerPosition();
+        if (currentPosition == targetPosition) {
             return;
         }
-        if (smooth) {
+        if (smooth && currentPosition != RecyclerView.NO_POSITION && Math.abs(targetPosition - currentPosition) <= 2) {
             monthPager.smoothScrollToPosition(targetPosition);
         } else if (monthPager.getScrollState() == RecyclerView.SCROLL_STATE_IDLE) {
+            monthPager.stopScroll();
             monthPager.scrollToPosition(targetPosition);
         }
     }

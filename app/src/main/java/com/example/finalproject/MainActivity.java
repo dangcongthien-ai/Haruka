@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,12 +14,18 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.example.finalproject.ui.calendar.CalendarFragment;
+import com.example.finalproject.ui.calendar.EventDetailFragment;
 import com.example.finalproject.ui.calendar.EventEditFragment;
+import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.PlaceholderFragment;
+import com.example.finalproject.ui.common.ScreenBackHandler;
+import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.ui.habit.HabitEditFragment;
 import com.example.finalproject.ui.habit.HabitFragment;
+import com.example.finalproject.ui.habit.HabitStatsFragment;
 import com.example.finalproject.ui.journal.JournalEditFragment;
 import com.example.finalproject.ui.journal.JournalFragment;
 import com.example.finalproject.ui.journal.JournalStatsFragment;
@@ -29,9 +36,12 @@ import com.example.finalproject.ui.todo.TodoFragment;
 import java.time.LocalDate;
 
 public class MainActivity extends AppCompatActivity {
+    private static final long FULL_SCREEN_CONTAINER_HIDE_DELAY_MS = 520L;
+    private static final long FULL_SCREEN_DISMISS_DURATION_MS = 380L;
     private View bottomNavigationView;
     private View mainRoot;
     private View fab;
+    private View fullScreenContainer;
     private FrameLayout navCalendar;
     private FrameLayout navTodo;
     private FrameLayout navHabits;
@@ -46,6 +56,20 @@ public class MainActivity extends AppCompatActivity {
     private View indicatorJournal;
     private int currentTabId = R.id.nav_calendar;
     private LocalDate selectedDate = LocalDate.now();
+    private final Runnable hideFullScreenContainerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (fullScreenContainer == null) {
+                return;
+            }
+            FragmentManager manager = getSupportFragmentManager();
+            if (manager.getBackStackEntryCount() > 0) {
+                return;
+            }
+            fullScreenContainer.setVisibility(View.GONE);
+            clearFullScreenFragments(manager, false);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         mainRoot = findViewById(R.id.main);
         bottomNavigationView = findViewById(R.id.custom_bottom_navigation);
         fab = findViewById(R.id.main_fab);
+        fullScreenContainer = findViewById(R.id.fullscreen_container);
         ViewCompat.setOnApplyWindowInsetsListener(mainRoot, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
@@ -99,6 +124,10 @@ public class MainActivity extends AppCompatActivity {
         openFullScreen(EventEditFragment.newInstance(eventId, date == null ? selectedDate : date));
     }
 
+    public void openEventDetail(long eventId, LocalDate date) {
+        openFullScreen(EventDetailFragment.newInstance(eventId, date == null ? selectedDate : date));
+    }
+
     public void openTodoEditor(long todoId, LocalDate date) {
         openFullScreen(TodoEditFragment.newInstance(todoId, date == null ? selectedDate : date));
     }
@@ -117,7 +146,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void openHabitEditor(long habitId) {
         LocalDate today = selectedDate == null ? LocalDate.now() : selectedDate;
+        if (habitId <= 0 && today.isAfter(LocalDate.now())) {
+            Toast.makeText(this, R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+            return;
+        }
         openFullScreen(HabitEditFragment.newInstance(habitId, today));
+    }
+
+    public void openHabitStats(LocalDate date) {
+        openFullScreen(HabitStatsFragment.newInstance(date == null ? selectedDate : date));
     }
 
     public void finishFullScreen() {
@@ -137,7 +174,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void finishToHome() {
-        getSupportFragmentManager().popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        FragmentManager manager = getSupportFragmentManager();
+        Fragment currentFullScreen = getVisibleFullScreenFragment(manager);
+        if (currentFullScreen != null) {
+            cancelPendingHideFullScreenContainer();
+            FragmentTransaction transaction = manager.beginTransaction();
+            transaction.setReorderingAllowed(true);
+            transaction.setCustomAnimations(0, R.anim.fullscreen_slide_out_right);
+            transaction.remove(currentFullScreen).commit();
+            if (fullScreenContainer != null) {
+                fullScreenContainer.postDelayed(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+                    manager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                    clearFullScreenFragments(manager, false);
+                    fullScreenContainer.setVisibility(View.GONE);
+                    refreshHomeAfterFullScreen();
+                    updateNavSelection();
+                }, FULL_SCREEN_DISMISS_DURATION_MS);
+            }
+            return;
+        }
         if (currentTabId == R.id.nav_todo) {
             showTodo();
         } else if (currentTabId == R.id.nav_habits) {
@@ -150,10 +208,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void switchFullScreen(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        showFullScreenContainer();
+        applyFullScreenAnimations(transaction);
+        transaction.replace(R.id.fullscreen_container, fragment).commit();
     }
 
     private void setupNavigation() {
@@ -164,10 +222,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectTab(int id) {
+        int previousTabId = currentTabId;
         currentTabId = id;
         if (id == R.id.nav_calendar) {
             showCalendar();
         } else if (id == R.id.nav_todo) {
+            if (previousTabId != R.id.nav_todo) {
+                selectedDate = LocalDate.now();
+            }
             showTodo();
         } else if (id == R.id.nav_habits) {
             showHabits();
@@ -179,8 +241,12 @@ public class MainActivity extends AppCompatActivity {
     private void setupBackStackVisibility() {
         getSupportFragmentManager().addOnBackStackChangedListener(() -> {
             boolean fullScreen = getSupportFragmentManager().getBackStackEntryCount() > 0;
-            bottomNavigationView.setVisibility(fullScreen ? View.GONE : View.VISIBLE);
-            fab.setVisibility(fullScreen ? View.GONE : View.VISIBLE);
+            if (fullScreen) {
+                showFullScreenContainer();
+            } else {
+                refreshHomeAfterFullScreen();
+                scheduleHideFullScreenContainer();
+            }
         });
     }
 
@@ -211,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showHabits() {
-        replaceHome(HabitFragment.newInstance());
+        replaceHome(HabitFragment.newInstance(selectedDate));
     }
 
     private void showPlaceholder(String message) {
@@ -224,32 +290,119 @@ public class MainActivity extends AppCompatActivity {
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
-        bottomNavigationView.setVisibility(View.VISIBLE);
-        fab.setVisibility(View.VISIBLE);
+        cancelPendingHideFullScreenContainer();
+        if (fullScreenContainer != null) {
+            fullScreenContainer.setVisibility(View.GONE);
+        }
         updateNavSelection();
     }
 
     private void openFullScreen(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .addToBackStack(fragment.getClass().getSimpleName())
+        pushFullScreenFragment(fragment, fragment.getClass().getSimpleName());
+    }
+
+    public void pushFullScreenFragment(Fragment fragment, String backStackName) {
+        pushFullScreenFragment(fragment, backStackName, true);
+    }
+
+    public void pushFullScreenFragment(Fragment fragment, String backStackName, boolean animated) {
+        FragmentManager manager = getSupportFragmentManager();
+        if (manager.getBackStackEntryCount() == 0) {
+            clearFullScreenFragments(manager, true);
+        }
+        showFullScreenContainer();
+        Fragment current = getVisibleFullScreenFragment(manager);
+        FragmentTransaction transaction = manager.beginTransaction();
+        applyFullScreenAnimations(transaction, animated);
+        if (current != null) {
+            transaction.hide(current);
+        }
+        transaction.add(R.id.fullscreen_container, fragment, backStackName)
+                .addToBackStack(backStackName)
                 .commit();
+    }
+
+    private void applyFullScreenAnimations(FragmentTransaction transaction) {
+        applyFullScreenAnimations(transaction, true);
+    }
+
+    private void applyFullScreenAnimations(FragmentTransaction transaction, boolean animated) {
+        transaction.setReorderingAllowed(true);
+        if (!animated) {
+            transaction.setTransition(FragmentTransaction.TRANSIT_NONE);
+            return;
+        }
+        transaction.setCustomAnimations(
+                R.anim.fullscreen_slide_in_right,
+                R.anim.fullscreen_hold,
+                R.anim.fullscreen_hold,
+                R.anim.fullscreen_slide_out_right
+        );
+    }
+
+    private void showFullScreenContainer() {
+        cancelPendingHideFullScreenContainer();
+        if (fullScreenContainer != null) {
+            fullScreenContainer.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void scheduleHideFullScreenContainer() {
+        cancelPendingHideFullScreenContainer();
+        if (fullScreenContainer != null) {
+            fullScreenContainer.postDelayed(hideFullScreenContainerRunnable, FULL_SCREEN_CONTAINER_HIDE_DELAY_MS);
+        }
+    }
+
+    private void cancelPendingHideFullScreenContainer() {
+        if (fullScreenContainer != null) {
+            fullScreenContainer.removeCallbacks(hideFullScreenContainerRunnable);
+        }
+    }
+
+    private void refreshHomeAfterFullScreen() {
+        Fragment home = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (home instanceof HomeDataRefreshable) {
+            ((HomeDataRefreshable) home).onHomeDataRefresh(selectedDate);
+        }
+    }
+
+    public void handleActivityBackPressed() {
+        FragmentManager manager = getSupportFragmentManager();
+        Fragment current = getCurrentScreenFragment(manager);
+        if (current instanceof ScreenBackHandler && ((ScreenBackHandler) current).onHandleBackPressed()) {
+            return;
+        }
+        if (manager.getBackStackEntryCount() > 0) {
+            Fragment homeFragment = manager.findFragmentById(R.id.fragment_container);
+            if (homeFragment instanceof JournalEditFragment) {
+                ((JournalEditFragment) homeFragment).handleBackPressed();
+                return;
+            }
+            if (homeFragment instanceof HabitEditFragment) {
+                ((HabitEditFragment) homeFragment).handleBackPressed();
+                return;
+            }
+            manager.popBackStack();
+            return;
+        }
+        if (current != null && !isHomeFragment(current)) {
+            finishToHome();
+            return;
+        }
+        UiUtils.showConfirmationDialog(
+                this,
+                R.drawable.ic_close_centered,
+                getString(R.string.exit_app_title),
+                getString(R.string.exit_app_message),
+                getString(R.string.exit_app_confirm),
+                this::finishAffinity
+        );
     }
 
     @Override
     public void onBackPressed() {
-        FragmentManager manager = getSupportFragmentManager();
-        if (manager.getBackStackEntryCount() > 0) {
-            Fragment current = manager.findFragmentById(R.id.fragment_container);
-            if (current instanceof JournalEditFragment) {
-                ((JournalEditFragment) current).handleBackPressed();
-                return;
-            }
-            manager.popBackStack();
-        } else {
-            super.onBackPressed();
-        }
+        handleActivityBackPressed();
     }
 
     private void updateNavSelection() {
@@ -271,6 +424,60 @@ public class MainActivity extends AppCompatActivity {
             fab.setContentDescription(getString(R.string.add_journal));
         } else {
             fab.setContentDescription(getString(R.string.add_event));
+        }
+    }
+
+    private boolean isHomeFragment(Fragment fragment) {
+        return fragment instanceof CalendarFragment
+                || fragment instanceof TodoFragment
+                || fragment instanceof HabitFragment
+                || fragment instanceof JournalFragment
+                || fragment instanceof PlaceholderFragment;
+    }
+
+    private Fragment getCurrentScreenFragment(FragmentManager manager) {
+        Fragment fullScreen = getVisibleFullScreenFragment(manager);
+        if (fullScreen != null && fullScreen.isVisible()) {
+            return fullScreen;
+        }
+        return manager.findFragmentById(R.id.fragment_container);
+    }
+
+    private Fragment getVisibleFullScreenFragment(FragmentManager manager) {
+        for (int i = manager.getFragments().size() - 1; i >= 0; i--) {
+            Fragment fragment = manager.getFragments().get(i);
+            if (fragment == null || fragment.getId() != R.id.fullscreen_container) {
+                continue;
+            }
+            if (fragment.isAdded() && !fragment.isHidden() && fragment.getView() != null) {
+                return fragment;
+            }
+        }
+        return null;
+    }
+
+    private void clearFullScreenFragments(FragmentManager manager, boolean immediate) {
+        if (manager.isStateSaved()) {
+            return;
+        }
+        FragmentTransaction cleanup = null;
+        for (Fragment fragment : manager.getFragments()) {
+            if (fragment == null || fragment.getId() != R.id.fullscreen_container) {
+                continue;
+            }
+            if (cleanup == null) {
+                cleanup = manager.beginTransaction();
+                cleanup.setReorderingAllowed(true);
+            }
+            cleanup.remove(fragment);
+        }
+        if (cleanup == null) {
+            return;
+        }
+        if (immediate) {
+            cleanup.commitNow();
+        } else {
+            cleanup.commit();
         }
     }
 }

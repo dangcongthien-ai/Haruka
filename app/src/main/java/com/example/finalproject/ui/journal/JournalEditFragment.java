@@ -45,6 +45,7 @@ import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.JournalEntry;
 import com.example.finalproject.repository.JournalRepository;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.util.JournalTextUtils;
 
@@ -52,7 +53,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JournalEditFragment extends Fragment {
+public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     private static final String ARG_JOURNAL_ID = "journal_id";
     private static final String ARG_DATE = "date";
     private static final String RESULT_DATE = "journal_edit_date";
@@ -78,6 +79,7 @@ public class JournalEditFragment extends Fragment {
     private boolean suppressAutoSave;
     private boolean shouldAutoShowMoodPicker;
     private boolean initialMoodPickerShown;
+    private String initialSnapshot;
     private LocalDate journalDate;
     private String title = "";
     private String caption = "";
@@ -148,7 +150,7 @@ public class JournalEditFragment extends Fragment {
         getParentFragmentManager().setFragmentResultListener(RESULT_DATE, this, (requestKey, result) -> {
             LocalDate picked = DateTimeUtils.isoToDate(result.getString(DatePickerDialogFragment.RESULT_DATE));
             if (picked != null) {
-                journalDate = picked;
+                journalDate = clampFutureDate(picked);
                 ((MainActivity) requireActivity()).setSelectedDate(journalDate);
                 bindValues();
             }
@@ -167,6 +169,9 @@ public class JournalEditFragment extends Fragment {
         setupClicks(view);
         setupSystemInsets(view);
         bindValues();
+        if (initialSnapshot == null) {
+            initialSnapshot = currentInputSnapshot();
+        }
         maybeShowInitialMoodPicker(view);
         return view;
     }
@@ -232,6 +237,9 @@ public class JournalEditFragment extends Fragment {
         if (journalDate == null) {
             journalDate = LocalDate.now();
         }
+        if (journalId <= 0) {
+            journalDate = clampFutureDate(journalDate);
+        }
         if (journalId > 0) {
             JournalEntry entry = repository.getJournalEntry(journalId);
             if (entry != null) {
@@ -265,7 +273,7 @@ public class JournalEditFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_journal_back).setOnClickListener(v -> handleBackPressed());
+        view.findViewById(R.id.btn_journal_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.btn_journal_prev_day).setOnClickListener(v -> moveDay(-1));
         view.findViewById(R.id.btn_journal_next_day).setOnClickListener(v -> moveDay(1));
         view.findViewById(R.id.btn_journal_save).setOnClickListener(v -> save());
@@ -1145,15 +1153,33 @@ public class JournalEditFragment extends Fragment {
 
     private void moveDay(int amount) {
         captureInput();
-        journalDate = journalDate.plusDays(amount);
+        LocalDate nextDate = journalDate.plusDays(amount);
+        if (nextDate.isAfter(LocalDate.now())) {
+            Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        journalDate = nextDate;
         ((MainActivity) requireActivity()).setSelectedDate(journalDate);
         bindValues();
     }
 
+    @Override
+    public boolean onHandleBackPressed() {
+        handleBackPressed();
+        return true;
+    }
+
     public void handleBackPressed() {
-        saveDraftIfNeeded();
-        suppressAutoSave = true;
-        ((MainActivity) requireActivity()).finishToHome();
+        if (hasUnsavedChanges()) {
+            UiUtils.showConfirmDialog(
+                    requireContext(),
+                    getString(R.string.unsaved_changes_confirm),
+                    getString(R.string.discard_changes),
+                    this::exitWithoutSaving
+            );
+            return;
+        }
+        exitWithoutSaving();
     }
 
     private void save() {
@@ -1165,6 +1191,11 @@ public class JournalEditFragment extends Fragment {
         saveCurrentEntry();
         suppressAutoSave = true;
         ((MainActivity) requireActivity()).setSelectedDate(journalDate);
+        ((MainActivity) requireActivity()).finishToHome();
+    }
+
+    private void exitWithoutSaving() {
+        suppressAutoSave = true;
         ((MainActivity) requireActivity()).finishToHome();
     }
 
@@ -1202,6 +1233,31 @@ public class JournalEditFragment extends Fragment {
             }
         }
         return false;
+    }
+
+    private boolean hasUnsavedChanges() {
+        return initialSnapshot != null && !initialSnapshot.equals(currentInputSnapshot());
+    }
+
+    private String currentInputSnapshot() {
+        captureInput();
+        return DateTimeUtils.dateToIso(journalDate) + "|"
+                + selectedLayoutId + "|"
+                + captionTextSizeSp + "|"
+                + contentTextSizeSp + "|"
+                + valueOrEmpty(caption) + "|"
+                + valueOrEmpty(content) + "|"
+                + imageUris.toString() + "|"
+                + selectedMoodResourceNames().toString();
+    }
+
+    private LocalDate clampFutureDate(LocalDate date) {
+        LocalDate today = LocalDate.now();
+        if (date.isAfter(today)) {
+            Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
+            return today;
+        }
+        return date;
     }
 
     private void applyStoredMoods(List<String> moodResourceNames) {

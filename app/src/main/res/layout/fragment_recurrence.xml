@@ -1,247 +1,351 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/app_background"
+    android:background="@color/surface_soft"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="56dp"
         android:background="@color/surface"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="10dp"
-        android:paddingEnd="12dp">
+        android:paddingEnd="10dp">
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cancel"
             android:src="@drawable/ic_back" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_marginEnd="46dp"
             android:layout_weight="1"
             android:gravity="center"
             android:text="@string/repeat"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_save_recurrence"
-            android:layout_width="74dp"
-            android:layout_height="32dp"
-            android:text="@string/save"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            app:backgroundTint="@color/brand_orange"
-            app:cornerRadius="22dp" />
     </LinearLayout>
 
-    <View
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:background="@color/app_background" />
-
-    <LinearLayout
-        android:id="@+id/option_none"
-        style="@style/Caliary.OptionRow">
-
-        <TextView
-            style="@style/Caliary.OptionLabel"
-            android:text="@string/none" />
-
-        <TextView
-            android:id="@+id/check_none"
-            style="@style/Caliary.OptionCheck" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/option_daily"
-        style="@style/Caliary.OptionRow">
-
-        <TextView
-            style="@style/Caliary.OptionLabel"
-            android:text="@string/daily" />
-
-        <TextView
-            android:id="@+id/check_daily"
-            style="@style/Caliary.OptionCheck" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/option_weekly"
-        style="@style/Caliary.OptionRow">
-
-        <TextView
-            style="@style/Caliary.OptionLabel"
-            android:text="@string/weekly" />
-
-        <TextView
-            android:id="@+id/check_weekly"
-            style="@style/Caliary.OptionCheck" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/option_monthly"
-        style="@style/Caliary.OptionRow">
-
-        <TextView
-            style="@style/Caliary.OptionLabel"
-            android:text="@string/monthly" />
-
-        <TextView
-            android:id="@+id/check_monthly"
-            style="@style/Caliary.OptionCheck" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/option_yearly"
-        style="@style/Caliary.OptionRow">
-
-        <TextView
-            style="@style/Caliary.OptionLabel"
-            android:text="@string/yearly" />
-
-        <TextView
-            android:id="@+id/check_yearly"
-            style="@style/Caliary.OptionCheck" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/option_custom"
-        style="@style/Caliary.OptionRow">
-
-        <TextView
-            style="@style/Caliary.OptionLabel"
-            android:text="@string/custom" />
-
-        <TextView
-            android:id="@+id/check_custom"
-            style="@style/Caliary.OptionCheck" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/custom_panel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/surface"
-        android:orientation="vertical"
-        android:padding="22dp"
-        android:visibility="gone">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="28dp"
-            android:text="@string/repeat_every"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingBottom="24dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <EditText
-                android:id="@+id/edit_interval"
-                android:layout_width="52dp"
-                android:layout_height="42dp"
-                android:background="@drawable/bg_chip_outline"
-                android:gravity="center"
-                android:inputType="number"
-                android:text="@string/default_one"
-                android:textCursorDrawable="@drawable/cursor_primary"
-                android:textColor="@color/text_primary" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@color/surface_soft" />
 
-            <Spinner
-                android:id="@+id/spinner_freq_unit"
-                android:layout_width="104dp"
-                android:layout_height="42dp"
-                android:layout_marginStart="10dp"
-                android:background="@drawable/bg_chip_outline" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/surface"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/option_none"
+                    style="@style/Caliary.OptionRow">
+
+                    <TextView
+                        style="@style/Caliary.OptionLabel"
+                        android:text="@string/none" />
+
+                    <TextView
+                        android:id="@+id/check_none"
+                        style="@style/Caliary.OptionCheck" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/line" />
+
+                <LinearLayout
+                    android:id="@+id/option_daily"
+                    style="@style/Caliary.OptionRow">
+
+                    <TextView
+                        style="@style/Caliary.OptionLabel"
+                        android:text="@string/daily" />
+
+                    <TextView
+                        android:id="@+id/check_daily"
+                        style="@style/Caliary.OptionCheck" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/line" />
+
+                <LinearLayout
+                    android:id="@+id/option_weekly"
+                    style="@style/Caliary.OptionRow">
+
+                    <TextView
+                        style="@style/Caliary.OptionLabel"
+                        android:text="@string/weekly" />
+
+                    <TextView
+                        android:id="@+id/check_weekly"
+                        style="@style/Caliary.OptionCheck" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/line" />
+
+                <LinearLayout
+                    android:id="@+id/option_monthly"
+                    style="@style/Caliary.OptionRow">
+
+                    <TextView
+                        style="@style/Caliary.OptionLabel"
+                        android:text="@string/monthly" />
+
+                    <TextView
+                        android:id="@+id/check_monthly"
+                        style="@style/Caliary.OptionCheck" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/line" />
+
+                <LinearLayout
+                    android:id="@+id/option_yearly"
+                    style="@style/Caliary.OptionRow">
+
+                    <TextView
+                        style="@style/Caliary.OptionLabel"
+                        android:text="@string/yearly" />
+
+                    <TextView
+                        android:id="@+id/check_yearly"
+                        style="@style/Caliary.OptionCheck" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/line" />
+
+                <LinearLayout
+                    android:id="@+id/option_custom"
+                    style="@style/Caliary.OptionRow">
+
+                    <TextView
+                        style="@style/Caliary.OptionLabel"
+                        android:text="@string/custom" />
+
+                    <TextView
+                        android:id="@+id/check_custom"
+                        style="@style/Caliary.OptionCheck" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/custom_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@color/surface"
+                android:orientation="vertical"
+                android:paddingTop="14dp"
+                android:paddingBottom="8dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:text="@string/repeat_every"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp">
+
+                    <EditText
+                        android:id="@+id/edit_interval"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_habit_input_box"
+                        android:gravity="center"
+                        android:inputType="number"
+                        android:text="@string/default_one"
+                        android:textColor="@color/text_primary"
+                        android:textCursorDrawable="@drawable/cursor_primary"
+                        android:textSize="14sp" />
+
+                    <AutoCompleteTextView
+                        android:id="@+id/input_freq_unit"
+                        android:layout_width="88dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_habit_input_box"
+                        android:completionThreshold="0"
+                        android:dropDownWidth="88dp"
+                        android:dropDownAnchor="@id/input_freq_unit"
+                        android:dropDownHorizontalOffset="0dp"
+                        android:dropDownVerticalOffset="0dp"
+                        android:drawableEnd="@drawable/ic_arrow_down"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="8dp"
+                        android:singleLine="true"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_muted"
+                        android:textCursorDrawable="@drawable/cursor_primary"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_repeat_on_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:text="@string/repeat_on"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/weekly_days"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:visibility="gone" />
+
+                <AutoCompleteTextView
+                    android:id="@+id/input_monthly_pattern"
+                    android:layout_width="240dp"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="24dp"
+                    android:dropDownWidth="240dp"
+                    android:background="@drawable/bg_habit_input_box"
+                    android:completionThreshold="0"
+                    android:dropDownAnchor="@id/input_monthly_pattern"
+                    android:dropDownHorizontalOffset="0dp"
+                    android:dropDownVerticalOffset="0dp"
+                    android:drawableEnd="@drawable/ic_arrow_down"
+                    android:drawablePadding="6dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textCursorDrawable="@drawable/cursor_primary"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Hàng tháng vào ngày 28" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:text="@string/finish"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@color/surface"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/end_none_row"
+                        style="@style/Caliary.OptionRowSmall">
+
+                        <TextView
+                            style="@style/Caliary.OptionLabel"
+                            android:text="@string/none" />
+
+                        <TextView
+                            android:id="@+id/check_end_none"
+                            style="@style/Caliary.OptionCheck" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:background="@color/line" />
+
+                    <LinearLayout
+                        android:id="@+id/end_date_row"
+                        style="@style/Caliary.OptionRowSmall">
+
+                        <TextView
+                            android:id="@+id/tv_end_date_option"
+                            style="@style/Caliary.OptionLabel" />
+
+                        <TextView
+                            android:id="@+id/check_end_date"
+                            style="@style/Caliary.OptionCheck" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:background="@color/line" />
+
+                    <LinearLayout
+                        android:id="@+id/end_count_row"
+                        style="@style/Caliary.OptionRowSmall">
+
+                        <TextView
+                            android:id="@+id/tv_end_count_option"
+                            style="@style/Caliary.OptionLabel"
+                            android:text="@string/end_after_once" />
+
+                        <TextView
+                            android:id="@+id/check_end_count"
+                            style="@style/Caliary.OptionCheck" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/tv_repeat_on_label"
-            android:layout_width="match_parent"
-            android:layout_height="28dp"
-            android:layout_marginTop="8dp"
-            android:text="@string/repeat_on"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp"
-            android:visibility="gone" />
-
-        <LinearLayout
-            android:id="@+id/weekly_days"
-            android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:visibility="gone" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_monthly_pattern"
-            android:layout_width="wrap_content"
-            android:layout_height="44dp"
-            android:layout_marginTop="8dp"
-            android:textAllCaps="false"
-            android:visibility="gone"
-            app:backgroundTint="@color/surface"
-            app:cornerRadius="8dp"
-            app:strokeColor="@color/line"
-            app:strokeWidth="1dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="28dp"
-            android:layout_marginTop="8dp"
-            android:text="@string/finish"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
-
-        <LinearLayout
-            android:id="@+id/end_none_row"
-            style="@style/Caliary.OptionRowSmall">
-
-            <TextView
-                style="@style/Caliary.OptionLabel"
-                android:text="@string/none" />
-
-            <TextView
-                android:id="@+id/check_end_none"
-                style="@style/Caliary.OptionCheck" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/end_date_row"
-            style="@style/Caliary.OptionRowSmall">
-
-            <TextView
-                android:id="@+id/tv_end_date_option"
-                style="@style/Caliary.OptionLabel" />
-
-            <TextView
-                android:id="@+id/check_end_date"
-                style="@style/Caliary.OptionCheck" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/end_count_row"
-            style="@style/Caliary.OptionRowSmall">
-
-            <TextView
-                android:id="@+id/tv_end_count_option"
-                style="@style/Caliary.OptionLabel"
-                android:text="@string/end_after_once" />
-
-            <TextView
-                android:id="@+id/check_end_count"
-                style="@style/Caliary.OptionCheck" />
-        </LinearLayout>
-    </LinearLayout>
+    </ScrollView>
 </LinearLayout>

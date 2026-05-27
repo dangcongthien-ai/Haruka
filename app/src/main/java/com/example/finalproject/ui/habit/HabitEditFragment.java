@@ -34,6 +34,7 @@ import com.example.finalproject.repository.HabitRepository;
 import com.example.finalproject.ui.calendar.RecurrenceFragment;
 import com.example.finalproject.ui.calendar.ReminderFragment;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.util.HabitDefaults;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
@@ -67,6 +68,8 @@ public class HabitEditFragment extends Fragment {
     private String targetOperator = "";
     private String targetValueText = "";
     private String targetUnit = "";
+    private String initialSnapshot;
+    private boolean suppressExitConfirmation;
 
     private EditText titleEdit;
     private NestedScrollView scrollView;
@@ -162,6 +165,9 @@ public class HabitEditFragment extends Fragment {
         }
         setupClicks(view);
         bindValues();
+        if (initialSnapshot == null) {
+            initialSnapshot = currentInputSnapshot();
+        }
         return view;
     }
 
@@ -288,7 +294,7 @@ public class HabitEditFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back_habit).setOnClickListener(v -> ((MainActivity) requireActivity()).finishToHome());
+        view.findViewById(R.id.btn_back_habit).setOnClickListener(v -> handleBackPressed());
         view.findViewById(R.id.btn_save_habit).setOnClickListener(v -> saveHabit());
         view.findViewById(R.id.row_habit_category).setOnClickListener(v -> {
             captureInput();
@@ -302,6 +308,7 @@ public class HabitEditFragment extends Fragment {
         });
         endRow.setOnClickListener(v -> endSwitch.toggle());
         endSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            captureInput();
             hasEndDate = isChecked;
             if (hasEndDate && endDate == null) {
                 endDate = startDate;
@@ -331,21 +338,23 @@ public class HabitEditFragment extends Fragment {
 
     private void openRecurrencePicker() {
         captureInput();
-        getParentFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, RecurrenceFragment.newInstance(RESULT_RECURRENCE, recurrenceRule, startDate))
-                .addToBackStack("HabitRecurrence")
-                .commit();
+        if (requireActivity() instanceof MainActivity) {
+            ((MainActivity) requireActivity()).pushFullScreenFragment(
+                    RecurrenceFragment.newInstance(RESULT_RECURRENCE, recurrenceRule, startDate),
+                    "HabitRecurrence"
+            );
+        }
     }
 
     private void openReminderPicker() {
         captureInput();
         Reminder current = reminders.isEmpty() ? Reminder.none() : reminders.get(0);
-        getParentFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, ReminderFragment.newInstance(RESULT_REMINDER, current))
-                .addToBackStack("HabitReminder")
-                .commit();
+        if (requireActivity() instanceof MainActivity) {
+            ((MainActivity) requireActivity()).pushFullScreenFragment(
+                    ReminderFragment.newInstance(RESULT_REMINDER, current),
+                    "HabitReminder"
+            );
+        }
     }
 
     private void bindValues() {
@@ -353,8 +362,14 @@ public class HabitEditFragment extends Fragment {
             return;
         }
         refreshColors();
-        titleEdit.setText(title);
-        descriptionEdit.setText(description);
+        if (!title.equals(titleEdit.getText().toString())) {
+            titleEdit.setText(title);
+            titleEdit.setSelection(titleEdit.getText().length());
+        }
+        if (!description.equals(descriptionEdit.getText().toString())) {
+            descriptionEdit.setText(description);
+            descriptionEdit.setSelection(descriptionEdit.getText().length());
+        }
         if (selectedCategory != null) {
             categoryIcon.setImageResource(HabitDefaults.resolveIconRes(requireContext(), selectedCategory.getIconUri()));
             categoryText.setText(selectedCategory.getName());
@@ -380,8 +395,14 @@ public class HabitEditFragment extends Fragment {
         booleanRadio.setChecked(HabitItem.EVALUATION_BOOLEAN.equals(evaluationType));
         numberRadio.setChecked(HabitItem.EVALUATION_NUMBER.equals(evaluationType));
         operatorInput.setText(operatorLabel(targetOperator), false);
-        targetValueEdit.setText(targetValueText);
-        targetUnitEdit.setText(targetUnit);
+        if (!targetValueText.equals(targetValueEdit.getText().toString())) {
+            targetValueEdit.setText(targetValueText);
+            targetValueEdit.setSelection(targetValueEdit.getText().length());
+        }
+        if (!targetUnit.equals(targetUnitEdit.getText().toString())) {
+            targetUnitEdit.setText(targetUnit);
+            targetUnitEdit.setSelection(targetUnitEdit.getText().length());
+        }
         refreshEvaluationFields();
     }
 
@@ -408,7 +429,7 @@ public class HabitEditFragment extends Fragment {
             if (!isAdded()) {
                 return;
             }
-            int margin = dpToPx(16);
+            int margin = dpToPx(20);
             int extraTop = anchor == descriptionSection ? dpToPx(12) : 0;
             int targetScroll = Math.max(0, anchor.getTop() - margin - extraTop);
             if (animated) {
@@ -426,14 +447,12 @@ public class HabitEditFragment extends Fragment {
         field.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 enableKeyboardInputMode();
-                scrollFieldIntoView(anchor, focusDelayMs, true);
-            } else {
-                v.post(this::restoreSoftInputModeIfNeeded);
+                scrollFieldIntoView(anchor, Math.max(focusDelayMs, 220), true);
             }
         });
         field.setOnClickListener(v -> {
             enableKeyboardInputMode();
-            scrollFieldIntoView(anchor, 0, false);
+            scrollFieldIntoView(anchor, 220, true);
         });
     }
 
@@ -441,7 +460,7 @@ public class HabitEditFragment extends Fragment {
         if (getActivity() == null) {
             return;
         }
-        requireActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+        requireActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
     }
 
     private void restoreSoftInputMode() {
@@ -514,7 +533,56 @@ public class HabitEditFragment extends Fragment {
             return;
         }
         repository.saveHabit(item);
+        suppressExitConfirmation = true;
         ((MainActivity) requireActivity()).finishToHome();
+    }
+
+    public void handleBackPressed() {
+        if (!suppressExitConfirmation && hasUnsavedChanges()) {
+            UiUtils.showConfirmDialog(
+                    requireContext(),
+                    getString(R.string.unsaved_changes_confirm),
+                    getString(R.string.discard_changes),
+                    this::exitWithoutSaving
+            );
+            return;
+        }
+        exitWithoutSaving();
+    }
+
+    private void exitWithoutSaving() {
+        suppressExitConfirmation = true;
+        ((MainActivity) requireActivity()).finishToHome();
+    }
+
+    private boolean hasUnsavedChanges() {
+        return initialSnapshot != null && !initialSnapshot.equals(currentInputSnapshot());
+    }
+
+    private String currentInputSnapshot() {
+        captureInput();
+        long categoryId = selectedCategory == null ? 0 : selectedCategory.getId();
+        long priorityId = selectedPriority == null ? 0 : selectedPriority.getId();
+        String recurrenceText = recurrenceRule == null ? "" : recurrenceRule.getDisplayText();
+        String reminderTextValue = reminders.isEmpty() ? "" : reminders.get(0).getDisplayText();
+        return safe(title) + "|"
+                + safe(description) + "|"
+                + safe(selectedColor) + "|"
+                + categoryId + "|"
+                + priorityId + "|"
+                + DateTimeUtils.dateToIso(startDate) + "|"
+                + hasEndDate + "|"
+                + DateTimeUtils.dateToIso(endDate) + "|"
+                + safe(recurrenceText) + "|"
+                + safe(reminderTextValue) + "|"
+                + safe(evaluationType) + "|"
+                + safe(targetOperator) + "|"
+                + safe(targetValueText) + "|"
+                + safe(targetUnit);
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
     }
 
     private String selectedOperatorValue() {

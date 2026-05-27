@@ -26,16 +26,15 @@
             android:text="@string/app_name"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
-            android:textStyle="normal" />
+            android:textStyle="bold" />
 
         <FrameLayout
             android:id="@+id/btn_mode"
             android:layout_width="120dp"
             android:layout_height="35dp"
-            android:background="@drawable/bg_dropdown"
+            android:background="@drawable/bg_dropdown_ripple"
             android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
+            android:focusable="true">
 
             <TextView
                 android:id="@+id/tv_mode_label"
@@ -57,6 +56,7 @@
                 android:background="@drawable/bg_mode_arrow_circle">
 
                 <ImageView
+                    android:id="@+id/iv_mode_arrow"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_gravity="center"
@@ -66,7 +66,7 @@
         </FrameLayout>
     </LinearLayout>
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/calendar_nav_row"
         android:layout_width="match_parent"
         android:layout_height="40dp"
@@ -74,36 +74,62 @@
         android:clipChildren="false"
         android:clipToPadding="false"
         android:elevation="4dp"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/btn_previous"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/month"
-            android:src="@drawable/ic_arrow_left" />
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
 
         <TextView
-            android:id="@+id/tv_period_title"
+            android:id="@+id/btn_today"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_gravity="start|center_vertical"
+            android:background="@drawable/bg_surface_card_soft_ripple"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:minWidth="68dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/today"
+            android:textColor="@color/brand_orange_dark"
+            android:textSize="13sp"
+            android:visibility="gone"
+            android:fontFamily="sans-serif-medium" />
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
             android:gravity="center"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:textColor="@color/text_primary"
-            android:textSize="17sp"
-            android:textStyle="normal" />
+            android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btn_next"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/month"
-            android:src="@drawable/ic_arrow_right" />
-    </LinearLayout>
+            <ImageButton
+                android:id="@+id/btn_previous"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/month"
+                android:src="@drawable/ic_arrow_left" />
+
+            <TextView
+                android:id="@+id/tv_period_title"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:textColor="@color/text_primary"
+                android:textSize="17sp"
+                android:textStyle="normal" />
+
+            <ImageButton
+                android:id="@+id/btn_next"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/month"
+                android:src="@drawable/ic_arrow_right" />
+        </LinearLayout>
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/month_container"
@@ -158,8 +184,8 @@
 
                     <ImageButton
                         android:id="@+id/btn_close_month_detail"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:layout_gravity="end|center_vertical"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:contentDescription="@string/close"

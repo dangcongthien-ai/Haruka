@@ -10,36 +10,37 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.finalproject.MainActivity;
 import com.example.finalproject.R;
+import com.example.finalproject.adapter.TodoDayPagerAdapter;
 import com.example.finalproject.adapter.TodoListAdapter;
 import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.TodoItem;
 import com.example.finalproject.repository.TodoRepository;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.UiUtils;
 import com.google.android.material.button.MaterialButton;
 
 import java.time.LocalDate;
-import java.util.List;
 
-public class TodoFragment extends Fragment {
+public class TodoFragment extends Fragment implements HomeDataRefreshable {
     private static final String ARG_DATE = "date";
     private static final String DATE_RESULT_KEY = "todo_date_result";
 
     private TodoRepository repository;
-    private TodoListAdapter adapter;
+    private TodoDayPagerAdapter pagerAdapter;
     private TextView dateLabel;
-    private TextView emptyLabel;
-    private RecyclerView recyclerView;
+    private TextView todayButton;
+    private ViewPager2 dayPager;
     private MaterialButton allButton;
     private MaterialButton activeButton;
     private MaterialButton doneButton;
     private LocalDate selectedDate;
     private int filter = TodoRepository.FILTER_ALL;
+    private boolean pagerRecentering;
 
     public static TodoFragment newInstance(LocalDate date) {
         TodoFragment fragment = new TodoFragment();
@@ -72,17 +73,25 @@ public class TodoFragment extends Fragment {
         refresh();
     }
 
+    @Override
+    public void onHomeDataRefresh(LocalDate hostSelectedDate) {
+        if (hostSelectedDate != null) {
+            selectedDate = hostSelectedDate;
+        }
+        refresh();
+    }
+
     private void bind(View view) {
         dateLabel = view.findViewById(R.id.tv_todo_date);
-        emptyLabel = view.findViewById(R.id.tv_todo_empty);
-        recyclerView = view.findViewById(R.id.todo_recycler);
+        todayButton = view.findViewById(R.id.btn_todo_today);
+        dayPager = view.findViewById(R.id.todo_day_pager);
         allButton = view.findViewById(R.id.btn_filter_all);
         activeButton = view.findViewById(R.id.btn_filter_active);
         doneButton = view.findViewById(R.id.btn_filter_done);
     }
 
     private void setupAdapter() {
-        adapter = new TodoListAdapter(new TodoListAdapter.Listener() {
+        TodoListAdapter.Listener todoListener = new TodoListAdapter.Listener() {
             @Override
             public void onClick(TodoItem item) {
                 ((MainActivity) requireActivity()).openTodoDetail(item.getId());
@@ -91,6 +100,9 @@ public class TodoFragment extends Fragment {
             @Override
             public void onToggle(TodoItem item, boolean completed) {
                 repository.setCompleted(item.getId(), completed);
+                if (pagerAdapter != null) {
+                    pagerAdapter.reload();
+                }
                 refresh();
             }
 
@@ -103,13 +115,35 @@ public class TodoFragment extends Fragment {
             public void onDelete(TodoItem item) {
                 UiUtils.showDeleteDialog(requireContext(), getString(R.string.delete_confirm_todo), () -> {
                     repository.deleteTodo(item.getId());
+                    if (pagerAdapter != null) {
+                        pagerAdapter.reload();
+                    }
                     refresh();
                 });
             }
+        };
+        pagerAdapter = new TodoDayPagerAdapter(repository, todoListener);
+        dayPager.setAdapter(pagerAdapter);
+        dayPager.setOffscreenPageLimit(1);
+        dayPager.setCurrentItem(1, false);
+        dayPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                super.onPageScrollStateChanged(state);
+                if (pagerRecentering || state != ViewPager2.SCROLL_STATE_IDLE) {
+                    return;
+                }
+                int position = dayPager.getCurrentItem();
+                if (position == 1) {
+                    return;
+                }
+                pagerRecentering = true;
+                selectedDate = pagerAdapter.getDateForPosition(position);
+                ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+                refresh();
+                pagerRecentering = false;
+            }
         });
-        adapter.setShowActions(false);
-        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        recyclerView.setAdapter(adapter);
     }
 
     private void setupClicks(View view) {
@@ -117,6 +151,7 @@ public class TodoFragment extends Fragment {
         ImageButton next = view.findViewById(R.id.btn_todo_next_day);
         previous.setOnClickListener(v -> moveDay(-1));
         next.setOnClickListener(v -> moveDay(1));
+        todayButton.setOnClickListener(v -> jumpToToday());
         dateLabel.setOnClickListener(v -> DatePickerDialogFragment
                 .newInstance(DATE_RESULT_KEY, selectedDate)
                 .show(getParentFragmentManager(), DATE_RESULT_KEY));
@@ -146,7 +181,20 @@ public class TodoFragment extends Fragment {
     }
 
     private void moveDay(int amount) {
+        if (dayPager != null && amount != 0) {
+            int target = dayPager.getCurrentItem() + (amount > 0 ? 1 : -1);
+            if (target >= 0 && target < 3) {
+                dayPager.setCurrentItem(target, true);
+                return;
+            }
+        }
         selectedDate = selectedDate.plusDays(amount);
+        ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+        refresh();
+    }
+
+    private void jumpToToday() {
+        selectedDate = LocalDate.now();
         ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
         refresh();
     }
@@ -163,9 +211,14 @@ public class TodoFragment extends Fragment {
         } else {
             UiUtils.selectSegment(requireContext(), doneButton, allButton, activeButton);
         }
-        List<TodoItem> items = repository.getTodos(selectedDate, filter);
-        adapter.submit(items);
-        recyclerView.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
-        emptyLabel.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+        if (pagerAdapter != null) {
+            pagerAdapter.updateState(selectedDate, filter);
+        }
+        if (dayPager != null && dayPager.getCurrentItem() != 1) {
+            pagerRecentering = true;
+            dayPager.setCurrentItem(1, false);
+            pagerRecentering = false;
+        }
+        todayButton.setVisibility(selectedDate.equals(LocalDate.now()) ? View.GONE : View.VISIBLE);
     }
 }

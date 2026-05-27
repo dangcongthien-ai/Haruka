@@ -7,37 +7,19 @@
 
     <TextView
         android:id="@+id/popup_mode_month"
-        android:layout_width="match_parent"
-        android:layout_height="35dp"
-        android:gravity="center_vertical"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:text="@string/month"
-        android:textColor="@color/text_primary"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        style="@style/Caliary.PopupMenuItem"
+        android:background="@drawable/bg_popup_item_top_ripple"
+        android:text="@string/month" />
 
     <TextView
         android:id="@+id/popup_mode_week"
-        android:layout_width="match_parent"
-        android:layout_height="35dp"
-        android:gravity="center_vertical"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:text="@string/week"
-        android:textColor="@color/text_primary"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        style="@style/Caliary.PopupMenuItem"
+        android:background="@drawable/bg_popup_item_middle_ripple"
+        android:text="@string/week" />
 
     <TextView
         android:id="@+id/popup_mode_day"
-        android:layout_width="match_parent"
-        android:layout_height="35dp"
-        android:gravity="center_vertical"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:text="@string/day"
-        android:textColor="@color/text_primary"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        style="@style/Caliary.PopupMenuItem"
+        android:background="@drawable/bg_popup_item_bottom_ripple"
+        android:text="@string/day" />
 </LinearLayout>

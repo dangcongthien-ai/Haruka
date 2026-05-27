@@ -4,15 +4,17 @@ import android.app.Dialog;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
+import android.widget.AutoCompleteTextView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,14 +26,15 @@ import com.example.finalproject.R;
 import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.RecurrenceRule;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
-import com.google.android.material.button.MaterialButton;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
-public class RecurrenceFragment extends Fragment {
+public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
     public static final String ARG_RESULT_KEY = "result_key";
     public static final String ARG_RULE = "rule";
     public static final String ARG_BASE_DATE = "base_date";
@@ -43,16 +46,17 @@ public class RecurrenceFragment extends Fragment {
     private String resultKey;
     private View customPanel;
     private EditText intervalEdit;
-    private Spinner unitSpinner;
+    private AutoCompleteTextView unitInput;
     private TextView repeatOnLabel;
     private LinearLayout weeklyDays;
-    private MaterialButton monthlyPatternButton;
+    private AutoCompleteTextView monthlyPatternInput;
     private TextView endDateText;
     private TextView endCountText;
     private boolean customMode;
     private final List<TextView> mainChecks = new ArrayList<>();
     private final List<TextView> endChecks = new ArrayList<>();
     private final List<String> selectedWeekDays = new ArrayList<>();
+    private int monthlyPatternSelection;
 
     public static RecurrenceFragment newInstance(String resultKey, RecurrenceRule rule, LocalDate baseDate) {
         RecurrenceFragment fragment = new RecurrenceFragment();
@@ -77,9 +81,14 @@ public class RecurrenceFragment extends Fragment {
         if (baseDate == null) {
             baseDate = LocalDate.now();
         }
-        customMode = !rule.isNone() && (rule.getIntervalValue() > 1 || rule.getByDay() != null || rule.getMonthlyPatternType() != null);
+        customMode = !rule.isNone()
+                && (rule.getIntervalValue() > 1
+                || rule.getByDay() != null
+                || rule.getMonthlyPatternType() != null
+                || RecurrenceRule.END_DATE.equals(rule.getEndType())
+                || RecurrenceRule.END_COUNT.equals(rule.getEndType()));
         bind(view);
-        setupSpinner();
+        setupDropdowns();
         setupWeekDays();
         setupClicks(view);
         setupDateResult();
@@ -90,10 +99,10 @@ public class RecurrenceFragment extends Fragment {
     private void bind(View view) {
         customPanel = view.findViewById(R.id.custom_panel);
         intervalEdit = view.findViewById(R.id.edit_interval);
-        unitSpinner = view.findViewById(R.id.spinner_freq_unit);
+        unitInput = view.findViewById(R.id.input_freq_unit);
         repeatOnLabel = view.findViewById(R.id.tv_repeat_on_label);
         weeklyDays = view.findViewById(R.id.weekly_days);
-        monthlyPatternButton = view.findViewById(R.id.btn_monthly_pattern);
+        monthlyPatternInput = view.findViewById(R.id.input_monthly_pattern);
         endDateText = view.findViewById(R.id.tv_end_date_option);
         endCountText = view.findViewById(R.id.tv_end_count_option);
         mainChecks.add(view.findViewById(R.id.check_none));
@@ -107,13 +116,54 @@ public class RecurrenceFragment extends Fragment {
         endChecks.add(view.findViewById(R.id.check_end_count));
     }
 
-    private void setupSpinner() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+    private void setupDropdowns() {
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 requireContext(),
-                android.R.layout.simple_spinner_dropdown_item,
-                new String[]{"ngày", "tuần", "tháng", "năm"}
+                R.array.recurrence_units,
+                R.layout.item_recurrence_dropdown_option
         );
-        unitSpinner.setAdapter(adapter);
+        adapter.setDropDownViewResource(R.layout.item_recurrence_dropdown_option);
+        unitInput.setAdapter(adapter);
+        unitInput.setDropDownBackgroundResource(R.drawable.bg_recurrence_dropdown_menu);
+        unitInput.setInputType(InputType.TYPE_NULL);
+        unitInput.setKeyListener(null);
+        unitInput.setCursorVisible(false);
+        unitInput.setOnClickListener(v -> unitInput.showDropDown());
+        unitInput.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                unitInput.showDropDown();
+            }
+        });
+        unitInput.setOnItemClickListener((parent, view, position, id) -> {
+            if (!customMode) {
+                return;
+            }
+            String[] freqs = {
+                    RecurrenceRule.FREQ_DAILY,
+                    RecurrenceRule.FREQ_WEEKLY,
+                    RecurrenceRule.FREQ_MONTHLY,
+                    RecurrenceRule.FREQ_YEARLY
+            };
+            rule.setFreq(freqs[position]);
+            refreshCustomControls();
+        });
+
+        monthlyPatternInput.setInputType(InputType.TYPE_NULL);
+        monthlyPatternInput.setKeyListener(null);
+        monthlyPatternInput.setCursorVisible(false);
+        monthlyPatternInput.setDropDownBackgroundResource(R.drawable.bg_recurrence_dropdown_menu);
+        monthlyPatternInput.setOnClickListener(v -> monthlyPatternInput.showDropDown());
+        monthlyPatternInput.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                monthlyPatternInput.showDropDown();
+            }
+        });
+        monthlyPatternInput.setOnItemClickListener((parent, view, position, id) -> {
+            monthlyPatternSelection = position;
+            applyMonthlyPatternSelection(position);
+            monthlyPatternInput.dismissDropDown();
+            refreshCustomControls();
+        });
     }
 
     private void setupWeekDays() {
@@ -123,15 +173,26 @@ public class RecurrenceFragment extends Fragment {
                 selectedWeekDays.add(day.trim());
             }
         }
-        String[] labels = {"T2", "T3", "T4", "T5", "T6", "T7", "CN"};
+        String[] labels = {
+                getString(R.string.weekday_monday),
+                getString(R.string.weekday_tuesday),
+                getString(R.string.weekday_wednesday),
+                getString(R.string.weekday_thursday),
+                getString(R.string.weekday_friday),
+                getString(R.string.weekday_saturday),
+                getString(R.string.weekday_sunday)
+        };
         String[] values = {"MO", "TU", "WE", "TH", "FR", "SA", "SU"};
         for (int i = 0; i < labels.length; i++) {
             TextView chip = new TextView(requireContext());
             chip.setText(labels[i]);
             chip.setGravity(android.view.Gravity.CENTER);
-            chip.setTextSize(13);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, UiUtils.dp(requireContext(), 38), 1);
-            params.setMargins(2, 0, 2, 0);
+            chip.setTextSize(12);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    UiUtils.dp(requireContext(), 40),
+                    UiUtils.dp(requireContext(), 40)
+            );
+            params.setMargins(UiUtils.dp(requireContext(), 4), 0, UiUtils.dp(requireContext(), 4), 0);
             chip.setLayoutParams(params);
             int index = i;
             chip.setOnClickListener(v -> {
@@ -147,33 +208,34 @@ public class RecurrenceFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreen());
-        view.findViewById(R.id.btn_save_recurrence).setOnClickListener(v -> saveResult());
-        view.findViewById(R.id.option_none).setOnClickListener(v -> setSimple(RecurrenceRule.FREQ_NONE));
-        view.findViewById(R.id.option_daily).setOnClickListener(v -> setSimple(RecurrenceRule.FREQ_DAILY));
-        view.findViewById(R.id.option_weekly).setOnClickListener(v -> setSimple(RecurrenceRule.FREQ_WEEKLY));
-        view.findViewById(R.id.option_monthly).setOnClickListener(v -> setSimple(RecurrenceRule.FREQ_MONTHLY));
-        view.findViewById(R.id.option_yearly).setOnClickListener(v -> setSimple(RecurrenceRule.FREQ_YEARLY));
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
+        view.findViewById(R.id.option_none).setOnClickListener(v -> {
+            setSimple(RecurrenceRule.FREQ_NONE);
+            saveResult();
+        });
+        view.findViewById(R.id.option_daily).setOnClickListener(v -> {
+            setSimple(RecurrenceRule.FREQ_DAILY);
+            saveResult();
+        });
+        view.findViewById(R.id.option_weekly).setOnClickListener(v -> {
+            setSimple(RecurrenceRule.FREQ_WEEKLY);
+            saveResult();
+        });
+        view.findViewById(R.id.option_monthly).setOnClickListener(v -> {
+            setSimple(RecurrenceRule.FREQ_MONTHLY);
+            saveResult();
+        });
+        view.findViewById(R.id.option_yearly).setOnClickListener(v -> {
+            setSimple(RecurrenceRule.FREQ_YEARLY);
+            saveResult();
+        });
         view.findViewById(R.id.option_custom).setOnClickListener(v -> {
             customMode = true;
-            rule.setFreq(RecurrenceRule.FREQ_DAILY);
-            rule.setIntervalValue(parseInterval());
+            if (rule.isNone()) {
+                rule.setFreq(RecurrenceRule.FREQ_DAILY);
+                rule.setIntervalValue(1);
+            }
             refresh();
-        });
-        unitSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                if (!customPanel.isShown()) {
-                    return;
-                }
-                String[] freqs = {RecurrenceRule.FREQ_DAILY, RecurrenceRule.FREQ_WEEKLY, RecurrenceRule.FREQ_MONTHLY, RecurrenceRule.FREQ_YEARLY};
-                rule.setFreq(freqs[position]);
-                refreshCustomControls();
-            }
-
-            @Override
-            public void onNothingSelected(android.widget.AdapterView<?> parent) {
-            }
         });
         view.findViewById(R.id.end_none_row).setOnClickListener(v -> {
             rule.setEndType(RecurrenceRule.END_NONE);
@@ -183,6 +245,16 @@ public class RecurrenceFragment extends Fragment {
                 .newInstance(END_DATE_RESULT, rule.getEndDate() == null ? baseDate : rule.getEndDate())
                 .show(getParentFragmentManager(), END_DATE_RESULT));
         view.findViewById(R.id.end_count_row).setOnClickListener(v -> showCountDialog());
+    }
+
+    @Override
+    public boolean onHandleBackPressed() {
+        if (customMode) {
+            saveResult();
+        } else {
+            ((MainActivity) requireActivity()).finishFullScreen();
+        }
+        return true;
     }
 
     private void setupDateResult() {
@@ -200,17 +272,29 @@ public class RecurrenceFragment extends Fragment {
         rule.setIntervalValue(1);
         rule.setByDay(null);
         rule.setByMonthDay(null);
+        rule.setMonthlyPatternType(null);
         rule.setEndType(RecurrenceRule.END_NONE);
+        rule.setEndDate(null);
+        rule.setOccurrenceCount(null);
         refresh();
     }
 
     private void saveResult() {
-        rule.setIntervalValue(parseInterval());
-        if (RecurrenceRule.FREQ_WEEKLY.equals(rule.getFreq())) {
-            rule.setByDay(selectedWeekDays.isEmpty() ? dayToRule(baseDate) : String.join(",", selectedWeekDays));
-        } else if (RecurrenceRule.FREQ_MONTHLY.equals(rule.getFreq())) {
-            rule.setByMonthDay(baseDate.getDayOfMonth());
-            rule.setMonthlyPatternType("DAY_OF_MONTH");
+        if (customMode) {
+            rule.setIntervalValue(parseInterval());
+            if (RecurrenceRule.FREQ_WEEKLY.equals(rule.getFreq())) {
+                rule.setByDay(selectedWeekDays.isEmpty() ? dayToRule(baseDate) : String.join(",", selectedWeekDays));
+                rule.setByMonthDay(null);
+                rule.setMonthlyPatternType(null);
+                rule.setBySetPos(null);
+            } else if (RecurrenceRule.FREQ_MONTHLY.equals(rule.getFreq())) {
+                applyMonthlyPatternSelection(monthlyPatternSelection);
+            } else {
+                rule.setByDay(null);
+                rule.setByMonthDay(null);
+                rule.setMonthlyPatternType(null);
+                rule.setBySetPos(null);
+            }
         }
         Bundle result = new Bundle();
         result.putSerializable(RESULT_RULE, rule);
@@ -219,18 +303,15 @@ public class RecurrenceFragment extends Fragment {
     }
 
     private void refresh() {
-        boolean custom = customMode;
-        customPanel.setVisibility(custom ? View.VISIBLE : View.GONE);
+        customPanel.setVisibility(customMode ? View.VISIBLE : View.GONE);
         UiUtils.setCheck(mainChecks.get(0), rule.isNone());
-        UiUtils.setCheck(mainChecks.get(1), RecurrenceRule.FREQ_DAILY.equals(rule.getFreq()) && !custom);
-        UiUtils.setCheck(mainChecks.get(2), RecurrenceRule.FREQ_WEEKLY.equals(rule.getFreq()) && !custom);
-        UiUtils.setCheck(mainChecks.get(3), RecurrenceRule.FREQ_MONTHLY.equals(rule.getFreq()) && !custom);
-        UiUtils.setCheck(mainChecks.get(4), RecurrenceRule.FREQ_YEARLY.equals(rule.getFreq()) && !custom);
-        UiUtils.setCheck(mainChecks.get(5), custom);
-        if (!rule.isNone()) {
-            intervalEdit.setText(String.valueOf(rule.getIntervalValue()));
-        }
-        updateSpinner();
+        UiUtils.setCheck(mainChecks.get(1), RecurrenceRule.FREQ_DAILY.equals(rule.getFreq()) && !customMode);
+        UiUtils.setCheck(mainChecks.get(2), RecurrenceRule.FREQ_WEEKLY.equals(rule.getFreq()) && !customMode);
+        UiUtils.setCheck(mainChecks.get(3), RecurrenceRule.FREQ_MONTHLY.equals(rule.getFreq()) && !customMode);
+        UiUtils.setCheck(mainChecks.get(4), RecurrenceRule.FREQ_YEARLY.equals(rule.getFreq()) && !customMode);
+        UiUtils.setCheck(mainChecks.get(5), customMode);
+        intervalEdit.setText(String.valueOf(Math.max(1, rule.getIntervalValue())));
+        updateUnitInput();
         refreshCustomControls();
         refreshEndOptions();
     }
@@ -240,20 +321,32 @@ public class RecurrenceFragment extends Fragment {
         boolean monthly = RecurrenceRule.FREQ_MONTHLY.equals(rule.getFreq());
         repeatOnLabel.setVisibility(weekly ? View.VISIBLE : View.GONE);
         weeklyDays.setVisibility(weekly ? View.VISIBLE : View.GONE);
-        monthlyPatternButton.setVisibility(monthly ? View.VISIBLE : View.GONE);
-        monthlyPatternButton.setText("Hằng tháng vào ngày " + baseDate.getDayOfMonth());
+        monthlyPatternInput.setVisibility(monthly ? View.VISIBLE : View.GONE);
+        String[] monthlyOptions = buildMonthlyPatternOptions();
+        monthlyPatternSelection = resolveMonthlyPatternSelection();
+        monthlyPatternInput.setText(monthlyOptions[monthlyPatternSelection], false);
+        ArrayAdapter<String> monthlyAdapter = new ArrayAdapter<>(
+                requireContext(),
+                R.layout.item_recurrence_dropdown_option,
+                monthlyOptions
+        );
+        monthlyAdapter.setDropDownViewResource(R.layout.item_recurrence_dropdown_option);
+        monthlyPatternInput.setAdapter(monthlyAdapter);
         updateWeekChips();
     }
 
     private void refreshEndOptions() {
         endDateText.setText(rule.getEndDate() == null ? DateTimeUtils.formatDateWithDow(baseDate) : DateTimeUtils.formatDateWithDow(rule.getEndDate()));
-        endCountText.setText(rule.getOccurrenceCount() == null ? getString(R.string.end_after_once) : "Lặp lại " + rule.getOccurrenceCount() + " lần");
+        endCountText.setText(rule.getOccurrenceCount() == null
+                ? getString(R.string.end_after_once)
+                : getString(R.string.repeat_count_times, rule.getOccurrenceCount()));
         UiUtils.setCheck(endChecks.get(0), RecurrenceRule.END_NONE.equals(rule.getEndType()));
         UiUtils.setCheck(endChecks.get(1), RecurrenceRule.END_DATE.equals(rule.getEndType()));
         UiUtils.setCheck(endChecks.get(2), RecurrenceRule.END_COUNT.equals(rule.getEndType()));
     }
 
-    private void updateSpinner() {
+    private void updateUnitInput() {
+        String[] units = getResources().getStringArray(R.array.recurrence_units);
         int index = 0;
         if (RecurrenceRule.FREQ_WEEKLY.equals(rule.getFreq())) {
             index = 1;
@@ -262,7 +355,7 @@ public class RecurrenceFragment extends Fragment {
         } else if (RecurrenceRule.FREQ_YEARLY.equals(rule.getFreq())) {
             index = 3;
         }
-        unitSpinner.setSelection(index);
+        unitInput.setText(units[index], false);
     }
 
     private void updateWeekChips() {
@@ -275,8 +368,8 @@ public class RecurrenceFragment extends Fragment {
             TextView chip = (TextView) weeklyDays.getChildAt(i);
             boolean selected = selectedWeekDays.contains(values[i]);
             chip.setBackground(selected
-                    ? UiUtils.rounded(requireContext().getColor(R.color.brand_orange), 19, requireContext())
-                    : UiUtils.roundedStroke(requireContext().getColor(R.color.surface), requireContext().getColor(R.color.line), 19, requireContext()));
+                    ? UiUtils.rounded(requireContext().getColor(R.color.brand_orange), 20, requireContext())
+                    : UiUtils.roundedStroke(requireContext().getColor(R.color.surface), requireContext().getColor(R.color.line), 20, requireContext()));
             chip.setTextColor(selected ? requireContext().getColor(R.color.white) : requireContext().getColor(R.color.text_primary));
         }
     }
@@ -286,13 +379,12 @@ public class RecurrenceFragment extends Fragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_count_picker, null, false);
         dialog.setContentView(content);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 248), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
         NumberPicker picker = content.findViewById(R.id.picker_repeat_count);
         picker.setMinValue(1);
         picker.setMaxValue(100);
         picker.setValue(rule.getOccurrenceCount() == null ? 1 : rule.getOccurrenceCount());
+        UiUtils.styleNumberPicker(picker, requireContext());
         content.findViewById(R.id.btn_count_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_count_ok).setOnClickListener(v -> {
             rule.setOccurrenceCount(picker.getValue());
@@ -314,5 +406,66 @@ public class RecurrenceFragment extends Fragment {
     private String dayToRule(LocalDate date) {
         String[] values = {"MO", "TU", "WE", "TH", "FR", "SA", "SU"};
         return values[date.getDayOfWeek().getValue() - 1];
+    }
+
+    private String[] buildMonthlyPatternOptions() {
+        return new String[]{
+                getString(R.string.monthly_on_day, baseDate.getDayOfMonth()),
+                getString(R.string.monthly_on_weekday_ordinal, weekdayLabel(baseDate), ordinalLabel(baseDate))
+        };
+    }
+
+    private int resolveMonthlyPatternSelection() {
+        return "DAY_OF_WEEK".equals(rule.getMonthlyPatternType()) ? 1 : 0;
+    }
+
+    private void applyMonthlyPatternSelection(int position) {
+        monthlyPatternSelection = position;
+        if (position == 1) {
+            rule.setMonthlyPatternType("DAY_OF_WEEK");
+            rule.setByMonthDay(null);
+            rule.setByDay(dayToRule(baseDate));
+            rule.setBySetPos(resolveWeekOrdinal(baseDate));
+        } else {
+            rule.setMonthlyPatternType("DAY_OF_MONTH");
+            rule.setByMonthDay(baseDate.getDayOfMonth());
+            rule.setByDay(null);
+            rule.setBySetPos(null);
+        }
+    }
+
+    private int resolveWeekOrdinal(LocalDate date) {
+        LocalDate plusWeek = date.plusWeeks(1);
+        if (plusWeek.getMonth() != date.getMonth()) {
+            return -1;
+        }
+        return ((date.getDayOfMonth() - 1) / 7) + 1;
+    }
+
+    private String ordinalLabel(LocalDate date) {
+        int ordinal = resolveWeekOrdinal(date);
+        if (ordinal == -1) {
+            return getString(R.string.ordinal_last);
+        }
+        return String.format(Locale.getDefault(), getString(R.string.ordinal_number), ordinal);
+    }
+
+    private String weekdayLabel(LocalDate date) {
+        switch (date.getDayOfWeek()) {
+            case MONDAY:
+                return getString(R.string.weekday_monday);
+            case TUESDAY:
+                return getString(R.string.weekday_tuesday);
+            case WEDNESDAY:
+                return getString(R.string.weekday_wednesday);
+            case THURSDAY:
+                return getString(R.string.weekday_thursday);
+            case FRIDAY:
+                return getString(R.string.weekday_friday);
+            case SATURDAY:
+                return getString(R.string.weekday_saturday);
+            default:
+                return getString(R.string.weekday_sunday);
+        }
     }
 }

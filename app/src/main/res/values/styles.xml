@@ -64,6 +64,26 @@
         <item name="android:textColor">@color/text_muted</item>
     </style>
 
+    <style name="Caliary.DetailRow" parent="Caliary.FormRow">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">42dp</item>
+        <item name="android:clickable">false</item>
+        <item name="android:focusable">false</item>
+        <item name="android:gravity">top</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <style name="Caliary.DetailValue" parent="Caliary.FormValue">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">end</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <style name="Caliary.DetailValueMuted" parent="Caliary.DetailValue">
+        <item name="android:textColor">@color/text_muted</item>
+    </style>
+
     <style name="Caliary.FormTime">
         <item name="android:layout_width">72dp</item>
         <item name="android:layout_height">match_parent</item>
@@ -79,6 +99,7 @@
         <item name="android:paddingStart">24dp</item>
         <item name="android:paddingEnd">24dp</item>
         <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHighlight">@color/brand_orange_highlight</item>
         <item name="android:textColorHint">@color/brand_orange</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textCursorDrawable">@drawable/cursor_primary</item>
@@ -112,8 +133,8 @@
 
     <style name="Caliary.OptionRowSmall" parent="Caliary.OptionRow">
         <item name="android:layout_height">42dp</item>
-        <item name="android:paddingStart">0dp</item>
-        <item name="android:paddingEnd">0dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
     </style>
 
     <style name="Caliary.OptionLabel">
@@ -129,6 +150,66 @@
         <item name="android:layout_width">42dp</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Caliary.DialogWindowAnimation">
+        <item name="android:windowEnterAnimation">@anim/dialog_overlay_enter</item>
+        <item name="android:windowExitAnimation">@anim/dialog_overlay_exit</item>
+    </style>
+
+    <style name="Caliary.PopupWindowAnimation">
+        <item name="android:windowEnterAnimation">@anim/popup_dropdown_enter</item>
+        <item name="android:windowExitAnimation">@anim/popup_dropdown_exit</item>
+    </style>
+
+    <style name="Caliary.DialogTextAction">
+        <item name="android:layout_width">72dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:background">@drawable/bg_dialog_text_action_ripple</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Caliary.DialogSecondaryButton" parent="Widget.Material3.Button">
+        <item name="android:minHeight">0dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="backgroundTint">@color/surface</item>
+        <item name="cornerRadius">21dp</item>
+        <item name="rippleColor">@color/ripple_neutral</item>
+        <item name="strokeColor">@color/line</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <style name="Caliary.DialogPrimaryButton" parent="Widget.Material3.Button">
+        <item name="android:minHeight">0dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="backgroundTint">@color/brand_orange</item>
+        <item name="cornerRadius">21dp</item>
+        <item name="rippleColor">@color/ripple_orange_pressed</item>
+    </style>
+
+    <style name="Caliary.PopupMenuItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">35dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textSize">18sp</item>
         <item name="android:textStyle">bold</item>

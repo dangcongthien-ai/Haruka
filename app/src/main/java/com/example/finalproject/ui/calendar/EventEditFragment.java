@@ -1,11 +1,27 @@
 package com.example.finalproject.ui.calendar;
 
+import android.app.Dialog;
+import android.animation.ValueAnimator;
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.ViewTreeObserver;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,7 +36,11 @@ import com.example.finalproject.model.CalendarEvent;
 import com.example.finalproject.model.RecurrenceRule;
 import com.example.finalproject.model.Reminder;
 import com.example.finalproject.repository.CalendarRepository;
+import com.example.finalproject.ui.common.AlphaSliderView;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
+import com.example.finalproject.ui.common.ScreenBackHandler;
+import com.example.finalproject.ui.common.HueSliderView;
+import com.example.finalproject.ui.common.SpectrumColorView;
 import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.ui.todo.TodoEditFragment;
 import com.google.android.material.button.MaterialButton;
@@ -33,18 +53,42 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
-public class EventEditFragment extends Fragment {
+public class EventEditFragment extends Fragment implements ScreenBackHandler {
     private static final String ARG_EVENT_ID = "event_id";
     private static final String ARG_DATE = "date";
     private static final String RESULT_RECURRENCE = "event_recurrence";
     private static final String RESULT_REMINDER = "event_reminder";
     private static final String RESULT_START_DATE = "event_start_date";
     private static final String RESULT_END_DATE = "event_end_date";
-
-    private final String[] colors = {
-            "#F7A8D7", "#F48FB1", "#CE93D8", "#90CAF9", "#4DD0E1",
-            "#7EE081", "#FFB74D", "#FFD54F", "#F4A261", "#00C853", "#3366CC"
+    private static final int[] PRESET_COLOR_RES_IDS = {
+            R.color.palette_pink_1,
+            R.color.palette_pink_2,
+            R.color.palette_lilac_1,
+            R.color.palette_lilac_2,
+            R.color.palette_blue_1,
+            R.color.palette_sky_1,
+            R.color.palette_sky_2,
+            R.color.palette_cyan_1,
+            R.color.palette_teal_1,
+            R.color.palette_green_1,
+            R.color.palette_lime_1,
+            R.color.palette_lime_2,
+            R.color.palette_yellow_1,
+            R.color.palette_orange_1,
+            R.color.brand_orange,
+            R.color.palette_neutral_1,
+            R.color.palette_red_1,
+            R.color.palette_magenta_1,
+            R.color.palette_magenta_2,
+            R.color.palette_purple_1,
+            R.color.palette_purple_2,
+            R.color.palette_blue_2,
+            R.color.palette_blue_3,
+            R.color.palette_green_2,
+            R.color.palette_amber_1,
+            R.color.palette_orange_2
     };
 
     private CalendarRepository repository;
@@ -54,7 +98,7 @@ public class EventEditFragment extends Fragment {
     private String notes = "";
     private String location = "";
     private String url = "";
-    private String selectedColor = "#90CAF9";
+    private String selectedColor = "#AFC0EA";
     private boolean allDay;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -73,11 +117,37 @@ public class EventEditFragment extends Fragment {
     private TextView startTimeText;
     private TextView endTimeText;
     private TextView recurrenceText;
+    private TextView reminderValueText;
+    private TextView addReminderButton;
     private LinearLayout reminderList;
     private View typeSegment;
+    private ViewGroup rootView;
+    private ScrollView contentScroll;
+    private View titleRow;
+    private View locationRow;
+    private View urlRow;
+    private View notesRow;
+    private View keyboardSpacer;
+    private View startTimeContainer;
+    private View endTimeContainer;
     private LinearLayout colorPalette;
+    private View customColorTrigger;
+    private View customColorTriggerPreview;
+    private View customColorTriggerCheck;
+    private TextView customColorTriggerLabel;
     private MaterialButton eventTypeButton;
     private MaterialButton todoTypeButton;
+    private boolean timePickerShowing;
+    private Integer previousSoftInputMode;
+    private ValueAnimator startTimeAnimator;
+    private ValueAnimator endTimeAnimator;
+    private ViewTreeObserver.OnGlobalLayoutListener keyboardLayoutListener;
+    private int baseKeyboardSpacerHeight;
+    private int keyboardInset;
+    private boolean keyboardVisible;
+    private Runnable pendingKeyboardScrollRunnable;
+    private View pendingKeyboardScrollAnchor;
+    private String initialStateSignature;
 
     public static EventEditFragment newInstance(long eventId, LocalDate date) {
         EventEditFragment fragment = new EventEditFragment();
@@ -92,7 +162,8 @@ public class EventEditFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getParentFragmentManager().setFragmentResultListener(RESULT_RECURRENCE, this, (requestKey, result) -> {
-            recurrenceRule = (RecurrenceRule) result.getSerializable(RecurrenceFragment.RESULT_RULE);
+            RecurrenceRule picked = (RecurrenceRule) result.getSerializable(RecurrenceFragment.RESULT_RULE);
+            recurrenceRule = picked == null ? RecurrenceRule.none() : picked;
             bindValues();
         });
         getParentFragmentManager().setFragmentResultListener(RESULT_REMINDER, this, (requestKey, result) -> {
@@ -106,7 +177,7 @@ public class EventEditFragment extends Fragment {
             LocalDate picked = DateTimeUtils.isoToDate(result.getString(DatePickerDialogFragment.RESULT_DATE));
             if (picked != null) {
                 startDate = picked;
-                if (endDate.isBefore(startDate)) {
+                if (endDate != null && endDate.isBefore(startDate)) {
                     endDate = startDate;
                 }
                 bindValues();
@@ -126,17 +197,46 @@ public class EventEditFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_event_edit, container, false);
         repository = new CalendarRepository(requireContext());
+        if (getActivity() != null && previousSoftInputMode == null) {
+            previousSoftInputMode = requireActivity().getWindow().getAttributes().softInputMode;
+        }
         bind(view);
+        installKeyboardScrollSupport();
         if (!initialized) {
             initializeFields();
         }
         setupClicks(view);
-        buildColorPalette();
         bindValues();
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        enableKeyboardInputMode();
+    }
+
+    @Override
+    public void onPause() {
+        restoreSoftInputMode();
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        detachKeyboardScrollSupport();
+        restoreSoftInputMode();
+        super.onDestroyView();
+    }
+
     private void bind(View view) {
+        rootView = view.findViewById(R.id.event_edit_root);
+        contentScroll = view.findViewById(R.id.event_edit_scroll);
+        titleRow = view.findViewById(R.id.title_row);
+        locationRow = view.findViewById(R.id.location_row);
+        urlRow = view.findViewById(R.id.url_row);
+        notesRow = view.findViewById(R.id.notes_row);
+        keyboardSpacer = view.findViewById(R.id.event_edit_keyboard_spacer);
         titleEdit = view.findViewById(R.id.edit_event_title);
         locationEdit = view.findViewById(R.id.edit_location);
         urlEdit = view.findViewById(R.id.edit_url);
@@ -146,12 +246,98 @@ public class EventEditFragment extends Fragment {
         endDateText = view.findViewById(R.id.tv_end_date);
         startTimeText = view.findViewById(R.id.tv_start_time);
         endTimeText = view.findViewById(R.id.tv_end_time);
+        startTimeContainer = view.findViewById(R.id.start_time_container);
+        endTimeContainer = view.findViewById(R.id.end_time_container);
         recurrenceText = view.findViewById(R.id.tv_repeat_value);
+        reminderValueText = view.findViewById(R.id.tv_reminder_value);
+        addReminderButton = view.findViewById(R.id.btn_add_reminder);
         reminderList = view.findViewById(R.id.reminder_list);
         typeSegment = view.findViewById(R.id.type_segment);
         colorPalette = view.findViewById(R.id.color_palette);
+        customColorTrigger = view.findViewById(R.id.custom_color_trigger);
+        customColorTriggerPreview = view.findViewById(R.id.view_custom_color_trigger_preview);
+        customColorTriggerCheck = view.findViewById(R.id.iv_custom_color_trigger_check);
+        customColorTriggerLabel = view.findViewById(R.id.tv_custom_color_trigger_label);
         eventTypeButton = view.findViewById(R.id.btn_event_type);
         todoTypeButton = view.findViewById(R.id.btn_todo_type);
+    }
+
+    private void installKeyboardScrollSupport() {
+        if (rootView == null || keyboardLayoutListener != null) {
+            return;
+        }
+        baseKeyboardSpacerHeight = keyboardSpacer != null && keyboardSpacer.getLayoutParams() != null
+                ? keyboardSpacer.getLayoutParams().height
+                : dp(28);
+        keyboardLayoutListener = () -> {
+            if (!isAdded() || rootView == null) {
+                return;
+            }
+            Rect visibleFrame = new Rect();
+            rootView.getWindowVisibleDisplayFrame(visibleFrame);
+            int fullHeight = rootView.getRootView().getHeight();
+            int overlap = Math.max(0, fullHeight - visibleFrame.bottom);
+            boolean nowVisible = overlap > dp(120);
+            int desiredInset = nowVisible ? overlap : 0;
+            boolean visibilityChanged = nowVisible != keyboardVisible;
+            if (desiredInset == keyboardInset && nowVisible == keyboardVisible) {
+                return;
+            }
+            keyboardInset = desiredInset;
+            keyboardVisible = nowVisible;
+            int spacerHeight = baseKeyboardSpacerHeight
+                    + (keyboardVisible ? Math.max(dp(28), keyboardInset - dp(20)) : 0);
+            updateKeyboardSpacerHeight(spacerHeight);
+            if (keyboardVisible) {
+                View focusedAnchor = resolveFocusedAnchor();
+                if (focusedAnchor != null && visibilityChanged) {
+                    requestFieldVisibility(focusedAnchor, 0L, true);
+                }
+            } else {
+                cancelPendingKeyboardScroll();
+            }
+        };
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(keyboardLayoutListener);
+    }
+
+    private void detachKeyboardScrollSupport() {
+        if (rootView == null || keyboardLayoutListener == null) {
+            return;
+        }
+        ViewTreeObserver observer = rootView.getViewTreeObserver();
+        if (observer.isAlive()) {
+            observer.removeOnGlobalLayoutListener(keyboardLayoutListener);
+        }
+        cancelPendingKeyboardScroll();
+        keyboardLayoutListener = null;
+    }
+
+    private void updateKeyboardSpacerHeight(int height) {
+        if (keyboardSpacer == null) {
+            return;
+        }
+        ViewGroup.LayoutParams params = keyboardSpacer.getLayoutParams();
+        if (params == null || params.height == height) {
+            return;
+        }
+        params.height = height;
+        keyboardSpacer.setLayoutParams(params);
+    }
+
+    private View resolveFocusedAnchor() {
+        if (isFieldFocused(notesEdit)) {
+            return notesEdit;
+        }
+        if (isFieldFocused(urlEdit)) {
+            return urlEdit;
+        }
+        if (isFieldFocused(locationEdit)) {
+            return locationEdit;
+        }
+        if (isFieldFocused(titleEdit)) {
+            return titleEdit;
+        }
+        return null;
     }
 
     private void initializeFields() {
@@ -168,7 +354,7 @@ public class EventEditFragment extends Fragment {
                 notes = event.getDescription() == null ? "" : event.getDescription();
                 location = event.getLocation() == null ? "" : event.getLocation();
                 url = event.getUrl() == null ? "" : event.getUrl();
-                selectedColor = event.getColor();
+                selectedColor = normalizeColor(event.getColor());
                 allDay = event.isAllDay();
                 startDate = event.getStartDateTime().toLocalDate();
                 endDate = event.getEndDateTime() == null ? startDate : event.getEndDateTime().toLocalDate();
@@ -179,119 +365,307 @@ public class EventEditFragment extends Fragment {
                 reminders.addAll(event.getReminders());
             }
         }
+        initialStateSignature = buildStateSignature();
         initialized = true;
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).finishFullScreenOrHome());
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
         view.findViewById(R.id.btn_save_event).setOnClickListener(v -> save());
         startDateText.setOnClickListener(v -> openDatePicker(RESULT_START_DATE, startDate));
         endDateText.setOnClickListener(v -> openDatePicker(RESULT_END_DATE, endDate));
         startTimeText.setOnClickListener(v -> openTimePicker(true));
         endTimeText.setOnClickListener(v -> openTimePicker(false));
-        allDaySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            captureInput();
-            allDay = isChecked;
-            bindValues();
-        });
         view.findViewById(R.id.repeat_row).setOnClickListener(v -> {
             captureInput();
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, RecurrenceFragment.newInstance(RESULT_RECURRENCE, recurrenceRule, startDate))
-                    .addToBackStack("Recurrence")
-                    .commit();
+            ((MainActivity) requireActivity()).pushFullScreenFragment(
+                    RecurrenceFragment.newInstance(RESULT_RECURRENCE, recurrenceRule, startDate),
+                    "Recurrence"
+            );
         });
-        view.findViewById(R.id.reminder_section).setOnClickListener(v -> openReminderPicker());
-        view.findViewById(R.id.btn_add_reminder).setOnClickListener(v -> openReminderPicker());
+        view.findViewById(R.id.reminder_header_row).setOnClickListener(v -> openReminderPicker());
+        addReminderButton.setOnClickListener(v -> openReminderPicker());
         todoTypeButton.setOnClickListener(v -> {
             captureInput();
             ((MainActivity) requireActivity()).switchFullScreen(TodoEditFragment.newInstance(0, startDate));
         });
+        customColorTrigger.setOnClickListener(v -> showCustomColorDialog());
+        attachKeyboardFieldBehavior(titleEdit, titleEdit, 60L);
+        attachKeyboardFieldBehavior(locationEdit, locationEdit, 90L);
+        attachKeyboardFieldBehavior(urlEdit, urlEdit, 90L);
+        attachKeyboardFieldBehavior(notesEdit, notesEdit, 140L);
     }
 
     private void openReminderPicker() {
         captureInput();
-        getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, ReminderFragment.newInstance(RESULT_REMINDER, Reminder.none()))
-                .addToBackStack("Reminder")
-                .commit();
-    }
-
-    private void buildColorPalette() {
-        colorPalette.removeAllViews();
-        for (String color : colors) {
-            TextView dot = new TextView(requireContext());
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(UiUtils.dp(requireContext(), 26), UiUtils.dp(requireContext(), 26));
-            params.setMargins(5, 0, 5, 0);
-            dot.setLayoutParams(params);
-            dot.setOnClickListener(v -> {
-                selectedColor = color;
-                buildColorPalette();
-            });
-            int fill = UiUtils.safeColor(color, requireContext().getColor(R.color.event_blue));
-            int stroke = color.equals(selectedColor) ? requireContext().getColor(R.color.black) : fill;
-            dot.setBackground(UiUtils.roundedStroke(fill, stroke, 13, requireContext()));
-            colorPalette.addView(dot);
-        }
+        ((MainActivity) requireActivity()).pushFullScreenFragment(
+                ReminderFragment.newInstance(RESULT_REMINDER, Reminder.none()),
+                "Reminder"
+        );
     }
 
     private void bindValues() {
         if (titleEdit == null) {
             return;
         }
-        titleEdit.setText(title);
-        locationEdit.setText(location);
-        urlEdit.setText(url);
-        notesEdit.setText(notes);
+        setTextIfChanged(titleEdit, title);
+        setTextIfChanged(locationEdit, location);
+        setTextIfChanged(urlEdit, url);
+        setTextIfChanged(notesEdit, notes);
         allDaySwitch.setOnCheckedChangeListener(null);
         allDaySwitch.setChecked(allDay);
         allDaySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             captureInput();
             allDay = isChecked;
-            bindValues();
+            updateTimeVisibility(true);
         });
         startDateText.setText(DateTimeUtils.formatDateWithDow(startDate));
         endDateText.setText(DateTimeUtils.formatDateWithDow(endDate));
         startTimeText.setText(DateTimeUtils.formatVietnameseTime(startTime));
         endTimeText.setText(DateTimeUtils.formatVietnameseTime(endTime));
-        startTimeText.setVisibility(allDay ? View.GONE : View.VISIBLE);
-        endTimeText.setVisibility(allDay ? View.GONE : View.VISIBLE);
-        recurrenceText.setText((recurrenceRule == null ? RecurrenceRule.none() : recurrenceRule).getDisplayText() + " ›");
-        renderReminders();
+        updateTimeVisibility(false);
+
+        RecurrenceRule currentRule = recurrenceRule == null ? RecurrenceRule.none() : recurrenceRule;
+        recurrenceText.setText(currentRule.getDisplayText());
+        recurrenceText.setTextColor(requireContext().getColor(currentRule.isNone() ? R.color.text_muted : R.color.text_primary));
+
         typeSegment.setVisibility(eventId > 0 ? View.GONE : View.VISIBLE);
         UiUtils.selectSegment(requireContext(), eventTypeButton, todoTypeButton);
         buildColorPalette();
+        renderReminders();
+    }
+
+    private void buildColorPalette() {
+        colorPalette.removeAllViews();
+        for (int resId : PRESET_COLOR_RES_IDS) {
+            int colorInt = requireContext().getColor(resId);
+            String hex = colorIntToHex(colorInt);
+            colorPalette.addView(createPresetSwatch(colorInt, normalizeColor(selectedColor).equals(hex)));
+        }
+        updateCustomColorTrigger();
+    }
+
+    private View createPresetSwatch(int colorInt, boolean selected) {
+        FrameLayout frame = buildSwatchFrame(selected);
+        View dot = new View(requireContext());
+        FrameLayout.LayoutParams dotParams = new FrameLayout.LayoutParams(dp(20), dp(20), Gravity.CENTER);
+        dot.setLayoutParams(dotParams);
+        dot.setBackground(circleDrawable(colorInt, UiUtils.adaptiveStrokeColor(colorInt, requireContext()), 1));
+        frame.addView(dot);
+        frame.setOnClickListener(v -> {
+            selectedColor = colorIntToHex(colorInt);
+            buildColorPalette();
+        });
+        return frame;
+    }
+
+    private FrameLayout buildSwatchFrame(boolean selected) {
+        FrameLayout frame = new FrameLayout(requireContext());
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(26), dp(26));
+        params.setMargins(dp(3), 0, dp(3), 0);
+        frame.setLayoutParams(params);
+        frame.setBackground(circleDrawable(
+                Color.TRANSPARENT,
+                selected ? requireContext().getColor(R.color.brand_orange) : Color.TRANSPARENT,
+                selected ? 2 : 0
+        ));
+        return frame;
+    }
+
+    private void updateCustomColorTrigger() {
+        boolean customSelected = !isPresetColor(selectedColor);
+        int fillColor = Color.parseColor(normalizeColor(selectedColor));
+        int surface = requireContext().getColor(R.color.surface);
+        int line = requireContext().getColor(R.color.line);
+        customColorTrigger.setBackground(customSelected
+                ? UiUtils.roundedStroke(requireContext().getColor(R.color.brand_orange_light), requireContext().getColor(R.color.brand_orange), 18, requireContext())
+                : UiUtils.roundedStroke(surface, line, 18, requireContext()));
+        customColorTriggerPreview.setBackground(circleDrawable(
+                customSelected ? fillColor : surface,
+                customSelected ? UiUtils.adaptiveStrokeColor(fillColor, requireContext()) : line,
+                1
+        ));
+        customColorTriggerLabel.setTextColor(requireContext().getColor(customSelected ? R.color.brand_orange_dark : R.color.text_secondary));
+        customColorTriggerLabel.setText(R.string.custom);
+        customColorTriggerCheck.setVisibility(customSelected ? View.VISIBLE : View.GONE);
+    }
+
+    private void showCustomColorDialog() {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_custom_color, null, false);
+        dialog.setContentView(content);
+        UiUtils.styleDialogWindow(dialog, resolveCustomColorDialogWidth(), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
+
+        View preview = content.findViewById(R.id.view_custom_color_preview);
+        View inlinePreview = content.findViewById(R.id.view_custom_color_inline_preview);
+        SpectrumColorView spectrumView = content.findViewById(R.id.view_custom_color_spectrum);
+        HueSliderView hueSliderView = content.findViewById(R.id.view_custom_color_hue);
+        AlphaSliderView alphaSliderView = content.findViewById(R.id.view_custom_color_alpha);
+        EditText hexEdit = content.findViewById(R.id.edit_custom_color_hex);
+        TextView opacityValue = content.findViewById(R.id.tv_custom_color_opacity);
+        String initial = normalizeColor(selectedColor);
+        int initialColor = Color.parseColor(initial);
+        final int[] alphaHolder = {Color.alpha(initialColor)};
+        final int[] rgbHolder = {Color.rgb(Color.red(initialColor), Color.green(initialColor), Color.blue(initialColor))};
+        final boolean[] syncingHex = {false};
+
+        Runnable syncViews = () -> {
+            int combined = Color.argb(alphaHolder[0], Color.red(rgbHolder[0]), Color.green(rgbHolder[0]), Color.blue(rgbHolder[0]));
+            updateColorPreview(preview, combined);
+            updateColorPreview(inlinePreview, combined);
+            alphaSliderView.setBaseColor(rgbHolder[0]);
+            alphaSliderView.setAlphaValue(alphaHolder[0]);
+            opacityValue.setText(getString(R.string.custom_color_opacity_value, Math.round(alphaHolder[0] * 100f / 255f)));
+            String rgbHex = String.format(Locale.US, "#%06X", (0xFFFFFF & rgbHolder[0]));
+            String currentText = hexEdit.getText() == null ? "" : hexEdit.getText().toString();
+            if (!rgbHex.equalsIgnoreCase(currentText)) {
+                syncingHex[0] = true;
+                hexEdit.setText(rgbHex);
+                hexEdit.setSelection(rgbHex.length());
+                syncingHex[0] = false;
+            }
+        };
+
+        spectrumView.setOnColorSelectedListener(color -> {
+            rgbHolder[0] = Color.rgb(Color.red(color), Color.green(color), Color.blue(color));
+            syncViews.run();
+        });
+        hueSliderView.setOnHueChangeListener(hue -> {
+            spectrumView.setHue(hue);
+            int updated = spectrumView.getSelectedColor();
+            rgbHolder[0] = Color.rgb(Color.red(updated), Color.green(updated), Color.blue(updated));
+            syncViews.run();
+        });
+        alphaSliderView.setOnAlphaChangeListener(alpha -> {
+            alphaHolder[0] = alpha;
+            syncViews.run();
+        });
+        hexEdit.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (syncingHex[0]) {
+                    return;
+                }
+                String normalized = normalizeRgbHex(s == null ? null : s.toString());
+                if (normalized == null) {
+                    return;
+                }
+                int parsedColor = Color.parseColor(normalized);
+                rgbHolder[0] = Color.rgb(Color.red(parsedColor), Color.green(parsedColor), Color.blue(parsedColor));
+                float[] hsv = new float[3];
+                Color.colorToHSV(rgbHolder[0], hsv);
+                hueSliderView.setHue(hsv[0]);
+                spectrumView.setSelectedColor(rgbHolder[0]);
+                syncViews.run();
+            }
+        });
+        spectrumView.post(() -> {
+            float[] hsv = new float[3];
+            Color.colorToHSV(rgbHolder[0], hsv);
+            hueSliderView.setHue(hsv[0]);
+            spectrumView.setSelectedColor(rgbHolder[0]);
+            alphaSliderView.setBaseColor(rgbHolder[0]);
+            alphaSliderView.setAlphaValue(alphaHolder[0]);
+            syncViews.run();
+        });
+        content.findViewById(R.id.btn_custom_color_cancel).setOnClickListener(v -> dialog.dismiss());
+        content.findViewById(R.id.btn_custom_color_apply).setOnClickListener(v -> {
+            selectedColor = colorIntToHex(Color.argb(alphaHolder[0], Color.red(rgbHolder[0]), Color.green(rgbHolder[0]), Color.blue(rgbHolder[0])));
+            buildColorPalette();
+            dialog.dismiss();
+        });
+        dialog.show();
+    }
+
+    private void updateColorPreview(View preview, String hexColor) {
+        int color = Color.parseColor(normalizeColor(hexColor));
+        updateColorPreview(preview, color);
+    }
+
+    private void updateColorPreview(View preview, int color) {
+        if (preview instanceof TextView) {
+            TextView chip = (TextView) preview;
+            chip.setTextColor(UiUtils.readableTextColor(color, requireContext()));
+            chip.setBackground(UiUtils.adaptiveEventBackground(color, 16, requireContext()));
+            return;
+        }
+        preview.setBackground(circleDrawable(color, requireContext().getColor(R.color.line), 1));
     }
 
     private void renderReminders() {
         reminderList.removeAllViews();
-        TextView row = reminderRow(reminderSummary());
-        row.setTextColor(requireContext().getColor(reminders.isEmpty() ? R.color.text_muted : R.color.text_primary));
-        reminderList.addView(row);
-    }
-
-    private String reminderSummary() {
         if (reminders.isEmpty()) {
-            return getString(R.string.none);
+            reminderList.setVisibility(View.GONE);
+            addReminderButton.setVisibility(View.GONE);
+            reminderValueText.setText(R.string.none);
+            reminderValueText.setTextColor(requireContext().getColor(R.color.text_muted));
+            return;
         }
-        if (reminders.size() == 1) {
-            return reminders.get(0).getDisplayText();
+        reminderList.setVisibility(View.VISIBLE);
+        addReminderButton.setVisibility(View.VISIBLE);
+        reminderValueText.setText(getString(R.string.reminder_count_value, reminders.size()));
+        reminderValueText.setTextColor(requireContext().getColor(R.color.text_secondary));
+        for (int i = 0; i < reminders.size(); i++) {
+            reminderList.addView(createReminderItem(reminders.get(i), i));
+            if (i < reminders.size() - 1) {
+                reminderList.addView(createReminderDivider());
+            }
         }
-        return reminders.get(0).getDisplayText() + " +" + (reminders.size() - 1);
     }
 
-    private TextView reminderRow(String text) {
-        TextView row = new TextView(requireContext());
-        row.setText(text);
-        row.setTextSize(14);
-        row.setTextColor(requireContext().getColor(R.color.text_primary));
-        row.setGravity(android.view.Gravity.CENTER_VERTICAL | android.view.Gravity.END);
-        row.setSingleLine(true);
-        row.setLayoutParams(new LinearLayout.LayoutParams(
+    private View createReminderItem(Reminder reminder, int index) {
+        LinearLayout row = new LinearLayout(requireContext());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setMinimumHeight(dp(40));
+        row.setPadding(0, 0, 0, 0);
+        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-        ));
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        row.setLayoutParams(rowParams);
+
+        TextView label = new TextView(requireContext());
+        label.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        label.setText(reminder.getDisplayText());
+        label.setTextColor(requireContext().getColor(R.color.text_primary));
+        label.setTextSize(14f);
+        label.setSingleLine(true);
+
+        ImageButton remove = new ImageButton(requireContext());
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(dp(32), dp(32));
+        remove.setLayoutParams(buttonParams);
+        remove.setBackgroundResource(android.R.color.transparent);
+        remove.setContentDescription(getString(R.string.remove_reminder));
+        remove.setImageResource(R.drawable.ic_close);
+        remove.setColorFilter(requireContext().getColor(R.color.text_secondary));
+        remove.setOnClickListener(v -> {
+            reminders.remove(index);
+            renderReminders();
+        });
+
+        row.addView(label);
+        row.addView(remove);
         return row;
+    }
+
+    private View createReminderDivider() {
+        View divider = new View(requireContext());
+        divider.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                hairline()
+        ));
+        divider.setBackgroundColor(requireContext().getColor(R.color.line));
+        return divider;
     }
 
     private void captureInput() {
@@ -300,6 +674,82 @@ public class EventEditFragment extends Fragment {
         url = urlEdit.getText().toString().trim();
         notes = notesEdit.getText().toString().trim();
         allDay = allDaySwitch.isChecked();
+    }
+
+    @Override
+    public boolean onHandleBackPressed() {
+        if (!isAdded()) {
+            return true;
+        }
+        captureInput();
+        if (!hasUnsavedChanges()) {
+            ((MainActivity) requireActivity()).finishFullScreenOrHome();
+            return true;
+        }
+        UiUtils.showConfirmationDialog(
+                requireContext(),
+                R.drawable.ic_close_centered,
+                getString(R.string.discard_changes_title),
+                getString(R.string.discard_changes_message),
+                getString(R.string.discard),
+                () -> ((MainActivity) requireActivity()).finishFullScreenOrHome()
+        );
+        return true;
+    }
+
+    private boolean hasUnsavedChanges() {
+        return !buildStateSignature().equals(initialStateSignature == null ? "" : initialStateSignature);
+    }
+
+    private String buildStateSignature() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(valueOrEmpty(title)).append('|')
+                .append(valueOrEmpty(location)).append('|')
+                .append(valueOrEmpty(url)).append('|')
+                .append(valueOrEmpty(notes)).append('|')
+                .append(normalizeColor(selectedColor)).append('|')
+                .append(allDay).append('|')
+                .append(valueOrEmpty(startDate)).append('|')
+                .append(valueOrEmpty(endDate)).append('|')
+                .append(valueOrEmpty(startTime)).append('|')
+                .append(valueOrEmpty(endTime)).append('|')
+                .append(recurrenceSignature(recurrenceRule)).append('|')
+                .append(reminderSignature(reminders));
+        return builder.toString();
+    }
+
+    private String recurrenceSignature(RecurrenceRule rule) {
+        RecurrenceRule currentRule = rule == null ? RecurrenceRule.none() : rule;
+        return valueOrEmpty(currentRule.getFreq()) + '|'
+                + currentRule.getIntervalValue() + '|'
+                + valueOrEmpty(currentRule.getByDay()) + '|'
+                + valueOrEmpty(currentRule.getByMonthDay()) + '|'
+                + valueOrEmpty(currentRule.getByMonth()) + '|'
+                + valueOrEmpty(currentRule.getBySetPos()) + '|'
+                + valueOrEmpty(currentRule.getMonthlyPatternType()) + '|'
+                + valueOrEmpty(currentRule.getEndType()) + '|'
+                + valueOrEmpty(currentRule.getEndDate()) + '|'
+                + valueOrEmpty(currentRule.getOccurrenceCount());
+    }
+
+    private String reminderSignature(List<Reminder> items) {
+        if (items == null || items.isEmpty()) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (Reminder item : items) {
+            builder.append(valueOrEmpty(item == null ? null : item.getReminderType())).append(':')
+                    .append(valueOrEmpty(item == null ? null : item.getOffsetValue())).append(':')
+                    .append(valueOrEmpty(item == null ? null : item.getOffsetUnit())).append(':')
+                    .append(valueOrEmpty(item == null ? null : item.getTimeOfDay())).append(':')
+                    .append(item != null && item.isEnabled())
+                    .append(';');
+        }
+        return builder.toString();
+    }
+
+    private String valueOrEmpty(Object value) {
+        return value == null ? "" : String.valueOf(value);
     }
 
     private void save() {
@@ -317,7 +767,7 @@ public class EventEditFragment extends Fragment {
         event.setId(eventId);
         event.setTitle(title);
         event.setDescription(notes);
-        event.setColor(selectedColor);
+        event.setColor(normalizeColor(selectedColor));
         event.setAllDay(allDay);
         event.setStartDateTime(start);
         event.setEndDateTime(end);
@@ -332,12 +782,22 @@ public class EventEditFragment extends Fragment {
 
     private void openDatePicker(String resultKey, LocalDate date) {
         captureInput();
+        if (getParentFragmentManager().findFragmentByTag(resultKey) != null) {
+            return;
+        }
         DatePickerDialogFragment
                 .newInstance(resultKey, date)
                 .show(getParentFragmentManager(), resultKey);
     }
 
     private void openTimePicker(boolean start) {
+        if (timePickerShowing) {
+            return;
+        }
+        String tag = start ? "start_time_picker" : "end_time_picker";
+        if (getParentFragmentManager().findFragmentByTag(tag) != null) {
+            return;
+        }
         LocalTime initial = start ? startTime : endTime;
         MaterialTimePicker picker = new MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_12H)
@@ -345,7 +805,10 @@ public class EventEditFragment extends Fragment {
                 .setMinute(initial.getMinute())
                 .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
                 .setTitleText(R.string.set_time)
+                .setNegativeButtonText(R.string.cancel)
+                .setPositiveButtonText(R.string.agree)
                 .build();
+        timePickerShowing = true;
         picker.addOnPositiveButtonClickListener(v -> {
             LocalTime pickedTime = LocalTime.of(picker.getHour(), picker.getMinute());
             if (start) {
@@ -355,6 +818,368 @@ public class EventEditFragment extends Fragment {
             }
             bindValues();
         });
-        picker.show(getParentFragmentManager(), start ? "start_time_picker" : "end_time_picker");
+        picker.addOnDismissListener(dialog -> timePickerShowing = false);
+        picker.show(getParentFragmentManager(), tag);
+        getParentFragmentManager().executePendingTransactions();
+        styleTimePickerActions(picker);
+    }
+
+    private void styleTimePickerActions(MaterialTimePicker picker) {
+        if (picker == null || picker.getDialog() == null) {
+            return;
+        }
+        Runnable styleButtons = () -> {
+            Dialog dialog = picker.getDialog();
+            if (dialog == null) {
+                return;
+            }
+            int actionColor = requireContext().getColor(R.color.text_primary);
+            TextView cancelButton = dialog.findViewById(com.google.android.material.R.id.material_timepicker_cancel_button);
+            TextView okButton = dialog.findViewById(com.google.android.material.R.id.material_timepicker_ok_button);
+            if (cancelButton != null) {
+                cancelButton.setTextColor(actionColor);
+                cancelButton.setText(getString(R.string.cancel));
+            }
+            if (okButton != null) {
+                okButton.setTextColor(actionColor);
+                okButton.setText(getString(R.string.agree));
+            }
+        };
+        styleButtons.run();
+        Window window = picker.getDialog().getWindow();
+        if (window != null && window.getDecorView() != null) {
+            window.getDecorView().post(styleButtons);
+        }
+    }
+
+    private void updateTimeVisibility(boolean animate) {
+        if (startTimeContainer == null || endTimeContainer == null) {
+            return;
+        }
+        if (animate) {
+            animateTimeContainer(startTimeContainer, !allDay, true);
+            animateTimeContainer(endTimeContainer, !allDay, false);
+        } else {
+            applyTimeContainerState(startTimeContainer, !allDay);
+            applyTimeContainerState(endTimeContainer, !allDay);
+        }
+    }
+
+    private void animateTimeContainer(View container, boolean show, boolean startContainer) {
+        if (container == null) {
+            return;
+        }
+        int expandedWidth = dp(72);
+        ViewGroup.LayoutParams params = container.getLayoutParams();
+        if (params == null) {
+            return;
+        }
+        ValueAnimator runningAnimator = startContainer ? startTimeAnimator : endTimeAnimator;
+        if (runningAnimator != null) {
+            runningAnimator.cancel();
+        }
+
+        int currentWidth = params.width > 0 ? params.width : (container.getVisibility() == View.VISIBLE ? expandedWidth : 0);
+        int targetWidth = show ? expandedWidth : 0;
+        if (currentWidth == targetWidth && ((show && container.getVisibility() == View.VISIBLE) || (!show && container.getVisibility() != View.VISIBLE))) {
+            return;
+        }
+        if (show) {
+            container.setVisibility(View.VISIBLE);
+            container.setAlpha(container.getAlpha() > 0f ? container.getAlpha() : 0f);
+        }
+
+        ValueAnimator animator = ValueAnimator.ofInt(currentWidth, targetWidth);
+        animator.setDuration(260L);
+        animator.setInterpolator(new AccelerateDecelerateInterpolator());
+        animator.addUpdateListener(animation -> {
+            int width = (int) animation.getAnimatedValue();
+            float progress = expandedWidth == 0 ? 1f : Math.min(1f, width / (float) expandedWidth);
+            ViewGroup.LayoutParams layoutParams = container.getLayoutParams();
+            layoutParams.width = width;
+            container.setLayoutParams(layoutParams);
+            container.setAlpha(show ? progress : Math.max(0f, 1f - progress));
+        });
+        animator.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                ViewGroup.LayoutParams layoutParams = container.getLayoutParams();
+                layoutParams.width = targetWidth;
+                container.setLayoutParams(layoutParams);
+                container.setAlpha(show ? 1f : 0f);
+                container.setVisibility(show ? View.VISIBLE : View.GONE);
+                if (startContainer) {
+                    startTimeAnimator = null;
+                } else {
+                    endTimeAnimator = null;
+                }
+            }
+
+            @Override
+            public void onAnimationCancel(android.animation.Animator animation) {
+                if (startContainer) {
+                    startTimeAnimator = null;
+                } else {
+                    endTimeAnimator = null;
+                }
+            }
+        });
+        if (startContainer) {
+            startTimeAnimator = animator;
+        } else {
+            endTimeAnimator = animator;
+        }
+        animator.start();
+    }
+
+    private void applyTimeContainerState(View container, boolean visible) {
+        if (container == null || container.getLayoutParams() == null) {
+            return;
+        }
+        ViewGroup.LayoutParams params = container.getLayoutParams();
+        params.width = visible ? dp(72) : 0;
+        container.setLayoutParams(params);
+        container.setAlpha(visible ? 1f : 0f);
+        container.setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+
+    private void attachKeyboardFieldBehavior(EditText field, View anchor, long focusDelayMs) {
+        if (field == null || anchor == null) {
+            return;
+        }
+        field.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                enableKeyboardInputMode();
+                if (keyboardVisible) {
+                    requestFieldVisibility(anchor, focusDelayMs, true);
+                }
+            }
+        });
+        field.setOnClickListener(v -> {
+            enableKeyboardInputMode();
+            if (keyboardVisible && field.hasFocus()) {
+                requestFieldVisibility(anchor, 0L, false);
+            }
+        });
+        field.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (field.hasFocus() && keyboardVisible) {
+                    long delay = field == notesEdit ? 24L : 0L;
+                    requestFieldVisibility(anchor, delay, false);
+                    if (field == notesEdit) {
+                        anchor.postDelayed(() -> {
+                            if (field.hasFocus() && keyboardVisible) {
+                                requestFieldVisibility(anchor, 0L, false);
+                            }
+                        }, 72L);
+                    }
+                }
+            }
+        });
+    }
+
+    private void requestFieldVisibility(View anchor, long delayMs, boolean animated) {
+        if (contentScroll == null || anchor == null || !isAdded()) {
+            return;
+        }
+        cancelPendingKeyboardScroll();
+        pendingKeyboardScrollAnchor = anchor;
+        pendingKeyboardScrollRunnable = () -> {
+            if (!isAdded() || !keyboardVisible || anchor != resolveFocusedAnchor()) {
+                return;
+            }
+            Rect visibleFrame = new Rect();
+            rootView.getWindowVisibleDisplayFrame(visibleFrame);
+
+            int[] location = new int[2];
+            anchor.getLocationOnScreen(location);
+            int anchorTopOnScreen = location[1];
+            int anchorBottomOnScreen = resolveAnchorBottomOnScreen(anchor, anchorTopOnScreen);
+            int desiredBottomInset = resolveDesiredBottomInset(anchor);
+            int desiredBottom = visibleFrame.bottom - desiredBottomInset;
+
+            if (anchorBottomOnScreen <= desiredBottom) {
+                return;
+            }
+            int delta = anchorBottomOnScreen - desiredBottom;
+            if (anchor == notesEdit && notesEdit != null) {
+                delta += Math.max(dp(24), notesEdit.getLineHeight());
+            }
+            if (delta < dp(6)) {
+                return;
+            }
+
+            int contentHeight = contentScroll.getChildCount() > 0 ? contentScroll.getChildAt(0).getHeight() : 0;
+            int maxScroll = Math.max(0, contentHeight - contentScroll.getHeight());
+            int targetScroll = clamp(contentScroll.getScrollY() + delta, 0, maxScroll);
+            if (animated) {
+                contentScroll.smoothScrollTo(0, targetScroll);
+            } else {
+                contentScroll.scrollTo(0, targetScroll);
+            }
+        };
+        if (delayMs > 0L) {
+            anchor.postDelayed(pendingKeyboardScrollRunnable, delayMs);
+        } else {
+            anchor.post(pendingKeyboardScrollRunnable);
+        }
+    }
+
+    private int resolveAnchorBottomOnScreen(View anchor, int anchorTopOnScreen) {
+        if (!(anchor instanceof EditText)) {
+            return anchorTopOnScreen + anchor.getHeight();
+        }
+        EditText editText = (EditText) anchor;
+        if (!editText.hasFocus() || editText.getLayout() == null) {
+            return anchorTopOnScreen + anchor.getHeight();
+        }
+        int safeSelection = Math.max(0, editText.getSelectionStart());
+        int line = editText.getLayout().getLineForOffset(safeSelection);
+        int cursorBottom = anchorTopOnScreen
+                + editText.getTotalPaddingTop()
+                + editText.getLayout().getLineBottom(line)
+                - editText.getScrollY()
+                + Math.max(dp(12), editText.getLineHeight() / 2);
+        int minimumVisibleBottom = anchorTopOnScreen + Math.min(editText.getHeight(), dp(44));
+        return Math.max(cursorBottom, minimumVisibleBottom);
+    }
+
+    private int resolveDesiredBottomInset(View anchor) {
+        if (anchor != notesEdit || notesEdit == null) {
+            return dp(24);
+        }
+        int lineHeight = Math.max(notesEdit.getLineHeight(), dp(20));
+        int noteSafeInset = (lineHeight * 2) + notesEdit.getTotalPaddingBottom() + dp(76);
+        return Math.max(dp(144), noteSafeInset);
+    }
+
+    private void cancelPendingKeyboardScroll() {
+        if (pendingKeyboardScrollAnchor != null && pendingKeyboardScrollRunnable != null) {
+            pendingKeyboardScrollAnchor.removeCallbacks(pendingKeyboardScrollRunnable);
+        }
+        pendingKeyboardScrollAnchor = null;
+        pendingKeyboardScrollRunnable = null;
+    }
+
+    private void enableKeyboardInputMode() {
+        if (getActivity() == null) {
+            return;
+        }
+        int currentMode = requireActivity().getWindow().getAttributes().softInputMode;
+        int stateMask = currentMode & WindowManager.LayoutParams.SOFT_INPUT_MASK_STATE;
+        requireActivity().getWindow().setSoftInputMode(stateMask | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+    }
+
+    private void restoreSoftInputMode() {
+        if (getActivity() == null || previousSoftInputMode == null) {
+            return;
+        }
+        requireActivity().getWindow().setSoftInputMode(previousSoftInputMode);
+    }
+
+    private boolean isFieldFocused(EditText field) {
+        return field != null && field.hasFocus();
+    }
+
+    private void setTextIfChanged(EditText editText, String value) {
+        String safe = value == null ? "" : value;
+        String current = editText.getText() == null ? "" : editText.getText().toString();
+        if (!safe.equals(current)) {
+            editText.setText(safe);
+            editText.setSelection(editText.getText().length());
+        }
+    }
+
+    private boolean isPresetColor(String hexColor) {
+        String normalized = normalizeColor(hexColor);
+        for (int resId : PRESET_COLOR_RES_IDS) {
+            if (normalized.equals(colorIntToHex(requireContext().getColor(resId)))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String normalizeColor(String color) {
+        String normalized = tryNormalizeColor(color);
+        return normalized == null ? colorIntToHex(requireContext().getColor(R.color.palette_blue_1)) : normalized;
+    }
+
+    private String normalizeRgbHex(String color) {
+        if (color == null || color.trim().isEmpty()) {
+            return null;
+        }
+        String candidate = color.trim().toUpperCase(Locale.US);
+        if (!candidate.startsWith("#")) {
+            candidate = "#" + candidate;
+        }
+        if (candidate.length() != 7) {
+            return null;
+        }
+        try {
+            Color.parseColor(candidate);
+            return candidate;
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private String tryNormalizeColor(String color) {
+        if (color == null || color.trim().isEmpty()) {
+            return null;
+        }
+        String candidate = color.trim();
+        if (!candidate.startsWith("#")) {
+            candidate = "#" + candidate;
+        }
+        try {
+            int parsed = Color.parseColor(candidate);
+            return colorIntToHex(parsed);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private String colorIntToHex(int color) {
+        return Color.alpha(color) < 255
+                ? String.format(Locale.US, "#%08X", color)
+                : String.format(Locale.US, "#%06X", (0xFFFFFF & color));
+    }
+
+    private GradientDrawable circleDrawable(int fillColor, int strokeColor, int strokeWidthDp) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setShape(GradientDrawable.OVAL);
+        drawable.setColor(fillColor);
+        if (strokeWidthDp > 0) {
+            drawable.setStroke(dp(strokeWidthDp), strokeColor);
+        }
+        return drawable;
+    }
+
+    private int dp(int value) {
+        return UiUtils.dp(requireContext(), value);
+    }
+
+    private int hairline() {
+        float density = requireContext().getResources().getDisplayMetrics().density;
+        return Math.max(1, Math.round(0.5f * density));
+    }
+
+    private int resolveCustomColorDialogWidth() {
+        int screenWidth = requireContext().getResources().getDisplayMetrics().widthPixels;
+        return Math.min(dp(372), screenWidth - dp(24));
+    }
+
+    private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 }

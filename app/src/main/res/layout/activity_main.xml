@@ -39,13 +39,13 @@
 
         <FrameLayout
             android:id="@+id/nav_calendar_button"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackgroundBorderless"
             android:layout_marginStart="17dp"
-            android:layout_marginBottom="6dp"
+            android:layout_marginBottom="10dp"
             android:translationZ="12dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent">
@@ -55,6 +55,7 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:layout_gravity="center"
+                android:translationY="-3dp"
                 android:contentDescription="@string/calendar"
                 android:scaleType="center"
                 android:src="@drawable/ic_calendar" />
@@ -70,13 +71,13 @@
 
         <FrameLayout
             android:id="@+id/nav_todo_button"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackgroundBorderless"
             android:layout_marginStart="87dp"
-            android:layout_marginBottom="6dp"
+            android:layout_marginBottom="10dp"
             android:translationZ="12dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent">
@@ -86,6 +87,7 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:layout_gravity="center"
+                android:translationY="-3dp"
                 android:contentDescription="@string/todo"
                 android:src="@drawable/ic_todo" />
 
@@ -125,13 +127,13 @@
 
         <FrameLayout
             android:id="@+id/nav_habits_button"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackgroundBorderless"
             android:layout_marginEnd="82dp"
-            android:layout_marginBottom="6dp"
+            android:layout_marginBottom="10dp"
             android:translationZ="12dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -141,6 +143,7 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:layout_gravity="center"
+                android:translationY="-3dp"
                 android:contentDescription="@string/habits"
                 android:src="@drawable/ic_habit" />
 
@@ -156,13 +159,13 @@
 
         <FrameLayout
             android:id="@+id/nav_journal_button"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackgroundBorderless"
             android:layout_marginEnd="17dp"
-            android:layout_marginBottom="6dp"
+            android:layout_marginBottom="10dp"
             android:translationZ="12dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -172,6 +175,7 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:layout_gravity="center"
+                android:translationY="-3dp"
                 android:contentDescription="@string/journal"
                 android:src="@drawable/ic_journal" />
 
@@ -185,5 +189,15 @@
                 android:visibility="gone" />
         </FrameLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <FrameLayout
+        android:id="@+id/fullscreen_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
