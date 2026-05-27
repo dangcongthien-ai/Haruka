@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -30,6 +31,8 @@ public class HabitCategoryEditorSheet extends BottomSheetDialogFragment {
     private String selectedColor = HabitDefaults.COLOR_OPTIONS[0];
     private String selectedSticker = HabitDefaults.STICKER_OPTIONS[0];
     private EditText nameEdit;
+    private LinearLayout colorContainer;
+    private LinearLayout customColorTrigger;
     private GridLayout stickerGrid;
 
     public static HabitCategoryEditorSheet newInstance(long categoryId) {
@@ -47,10 +50,13 @@ public class HabitCategoryEditorSheet extends BottomSheetDialogFragment {
         repository = new HabitRepository(requireContext());
         categoryId = requireArguments().getLong(ARG_CATEGORY_ID);
         nameEdit = view.findViewById(R.id.edit_category_name);
+        colorContainer = view.findViewById(R.id.layout_category_colors);
+        customColorTrigger = view.findViewById(R.id.custom_category_color_trigger);
         stickerGrid = view.findViewById(R.id.grid_category_stickers);
         view.findViewById(R.id.btn_close_category_editor).setOnClickListener(v -> dismiss());
         view.findViewById(R.id.btn_save_category_editor).setOnClickListener(v -> saveCategory());
         loadExistingCategory();
+        refreshColors();
         refreshStickers();
         return view;
     }
@@ -101,6 +107,17 @@ public class HabitCategoryEditorSheet extends BottomSheetDialogFragment {
             });
             stickerGrid.addView(cell);
         }
+    }
+
+    private void refreshColors() {
+        HabitUiHelper.populateColorDots(requireContext(), colorContainer, HabitDefaults.COLOR_OPTIONS, selectedColor, color -> {
+            selectedColor = color;
+            refreshColors();
+        });
+        HabitUiHelper.bindCustomColorTrigger(requireContext(), customColorTrigger, HabitDefaults.COLOR_OPTIONS, selectedColor, color -> {
+            selectedColor = color;
+            refreshColors();
+        });
     }
 
     private void saveCategory() {

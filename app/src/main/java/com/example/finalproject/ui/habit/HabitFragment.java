@@ -36,6 +36,7 @@ import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
 import com.example.finalproject.ui.common.UiUtils;
 import com.example.finalproject.util.HabitScheduleUtils;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.time.LocalDate;
@@ -61,8 +62,9 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
     private int sortMode = SORT_PRIORITY;
 
     private TextView dateLabel;
-    private TextView activeButton;
-    private TextView archivedButton;
+    private TextView todayButton;
+    private MaterialButton activeButton;
+    private MaterialButton archivedButton;
     private TextView emptyLabel;
     private TextView emptyHint;
     private TextView summaryLabel;
@@ -119,6 +121,7 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
 
     private void bind(View view) {
         dateLabel = view.findViewById(R.id.tv_habit_date);
+        todayButton = view.findViewById(R.id.btn_habit_today);
         activeButton = view.findViewById(R.id.btn_habit_active);
         archivedButton = view.findViewById(R.id.btn_habit_archived);
         emptyView = view.findViewById(R.id.layout_habit_empty);
@@ -172,6 +175,7 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
         nextDayButton = view.findViewById(R.id.btn_habit_next_day);
         previous.setOnClickListener(v -> moveDay(-1));
         nextDayButton.setOnClickListener(v -> moveDay(1));
+        todayButton.setOnClickListener(v -> jumpToToday());
         dateLabel.setOnClickListener(v -> DatePickerDialogFragment
                 .newInstance(DATE_RESULT_KEY, selectedDate)
                 .show(getParentFragmentManager(), DATE_RESULT_KEY));
@@ -210,12 +214,19 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
         refresh();
     }
 
+    private void jumpToToday() {
+        selectedDate = LocalDate.now();
+        ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+        refresh();
+    }
+
     private void refresh() {
         if (!isAdded()) {
             return;
         }
         ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
         dateLabel.setText(DateTimeUtils.formatVietnameseDate(selectedDate));
+        todayButton.setVisibility(selectedDate.equals(LocalDate.now()) ? View.GONE : View.VISIBLE);
         updateDateNavigation();
         updateFilterButtons();
 
@@ -341,14 +352,11 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
     }
 
     private void updateFilterButtons() {
-        activeButton.setBackgroundResource(archivedTab
-                ? R.drawable.bg_habit_segment
-                : R.drawable.bg_habit_segment_selected);
-        archivedButton.setBackgroundResource(archivedTab
-                ? R.drawable.bg_habit_segment_selected
-                : R.drawable.bg_habit_segment);
-        activeButton.setTextColor(requireContext().getColor(archivedTab ? R.color.text_primary : R.color.brand_orange));
-        archivedButton.setTextColor(requireContext().getColor(archivedTab ? R.color.brand_orange : R.color.text_primary));
+        if (archivedTab) {
+            UiUtils.selectSegment(requireContext(), archivedButton, activeButton);
+        } else {
+            UiUtils.selectSegment(requireContext(), activeButton, archivedButton);
+        }
     }
 
     private void updateSummary(List<HabitListItem> allTodayItems, List<HabitListItem> visibleItems) {
@@ -386,6 +394,14 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
 
     private void handleQuickAction(HabitListItem item) {
         HabitItem habit = item.getHabit();
+        if (item.isArchivedByCompletion() && item.isCompletedOnSelectedDate()) {
+            repository.deleteHabitLog(habit.getId(), selectedDate);
+            if (archivedTab && item.isDueOnSelectedDate()) {
+                archivedTab = false;
+            }
+            refresh();
+            return;
+        }
         if (habit.isNumberEvaluation()) {
             showTargetUpdateSheet(habit);
             return;

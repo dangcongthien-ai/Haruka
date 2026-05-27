@@ -11,18 +11,32 @@ import java.util.List;
 
 public final class HabitDefaults {
     public static final String[] COLOR_OPTIONS = {
-            "#F7C4DA",
-            "#F29DD3",
-            "#D8A8E8",
-            "#9CC0E7",
-            "#49C8D7",
-            "#8BE663",
-            "#FFBE4D",
-            "#FFD342",
-            "#F3B46E",
-            "#FF4036",
-            "#25D07F",
-            "#3E66C7"
+            "#FFC3E5",
+            "#FA9FD2",
+            "#E0B1E2",
+            "#C9B8E6",
+            "#AFC0EA",
+            "#83D3F4",
+            "#64DBF0",
+            "#6BD2DF",
+            "#37D2C7",
+            "#A8D6A2",
+            "#C8F2A4",
+            "#DFE47A",
+            "#FFF07C",
+            "#FFCA79",
+            "#EB9B54",
+            "#FFFFFF",
+            "#FF2A17",
+            "#FF0F8C",
+            "#EE83F1",
+            "#BB45F5",
+            "#7E58F5",
+            "#349CFF",
+            "#44D4FF",
+            "#48D279",
+            "#FFC125",
+            "#FF6F41"
     };
 
     public static final String[] STICKER_OPTIONS = {

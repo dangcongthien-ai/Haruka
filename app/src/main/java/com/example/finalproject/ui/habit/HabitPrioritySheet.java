@@ -5,7 +5,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -26,7 +25,6 @@ public class HabitPrioritySheet extends BottomSheetDialogFragment {
     public static final String RESULT_KEY = "habit_priority_picker_result";
     public static final String RESULT_PRIORITY_ID = "priority_id";
     private static final String ARG_SELECTED_ID = "selected_id";
-    private static final int PRIORITY_CHIP_WIDTH_DP = 168;
 
     private HabitRepository repository;
     private long selectedPriorityId;
@@ -92,44 +90,49 @@ public class HabitPrioritySheet extends BottomSheetDialogFragment {
     }
 
     private View createPriorityRow(HabitPriority priority) {
-        FrameLayout row = new FrameLayout(requireContext());
+        LinearLayout row = new LinearLayout(requireContext());
         row.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 UiUtils.dp(requireContext(), 60)
         ));
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setOrientation(LinearLayout.HORIZONTAL);
 
         TextView check = new TextView(requireContext());
-        FrameLayout.LayoutParams checkParams = new FrameLayout.LayoutParams(
+        LinearLayout.LayoutParams checkParams = new LinearLayout.LayoutParams(
                 UiUtils.dp(requireContext(), 24),
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        checkParams.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
         check.setLayoutParams(checkParams);
+        check.setGravity(Gravity.CENTER);
         check.setTextSize(18);
         check.setTextColor(requireContext().getColor(R.color.brand_orange));
         UiUtils.setCheck(check, selectedPriorityId == priority.getId());
         row.addView(check);
 
         TextView chip = new TextView(requireContext());
-        FrameLayout.LayoutParams chipParams = new FrameLayout.LayoutParams(
-                UiUtils.dp(requireContext(), PRIORITY_CHIP_WIDTH_DP),
+        LinearLayout.LayoutParams chipParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        chipParams.gravity = Gravity.CENTER;
+        chipParams.setMargins(UiUtils.dp(requireContext(), 10), 0, 0, 0);
         chip.setLayoutParams(chipParams);
-        chip.setPadding(UiUtils.dp(requireContext(), 12), UiUtils.dp(requireContext(), 7), UiUtils.dp(requireContext(), 12), UiUtils.dp(requireContext(), 7));
+        chip.setPadding(UiUtils.dp(requireContext(), 14), UiUtils.dp(requireContext(), 7), UiUtils.dp(requireContext(), 14), UiUtils.dp(requireContext(), 7));
         chip.setGravity(Gravity.CENTER);
         chip.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         HabitUiHelper.stylePriorityChip(chip, priority.getName(), priority.getColor());
         chip.setTextSize(16);
         row.addView(chip);
 
+        View spacer = new View(requireContext());
+        spacer.setLayoutParams(new LinearLayout.LayoutParams(0, 1, 1f));
+        row.addView(spacer);
+
         LinearLayout actionRow = new LinearLayout(requireContext());
-        FrameLayout.LayoutParams actionParams = new FrameLayout.LayoutParams(
+        LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        actionParams.gravity = Gravity.END | Gravity.CENTER_VERTICAL;
         actionRow.setLayoutParams(actionParams);
         actionRow.setGravity(Gravity.CENTER_VERTICAL);
         actionRow.setOrientation(LinearLayout.HORIZONTAL);

@@ -54,10 +54,11 @@ public class JournalFragment extends Fragment implements HomeDataRefreshable {
     private JournalRepository repository;
     private JournalEntryAdapter adapter;
     private LocalDate selectedDate;
-    private TextView monthLabel;
+    private TextView dateLabel;
+    private TextView todayButton;
     private TextView emptyLabel;
     private RecyclerView recyclerView;
-    private ImageButton nextMonthButton;
+    private ImageButton nextDayButton;
     private final List<JournalEntry> currentEntries = new ArrayList<>();
     private boolean newestFirst;
 
@@ -96,13 +97,14 @@ public class JournalFragment extends Fragment implements HomeDataRefreshable {
     @Override
     public void onHomeDataRefresh(LocalDate hostSelectedDate) {
         if (hostSelectedDate != null) {
-            selectedDate = hostSelectedDate;
+            selectedDate = clampFutureDate(hostSelectedDate);
         }
         refresh();
     }
 
     private void bind(View view) {
-        monthLabel = view.findViewById(R.id.tv_journal_date);
+        dateLabel = view.findViewById(R.id.tv_journal_date);
+        todayButton = view.findViewById(R.id.btn_journal_today);
         emptyLabel = view.findViewById(R.id.tv_journal_empty);
         recyclerView = view.findViewById(R.id.journal_recycler);
     }
@@ -141,10 +143,11 @@ public class JournalFragment extends Fragment implements HomeDataRefreshable {
 
     private void setupClicks(View view) {
         ImageButton previous = view.findViewById(R.id.btn_journal_prev_day);
-        nextMonthButton = view.findViewById(R.id.btn_journal_next_day);
-        previous.setOnClickListener(v -> moveMonth(-1));
-        nextMonthButton.setOnClickListener(v -> moveMonth(1));
-        monthLabel.setOnClickListener(v -> DatePickerDialogFragment
+        nextDayButton = view.findViewById(R.id.btn_journal_next_day);
+        previous.setOnClickListener(v -> moveDay(-1));
+        nextDayButton.setOnClickListener(v -> moveDay(1));
+        todayButton.setOnClickListener(v -> jumpToToday());
+        dateLabel.setOnClickListener(v -> DatePickerDialogFragment
                 .newInstance(DATE_RESULT_KEY, selectedDate)
                 .show(getParentFragmentManager(), DATE_RESULT_KEY));
         view.findViewById(R.id.btn_journal_sort).setOnClickListener(v -> {
@@ -166,13 +169,19 @@ public class JournalFragment extends Fragment implements HomeDataRefreshable {
         });
     }
 
-    private void moveMonth(int amount) {
-        LocalDate nextDate = selectedDate.plusMonths(amount);
-        if (isFutureMonth(nextDate)) {
+    private void moveDay(int amount) {
+        LocalDate nextDate = selectedDate.plusDays(amount);
+        if (isFutureDate(nextDate)) {
             Toast.makeText(requireContext(), R.string.future_date_action_blocked, Toast.LENGTH_SHORT).show();
             return;
         }
         selectedDate = nextDate;
+        ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
+        refresh();
+    }
+
+    private void jumpToToday() {
+        selectedDate = LocalDate.now();
         ((MainActivity) requireActivity()).setSelectedDate(selectedDate);
         refresh();
     }
@@ -182,8 +191,9 @@ public class JournalFragment extends Fragment implements HomeDataRefreshable {
             return;
         }
         updateDateNavigation();
-        monthLabel.setText(getString(R.string.journal_month_format, selectedDate.getMonthValue(), selectedDate.getYear()));
-        List<JournalEntry> entries = repository.getEntriesForMonth(selectedDate);
+        dateLabel.setText(DateTimeUtils.formatVietnameseDate(selectedDate));
+        todayButton.setVisibility(selectedDate.equals(LocalDate.now()) ? View.GONE : View.VISIBLE);
+        List<JournalEntry> entries = repository.getEntriesForDate(selectedDate);
         if (newestFirst) {
             Collections.reverse(entries);
         }
@@ -211,17 +221,13 @@ public class JournalFragment extends Fragment implements HomeDataRefreshable {
         return date != null && date.isAfter(LocalDate.now());
     }
 
-    private boolean isFutureMonth(LocalDate date) {
-        return date != null && date.withDayOfMonth(1).isAfter(LocalDate.now().withDayOfMonth(1));
-    }
-
     private void updateDateNavigation() {
-        if (nextMonthButton == null) {
+        if (nextDayButton == null) {
             return;
         }
-        boolean canMoveForward = selectedDate.withDayOfMonth(1).isBefore(LocalDate.now().withDayOfMonth(1));
-        nextMonthButton.setEnabled(canMoveForward);
-        nextMonthButton.setAlpha(canMoveForward ? 1f : 0.35f);
+        boolean canMoveForward = selectedDate.isBefore(LocalDate.now());
+        nextDayButton.setEnabled(canMoveForward);
+        nextDayButton.setAlpha(canMoveForward ? 1f : 0.35f);
     }
 
     private void showEntryDetail(JournalEntry initialEntry) {

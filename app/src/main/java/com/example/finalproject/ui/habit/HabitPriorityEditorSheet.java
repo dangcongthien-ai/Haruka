@@ -28,6 +28,7 @@ public class HabitPriorityEditorSheet extends BottomSheetDialogFragment {
     private String selectedColor = HabitDefaults.COLOR_OPTIONS[0];
     private EditText nameEdit;
     private LinearLayout colorContainer;
+    private LinearLayout customColorTrigger;
 
     public static HabitPriorityEditorSheet newInstance(long priorityId) {
         HabitPriorityEditorSheet sheet = new HabitPriorityEditorSheet();
@@ -45,6 +46,7 @@ public class HabitPriorityEditorSheet extends BottomSheetDialogFragment {
         priorityId = requireArguments().getLong(ARG_PRIORITY_ID);
         nameEdit = view.findViewById(R.id.edit_priority_name);
         colorContainer = view.findViewById(R.id.layout_priority_colors);
+        customColorTrigger = view.findViewById(R.id.custom_priority_color_trigger);
         view.findViewById(R.id.btn_close_priority_editor).setOnClickListener(v -> dismiss());
         view.findViewById(R.id.btn_save_priority_editor).setOnClickListener(v -> savePriority());
         loadExistingPriority();
@@ -74,6 +76,10 @@ public class HabitPriorityEditorSheet extends BottomSheetDialogFragment {
 
     private void refreshColors() {
         HabitUiHelper.populateColorDots(requireContext(), colorContainer, HabitDefaults.COLOR_OPTIONS, selectedColor, color -> {
+            selectedColor = color;
+            refreshColors();
+        });
+        HabitUiHelper.bindCustomColorTrigger(requireContext(), customColorTrigger, HabitDefaults.COLOR_OPTIONS, selectedColor, color -> {
             selectedColor = color;
             refreshColors();
         });
