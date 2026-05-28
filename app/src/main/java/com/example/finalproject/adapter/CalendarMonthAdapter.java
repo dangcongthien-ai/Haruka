@@ -6,6 +6,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -16,6 +17,7 @@ import com.example.finalproject.R;
 import com.example.finalproject.model.CalendarDayCell;
 import com.example.finalproject.model.CalendarEvent;
 import com.example.finalproject.ui.common.UiUtils;
+import com.example.finalproject.util.JournalMoodUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -156,6 +158,7 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
                 ? holder.itemView.getContext().getColor(R.color.text_primary)
                 : holder.itemView.getContext().getColor(R.color.text_muted));
         holder.dayNumber.setTypeface(selected ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        bindJournalIcon(holder, cell);
 
         int max = Math.min(MAX_VISIBLE_EVENTS, cell.getEvents().size());
         boolean hasMore = cell.getEvents().size() > MAX_VISIBLE_EVENTS;
@@ -170,6 +173,8 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         holder.itemView.setBackgroundColor(Color.TRANSPARENT);
         holder.itemView.setOnClickListener(null);
         holder.dayNumber.setText("");
+        holder.journalIcon.setImageDrawable(null);
+        holder.journalIcon.setVisibility(View.GONE);
         hideEventContent(holder);
         ViewGroup.LayoutParams params = holder.itemView.getLayoutParams();
         if (params != null && params.height != bottomSpacerHeight) {
@@ -208,6 +213,20 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
                 chip.setText("");
                 chip.setVisibility(View.GONE);
             }
+        }
+    }
+
+    private void bindJournalIcon(DayViewHolder holder, CalendarDayCell cell) {
+        int resourceId = JournalMoodUtils.resolveMoodResource(
+                holder.itemView.getContext(),
+                cell.getJournalDayMoodName()
+        );
+        if (resourceId != 0) {
+            holder.journalIcon.setImageResource(resourceId);
+            holder.journalIcon.setVisibility(View.VISIBLE);
+        } else {
+            holder.journalIcon.setImageDrawable(null);
+            holder.journalIcon.setVisibility(View.GONE);
         }
     }
 
@@ -272,9 +291,9 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         int chipHeight = availableForChips / MAX_VISIBLE_EVENTS;
         chipHeight = clamp(chipHeight, UiUtils.dp(holder.itemView.getContext(), 10), UiUtils.dp(holder.itemView.getContext(), 15));
 
-        ViewGroup.LayoutParams dayParams = holder.dayNumber.getLayoutParams();
+        ViewGroup.LayoutParams dayParams = holder.dayHeader.getLayoutParams();
         dayParams.height = dayHeight;
-        holder.dayNumber.setLayoutParams(dayParams);
+        holder.dayHeader.setLayoutParams(dayParams);
         holder.dayNumber.setIncludeFontPadding(false);
         holder.dayNumber.setTextSize(dayHeight <= UiUtils.dp(holder.itemView.getContext(), 15) ? 11 : 14);
 
@@ -324,7 +343,9 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
     }
 
     static class DayViewHolder extends RecyclerView.ViewHolder {
+        final View dayHeader;
         final TextView dayNumber;
+        final ImageView journalIcon;
         final TextView[] eventChips;
         final View moreTopSpacer;
         final TextView more;
@@ -332,7 +353,9 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
 
         DayViewHolder(@NonNull View itemView) {
             super(itemView);
+            dayHeader = itemView.findViewById(R.id.day_header_row);
             dayNumber = itemView.findViewById(R.id.tv_day_number);
+            journalIcon = itemView.findViewById(R.id.iv_journal_day_icon);
             eventChips = new TextView[]{
                     itemView.findViewById(R.id.tv_event_chip_1),
                     itemView.findViewById(R.id.tv_event_chip_2),

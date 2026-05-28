@@ -12,7 +12,9 @@ import com.example.finalproject.model.JournalEntry;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JournalRepository {
     private static final int MAX_JOURNAL_IMAGES = 3;
@@ -120,6 +122,52 @@ public class JournalRepository {
             }
         }
         return result;
+    }
+
+    public Map<LocalDate, String> getDayMoodNamesBetween(LocalDate startDate, LocalDate endDateExclusive) {
+        Map<LocalDate, String> result = new HashMap<>();
+        if (startDate == null || endDateExclusive == null || !startDate.isBefore(endDateExclusive)) {
+            return result;
+        }
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT je." + DbContract.JournalEntry.JOURNAL_DATE
+                + ", s." + DbContract.Sticker.IMAGE_URI
+                + " FROM " + DbContract.JournalEntry.TABLE + " je"
+                + " LEFT JOIN " + DbContract.JournalEntrySticker.TABLE + " jes"
+                + " ON je." + DbContract.JournalEntry.JOURNAL_ID
+                + " = jes." + DbContract.JournalEntrySticker.JOURNAL_ID
+                + " AND jes." + DbContract.JournalEntrySticker.SELECTED_ORDER + " = ?"
+                + " LEFT JOIN " + DbContract.Sticker.TABLE + " s"
+                + " ON jes." + DbContract.JournalEntrySticker.STICKER_ID
+                + " = s." + DbContract.Sticker.STICKER_ID
+                + " AND s." + DbContract.Sticker.STICKER_TYPE + " = ?"
+                + " WHERE je." + DbContract.JournalEntry.JOURNAL_DATE + " >= ?"
+                + " AND je." + DbContract.JournalEntry.JOURNAL_DATE + " < ?"
+                + " ORDER BY je." + DbContract.JournalEntry.JOURNAL_DATE + " ASC, "
+                + "je." + DbContract.JournalEntry.UPDATED_AT + " DESC, "
+                + "je." + DbContract.JournalEntry.CREATED_AT + " DESC";
+        try (Cursor cursor = db.rawQuery(sql, new String[]{
+                "1",
+                STICKER_TYPE_JOURNAL_MOOD,
+                DateTimeUtils.dateToIso(startDate),
+                DateTimeUtils.dateToIso(endDateExclusive)
+        })) {
+            while (cursor.moveToNext()) {
+                LocalDate date = DateTimeUtils.isoToDate(cursor.getString(0));
+                if (date == null || result.containsKey(date)) {
+                    continue;
+                }
+                result.put(date, cursor.isNull(1) ? null : cursor.getString(1));
+            }
+        }
+        return result;
+    }
+
+    public String getDayMoodNameForDate(LocalDate date) {
+        if (date == null) {
+            return null;
+        }
+        return getDayMoodNamesBetween(date, date.plusDays(1)).get(date);
     }
 
     public long saveJournalEntry(JournalEntry entry) {

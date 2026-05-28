@@ -51,6 +51,7 @@ import com.example.finalproject.model.CalendarDayCell;
 import com.example.finalproject.model.CalendarEvent;
 import com.example.finalproject.model.TodoItem;
 import com.example.finalproject.repository.CalendarRepository;
+import com.example.finalproject.repository.JournalRepository;
 import com.example.finalproject.repository.TodoRepository;
 import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.ScreenBackHandler;
@@ -78,6 +79,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
     private static final long MODE_POPUP_CLOSE_DURATION_MS = 160L;
 
     private CalendarRepository calendarRepository;
+    private JournalRepository journalRepository;
     private TodoRepository todoRepository;
     private View modeButton;
     private TextView modeLabel;
@@ -132,6 +134,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_calendar, container, false);
         calendarRepository = new CalendarRepository(requireContext());
+        journalRepository = new JournalRepository(requireContext());
         todoRepository = new TodoRepository(requireContext());
         bindViews(view);
         setupAdapters(view);
@@ -279,6 +282,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
 
         dayPagerAdapter = new DayPagerAdapter(
                 calendarRepository,
+                journalRepository,
                 todoRepository,
                 eventActions(),
                 todoActions()
@@ -801,6 +805,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
         LocalDate gridEnd = gridStart.plusDays(42);
         List<CalendarEvent> events = calendarRepository.getEventsBetween(gridStart.atStartOfDay(), gridEnd.atStartOfDay());
         Map<LocalDate, List<CalendarEvent>> eventsByDate = groupEventsByDate(events);
+        Map<LocalDate, String> journalDayMoods = journalRepository.getDayMoodNamesBetween(gridStart, gridEnd);
         List<CalendarDayCell> cells = new ArrayList<>();
         for (int i = 0; i < 42; i++) {
             LocalDate date = gridStart.plusDays(i);
@@ -809,6 +814,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
             if (dayEvents != null) {
                 cell.getEvents().addAll(dayEvents);
             }
+            cell.setJournalDayMoodName(journalDayMoods.get(date));
             cells.add(cell);
         }
         monthCellCache.put(cacheKey, cells);
@@ -818,9 +824,10 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
     private void refreshWeek() {
         LocalDate weekStart = getWeekStart(selectedDate);
         List<LocalDate> days = buildWeekDays(weekStart);
+        Map<LocalDate, String> journalDayMoods = journalRepository.getDayMoodNamesBetween(weekStart, weekStart.plusDays(7));
         weekMonthBadge.setText(getString(R.string.week_month_year_badge, selectedDate.getMonthValue(), selectedDate.getYear()));
         weekDayAdapter.submit(days);
-        weekJournalAdapter.submit(days);
+        weekJournalAdapter.submit(days, journalDayMoods);
         List<CalendarEvent> events = calendarRepository.getEventsBetween(weekStart.atStartOfDay(), weekStart.plusDays(7).atStartOfDay());
         weekTimelineView.submit(days, events);
         weekTopStripView.submit(days, weekTimelineView.getStripItems());

@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.finalproject.R;
 import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.model.JournalEntry;
+import com.example.finalproject.util.JournalMoodUtils;
 import com.example.finalproject.util.JournalTextUtils;
 
 import java.time.LocalDate;
@@ -38,7 +39,6 @@ public class JournalEntryAdapter extends RecyclerView.Adapter<JournalEntryAdapte
 
     private static final long LAYOUT_DENIM = 2L;
     private static final long LAYOUT_PLAID = 3L;
-    private static final String MOOD_BUON_NGU = "journal_emo_buon_ngu";
 
     private final List<JournalEntry> entries = new ArrayList<>();
     private final Listener listener;
@@ -162,19 +162,9 @@ public class JournalEntryAdapter extends RecyclerView.Adapter<JournalEntryAdapte
             String resourceName = moodResourceNames != null && index < moodResourceNames.size()
                     ? moodResourceNames.get(index)
                     : "";
-            moodViews[index].setImageResource(moodResource(context, resourceName, fallback[index]));
+            int resourceId = JournalMoodUtils.resolveMoodResource(context, resourceName);
+            moodViews[index].setImageResource(resourceId != 0 ? resourceId : fallback[index]);
         }
-    }
-
-    private int moodResource(Context context, String resourceName, int fallback) {
-        if (isBlank(resourceName)) {
-            return fallback;
-        }
-        String resolvedName = MOOD_BUON_NGU.equals(resourceName.trim())
-                ? "journal_emo_buon_ngu_clean"
-                : resourceName.trim();
-        int resourceId = context.getResources().getIdentifier(resolvedName, "drawable", context.getPackageName());
-        return resourceId == 0 ? fallback : resourceId;
     }
 
     private int patternResource(Long layoutId) {

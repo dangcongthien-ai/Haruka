@@ -8,5 +8,14 @@
         android:id="@+id/week_journal_slot_card"
         android:layout_width="37dp"
         android:layout_height="37dp"
-        android:layout_gravity="center" />
+        android:layout_gravity="center">
+
+        <ImageView
+            android:id="@+id/img_week_journal_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/journal"
+            android:visibility="gone" />
+    </FrameLayout>
 </FrameLayout>
