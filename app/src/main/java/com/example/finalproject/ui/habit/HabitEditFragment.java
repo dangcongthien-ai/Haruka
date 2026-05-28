@@ -1,7 +1,10 @@
 package com.example.finalproject.ui.habit;
 
 import android.os.Bundle;
+import android.graphics.Rect;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.widget.AutoCompleteTextView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -20,6 +23,7 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 
 import com.example.finalproject.MainActivity;
@@ -81,7 +85,6 @@ public class HabitEditFragment extends Fragment {
     private SwitchMaterial endSwitch;
     private View endPickerLayout;
     private View endRow;
-    private View descriptionSection;
     private TextView priorityText;
     private TextView repeatText;
     private TextView reminderText;
@@ -89,11 +92,23 @@ public class HabitEditFragment extends Fragment {
     private RadioButton booleanRadio;
     private RadioButton numberRadio;
     private View numberFields;
+    private View rootView;
+    private View keyboardSpacer;
     private AutoCompleteTextView operatorInput;
+    private LinearLayout customColorTrigger;
     private EditText targetValueEdit;
     private EditText targetUnitEdit;
     private EditText descriptionEdit;
     private Integer previousSoftInputMode;
+    @Nullable
+    private ViewTreeObserver.OnGlobalLayoutListener keyboardLayoutListener;
+    @Nullable
+    private Runnable pendingKeyboardScrollRunnable;
+    @Nullable
+    private View pendingKeyboardScrollAnchor;
+    private int baseKeyboardSpacerHeight;
+    private int keyboardInset;
+    private boolean keyboardVisible;
 
     public static HabitEditFragment newInstance(long habitId, LocalDate date) {
         HabitEditFragment fragment = new HabitEditFragment();
@@ -159,6 +174,7 @@ public class HabitEditFragment extends Fragment {
             previousSoftInputMode = requireActivity().getWindow().getAttributes().softInputMode;
         }
         bind(view);
+        installKeyboardScrollSupport();
         setupOperatorSpinner();
         if (!initialized) {
             initializeFields();
@@ -174,7 +190,7 @@ public class HabitEditFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        restoreSoftInputMode();
+        enableKeyboardInputMode();
     }
 
     @Override
@@ -183,10 +199,20 @@ public class HabitEditFragment extends Fragment {
         super.onPause();
     }
 
+    @Override
+    public void onDestroyView() {
+        detachKeyboardScrollSupport();
+        restoreSoftInputMode();
+        super.onDestroyView();
+    }
+
     private void bind(View view) {
+        rootView = view.findViewById(R.id.habit_edit_root);
         titleEdit = view.findViewById(R.id.edit_habit_title);
         scrollView = view.findViewById(R.id.habit_edit_scroll);
+        keyboardSpacer = view.findViewById(R.id.habit_edit_keyboard_spacer);
         colorContainer = view.findViewById(R.id.layout_habit_colors);
+        customColorTrigger = view.findViewById(R.id.custom_habit_color_trigger);
         categoryIcon = view.findViewById(R.id.img_selected_category);
         categoryText = view.findViewById(R.id.tv_selected_category);
         startText = view.findViewById(R.id.tv_habit_start);
@@ -194,7 +220,6 @@ public class HabitEditFragment extends Fragment {
         endSwitch = view.findViewById(R.id.switch_habit_end);
         endPickerLayout = view.findViewById(R.id.layout_habit_end_picker);
         endRow = view.findViewById(R.id.row_habit_end_toggle);
-        descriptionSection = view.findViewById(R.id.layout_habit_description_section);
         priorityText = view.findViewById(R.id.tv_habit_priority);
         repeatText = view.findViewById(R.id.tv_habit_repeat);
         reminderText = view.findViewById(R.id.tv_habit_reminder);
@@ -333,7 +358,7 @@ public class HabitEditFragment extends Fragment {
         attachKeyboardFieldBehavior(titleEdit, titleEdit, 60);
         attachKeyboardFieldBehavior(targetValueEdit, targetValueEdit, 90);
         attachKeyboardFieldBehavior(targetUnitEdit, targetUnitEdit, 90);
-        attachKeyboardFieldBehavior(descriptionEdit, descriptionSection == null ? descriptionEdit : descriptionSection, 140);
+        attachKeyboardFieldBehavior(descriptionEdit, descriptionEdit, 140);
     }
 
     private void openRecurrencePicker() {
@@ -411,6 +436,10 @@ public class HabitEditFragment extends Fragment {
             selectedColor = color;
             refreshColors();
         });
+        HabitUiHelper.bindCustomColorTrigger(requireContext(), customColorTrigger, HabitDefaults.COLOR_OPTIONS, selectedColor, color -> {
+            selectedColor = color;
+            refreshColors();
+        });
     }
 
     private void refreshEvaluationFields() {
@@ -421,23 +450,66 @@ public class HabitEditFragment extends Fragment {
         numberFields.setVisibility(numberMode ? View.VISIBLE : View.GONE);
     }
 
-    private void scrollFieldIntoView(View anchor, long delayMs, boolean animated) {
-        if (scrollView == null || anchor == null) {
+    private void installKeyboardScrollSupport() {
+        if (rootView == null || keyboardLayoutListener != null) {
             return;
         }
-        anchor.postDelayed(() -> {
-            if (!isAdded()) {
+        baseKeyboardSpacerHeight = keyboardSpacer != null && keyboardSpacer.getLayoutParams() != null
+                ? keyboardSpacer.getLayoutParams().height
+                : dpToPx(56);
+        keyboardLayoutListener = () -> {
+            if (!isAdded() || rootView == null) {
                 return;
             }
-            int margin = dpToPx(20);
-            int extraTop = anchor == descriptionSection ? dpToPx(12) : 0;
-            int targetScroll = Math.max(0, anchor.getTop() - margin - extraTop);
-            if (animated) {
-                scrollView.smoothScrollTo(0, targetScroll);
-            } else {
-                scrollView.scrollTo(0, targetScroll);
+            Rect visibleFrame = new Rect();
+            rootView.getWindowVisibleDisplayFrame(visibleFrame);
+            int fullHeight = rootView.getRootView().getHeight();
+            int overlap = Math.max(0, fullHeight - visibleFrame.bottom);
+            boolean nowVisible = overlap > dpToPx(120);
+            int desiredInset = nowVisible ? overlap : 0;
+            boolean visibilityChanged = nowVisible != keyboardVisible;
+            if (desiredInset == keyboardInset && nowVisible == keyboardVisible) {
+                return;
             }
-        }, delayMs);
+            keyboardInset = desiredInset;
+            keyboardVisible = nowVisible;
+            int spacerHeight = baseKeyboardSpacerHeight
+                    + (keyboardVisible ? Math.max(dpToPx(28), keyboardInset - dpToPx(20)) : 0);
+            updateKeyboardSpacerHeight(spacerHeight);
+            if (keyboardVisible) {
+                View focusedAnchor = resolveFocusedAnchor();
+                if (focusedAnchor != null && visibilityChanged) {
+                    requestFieldVisibility(focusedAnchor, 0L, true);
+                }
+            } else {
+                cancelPendingKeyboardScroll();
+            }
+        };
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(keyboardLayoutListener);
+    }
+
+    private void detachKeyboardScrollSupport() {
+        if (rootView == null || keyboardLayoutListener == null) {
+            return;
+        }
+        ViewTreeObserver observer = rootView.getViewTreeObserver();
+        if (observer.isAlive()) {
+            observer.removeOnGlobalLayoutListener(keyboardLayoutListener);
+        }
+        cancelPendingKeyboardScroll();
+        keyboardLayoutListener = null;
+    }
+
+    private void updateKeyboardSpacerHeight(int height) {
+        if (keyboardSpacer == null) {
+            return;
+        }
+        ViewGroup.LayoutParams params = keyboardSpacer.getLayoutParams();
+        if (params == null || params.height == height) {
+            return;
+        }
+        params.height = height;
+        keyboardSpacer.setLayoutParams(params);
     }
 
     private void attachKeyboardFieldBehavior(EditText field, View anchor, long focusDelayMs) {
@@ -447,20 +519,141 @@ public class HabitEditFragment extends Fragment {
         field.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 enableKeyboardInputMode();
-                scrollFieldIntoView(anchor, Math.max(focusDelayMs, 220), true);
+                requestFieldVisibility(anchor, Math.max(focusDelayMs, 220L), true);
             }
         });
         field.setOnClickListener(v -> {
             enableKeyboardInputMode();
-            scrollFieldIntoView(anchor, 220, true);
+            requestFieldVisibility(anchor, 0L, false);
         });
+        field.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (field.hasFocus()) {
+                    long delay = field == descriptionEdit ? 24L : 0L;
+                    requestFieldVisibility(anchor, delay, false);
+                    if (field == descriptionEdit) {
+                        anchor.postDelayed(() -> {
+                            if (field.hasFocus()) {
+                                requestFieldVisibility(anchor, 0L, false);
+                            }
+                        }, 72L);
+                    }
+                }
+            }
+        });
+    }
+
+    private void requestFieldVisibility(View anchor, long delayMs, boolean animated) {
+        if (scrollView == null || rootView == null || anchor == null || !isAdded()) {
+            return;
+        }
+        cancelPendingKeyboardScroll();
+        pendingKeyboardScrollAnchor = anchor;
+        pendingKeyboardScrollRunnable = () -> {
+            if (!isAdded() || !keyboardVisible || anchor != resolveFocusedAnchor()) {
+                return;
+            }
+            Rect visibleFrame = new Rect();
+            rootView.getWindowVisibleDisplayFrame(visibleFrame);
+
+            int[] location = new int[2];
+            anchor.getLocationOnScreen(location);
+            int anchorTopOnScreen = location[1];
+            int anchorBottomOnScreen = resolveAnchorBottomOnScreen(anchor, anchorTopOnScreen);
+            int desiredBottom = visibleFrame.bottom - resolveDesiredBottomInset(anchor);
+            if (anchorBottomOnScreen <= desiredBottom) {
+                return;
+            }
+            int delta = anchorBottomOnScreen - desiredBottom;
+            if (anchor == descriptionEdit && descriptionEdit != null) {
+                delta += Math.max(dpToPx(24), descriptionEdit.getLineHeight());
+            }
+            if (delta < dpToPx(6)) {
+                return;
+            }
+            int contentHeight = scrollView.getChildCount() > 0 ? scrollView.getChildAt(0).getHeight() : 0;
+            int maxScroll = Math.max(0, contentHeight - scrollView.getHeight());
+            int targetScroll = clamp(scrollView.getScrollY() + delta, 0, maxScroll);
+            if (animated) {
+                scrollView.smoothScrollTo(0, targetScroll);
+            } else {
+                scrollView.scrollTo(0, targetScroll);
+            }
+        };
+        if (delayMs > 0L) {
+            anchor.postDelayed(pendingKeyboardScrollRunnable, delayMs);
+        } else {
+            anchor.post(pendingKeyboardScrollRunnable);
+        }
+    }
+
+    private View resolveFocusedAnchor() {
+        if (isFieldFocused(descriptionEdit)) {
+            return descriptionEdit;
+        }
+        if (isFieldFocused(targetUnitEdit)) {
+            return targetUnitEdit;
+        }
+        if (isFieldFocused(targetValueEdit)) {
+            return targetValueEdit;
+        }
+        if (isFieldFocused(titleEdit)) {
+            return titleEdit;
+        }
+        return null;
+    }
+
+    private int resolveAnchorBottomOnScreen(View anchor, int anchorTopOnScreen) {
+        if (!(anchor instanceof EditText)) {
+            return anchorTopOnScreen + anchor.getHeight();
+        }
+        EditText editText = (EditText) anchor;
+        if (!editText.hasFocus() || editText.getLayout() == null) {
+            return anchorTopOnScreen + anchor.getHeight();
+        }
+        int safeSelection = Math.max(0, editText.getSelectionStart());
+        int line = editText.getLayout().getLineForOffset(safeSelection);
+        int cursorBottom = anchorTopOnScreen
+                + editText.getTotalPaddingTop()
+                + editText.getLayout().getLineBottom(line)
+                - editText.getScrollY()
+                + Math.max(dpToPx(12), editText.getLineHeight() / 2);
+        int minimumVisibleBottom = anchorTopOnScreen + Math.min(editText.getHeight(), dpToPx(44));
+        return Math.max(cursorBottom, minimumVisibleBottom);
+    }
+
+    private int resolveDesiredBottomInset(View anchor) {
+        if (anchor != descriptionEdit || descriptionEdit == null) {
+            return dpToPx(24);
+        }
+        int lineHeight = Math.max(descriptionEdit.getLineHeight(), dpToPx(20));
+        return Math.max(dpToPx(144), lineHeight * 2 + descriptionEdit.getTotalPaddingBottom() + dpToPx(76));
+    }
+
+    private void cancelPendingKeyboardScroll() {
+        if (pendingKeyboardScrollAnchor != null && pendingKeyboardScrollRunnable != null) {
+            pendingKeyboardScrollAnchor.removeCallbacks(pendingKeyboardScrollRunnable);
+        }
+        pendingKeyboardScrollAnchor = null;
+        pendingKeyboardScrollRunnable = null;
     }
 
     private void enableKeyboardInputMode() {
         if (getActivity() == null) {
             return;
         }
-        requireActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        int currentMode = requireActivity().getWindow().getAttributes().softInputMode;
+        int stateMask = currentMode & WindowManager.LayoutParams.SOFT_INPUT_MASK_STATE;
+        requireActivity().getWindow().setSoftInputMode(stateMask | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
     }
 
     private void restoreSoftInputMode() {
@@ -468,19 +661,6 @@ public class HabitEditFragment extends Fragment {
             return;
         }
         requireActivity().getWindow().setSoftInputMode(previousSoftInputMode);
-    }
-
-    private void restoreSoftInputModeIfNeeded() {
-        if (!isAnyKeyboardFieldFocused()) {
-            restoreSoftInputMode();
-        }
-    }
-
-    private boolean isAnyKeyboardFieldFocused() {
-        return isFieldFocused(titleEdit)
-                || isFieldFocused(targetValueEdit)
-                || isFieldFocused(targetUnitEdit)
-                || isFieldFocused(descriptionEdit);
     }
 
     private boolean isFieldFocused(EditText field) {
@@ -641,5 +821,9 @@ public class HabitEditFragment extends Fragment {
 
     private int dpToPx(int dp) {
         return Math.round(dp * requireContext().getResources().getDisplayMetrics().density);
+    }
+
+    private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 }
