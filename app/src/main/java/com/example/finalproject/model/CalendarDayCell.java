@@ -8,6 +8,7 @@ public class CalendarDayCell {
     private final LocalDate date;
     private final boolean currentMonth;
     private final List<CalendarEvent> events = new ArrayList<>();
+    private String journalDayMoodName;
 
     public CalendarDayCell(LocalDate date, boolean currentMonth) {
         this.date = date;
@@ -24,5 +25,13 @@ public class CalendarDayCell {
 
     public List<CalendarEvent> getEvents() {
         return events;
+    }
+
+    public String getJournalDayMoodName() {
+        return journalDayMoodName;
+    }
+
+    public void setJournalDayMoodName(String journalDayMoodName) {
+        this.journalDayMoodName = journalDayMoodName;
     }
 }
