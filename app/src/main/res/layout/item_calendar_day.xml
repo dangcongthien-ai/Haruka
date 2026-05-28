@@ -26,8 +26,8 @@
 
         <ImageView
             android:id="@+id/iv_journal_day_icon"
-            android:layout_width="14dp"
-            android:layout_height="14dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:layout_gravity="end|center_vertical"
             android:layout_marginEnd="3dp"
             android:contentDescription="@string/journal"

@@ -1,10 +1,9 @@
 package com.example.finalproject.adapter;
 
-import android.widget.ImageView;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.core.widget.NestedScrollView;
@@ -56,13 +55,19 @@ public class DayPagerAdapter extends RecyclerView.Adapter<DayPagerAdapter.DayPag
     @NonNull
     @Override
     public DayPageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_day_page, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_day_page, parent, false);
         return new DayPageViewHolder(view, eventListener, todoListener);
     }
 
     @Override
     public void onBindViewHolder(@NonNull DayPageViewHolder holder, int position) {
-        holder.bind(getDateForPosition(position), calendarRepository, journalRepository, todoRepository);
+        holder.bind(
+                getDateForPosition(position),
+                calendarRepository,
+                journalRepository,
+                todoRepository
+        );
     }
 
     @Override
@@ -82,6 +87,7 @@ public class DayPagerAdapter extends RecyclerView.Adapter<DayPagerAdapter.DayPag
                 TodoListAdapter.Listener todoListener
         ) {
             super(itemView);
+
             scrollView = itemView.findViewById(R.id.day_page_scroll);
             journalIcon = itemView.findViewById(R.id.iv_day_journal_icon);
 
@@ -98,25 +104,42 @@ public class DayPagerAdapter extends RecyclerView.Adapter<DayPagerAdapter.DayPag
             dayTodoRecycler.setAdapter(todoAdapter);
         }
 
-        void bind(LocalDate date, CalendarRepository calendarRepository, JournalRepository journalRepository, TodoRepository todoRepository) {
+        void bind(
+                LocalDate date,
+                CalendarRepository calendarRepository,
+                JournalRepository journalRepository,
+                TodoRepository todoRepository
+        ) {
             List<CalendarEvent> events = calendarRepository.getEventsForDate(date);
             List<TodoItem> todos = todoRepository.getTodosForDate(date);
+
             eventAdapter.submit(events);
             todoAdapter.submit(todos);
+
             int moodRes = JournalMoodUtils.resolveMoodResource(
                     itemView.getContext(),
                     journalRepository.getDayMoodNameForDate(date)
             );
+
             if (moodRes != 0) {
                 journalIcon.setImageResource(moodRes);
                 journalIcon.clearColorFilter();
                 journalIcon.setAlpha(1f);
+                journalIcon.setPadding(0, 0, 0, 0);
             } else {
                 journalIcon.setImageResource(R.drawable.ic_journal);
                 journalIcon.setColorFilter(itemView.getContext().getColor(R.color.brand_orange));
                 journalIcon.setAlpha(0.82f);
+
+                int padding = dpToPx(8);
+                journalIcon.setPadding(padding, padding, padding, padding);
             }
+
             scrollView.post(() -> scrollView.scrollTo(0, 0));
+        }
+
+        private int dpToPx(int dp) {
+            return (int) (dp * itemView.getResources().getDisplayMetrics().density + 0.5f);
         }
     }
 }
