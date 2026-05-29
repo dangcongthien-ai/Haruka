@@ -66,15 +66,15 @@
 
                 <LinearLayout
                     android:id="@+id/option_none"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/none" />
 
                     <TextView
                         android:id="@+id/check_none"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -84,15 +84,15 @@
 
                 <LinearLayout
                     android:id="@+id/option_daily"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/daily" />
 
                     <TextView
                         android:id="@+id/check_daily"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -102,15 +102,15 @@
 
                 <LinearLayout
                     android:id="@+id/option_weekly"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/weekly" />
 
                     <TextView
                         android:id="@+id/check_weekly"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -120,15 +120,15 @@
 
                 <LinearLayout
                     android:id="@+id/option_monthly"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/monthly" />
 
                     <TextView
                         android:id="@+id/check_monthly"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -138,15 +138,15 @@
 
                 <LinearLayout
                     android:id="@+id/option_yearly"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/yearly" />
 
                     <TextView
                         android:id="@+id/check_yearly"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -156,15 +156,15 @@
 
                 <LinearLayout
                     android:id="@+id/option_custom"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/custom" />
 
                     <TextView
                         android:id="@+id/check_custom"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -297,15 +297,15 @@
 
                     <LinearLayout
                         android:id="@+id/end_none_row"
-                        style="@style/Caliary.OptionRowSmall">
+                        style="@style/Haruka.OptionRowSmall">
 
                         <TextView
-                            style="@style/Caliary.OptionLabel"
+                            style="@style/Haruka.OptionLabel"
                             android:text="@string/none" />
 
                         <TextView
                             android:id="@+id/check_end_none"
-                            style="@style/Caliary.OptionCheck" />
+                            style="@style/Haruka.OptionCheck" />
                     </LinearLayout>
 
                     <View
@@ -315,15 +315,15 @@
 
                     <LinearLayout
                         android:id="@+id/end_date_row"
-                        style="@style/Caliary.OptionRowSmall">
+                        style="@style/Haruka.OptionRowSmall">
 
                         <TextView
                             android:id="@+id/tv_end_date_option"
-                            style="@style/Caliary.OptionLabel" />
+                            style="@style/Haruka.OptionLabel" />
 
                         <TextView
                             android:id="@+id/check_end_date"
-                            style="@style/Caliary.OptionCheck" />
+                            style="@style/Haruka.OptionCheck" />
                     </LinearLayout>
 
                     <View
@@ -333,16 +333,16 @@
 
                     <LinearLayout
                         android:id="@+id/end_count_row"
-                        style="@style/Caliary.OptionRowSmall">
+                        style="@style/Haruka.OptionRowSmall">
 
                         <TextView
                             android:id="@+id/tv_end_count_option"
-                            style="@style/Caliary.OptionLabel"
+                            style="@style/Haruka.OptionLabel"
                             android:text="@string/end_after_once" />
 
                         <TextView
                             android:id="@+id/check_end_count"
-                            style="@style/Caliary.OptionCheck" />
+                            style="@style/Haruka.OptionCheck" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

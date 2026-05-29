@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.example.finalproject.data.CaliaryDbHelper;
+import com.example.finalproject.data.HarukaDbHelper;
 import com.example.finalproject.data.DbContract;
 import com.example.finalproject.model.CalendarEvent;
 import com.example.finalproject.model.RecurrenceRule;
@@ -32,23 +32,23 @@ import java.util.HashSet;
 import java.util.Set;
 
 @RunWith(AndroidJUnit4.class)
-public class CaliaryDatabaseInstrumentedTest {
+public class HarukaDatabaseInstrumentedTest {
     private Context context;
 
     @Before
     public void setUp() {
         context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        context.deleteDatabase(CaliaryDbHelper.DATABASE_NAME);
+        context.deleteDatabase(HarukaDbHelper.DATABASE_NAME);
     }
 
     @After
     public void tearDown() {
-        context.deleteDatabase(CaliaryDbHelper.DATABASE_NAME);
+        context.deleteDatabase(HarukaDbHelper.DATABASE_NAME);
     }
 
     @Test
     public void createsAllTablesAndDefaultUser() {
-        CaliaryDbHelper helper = new CaliaryDbHelper(context);
+        HarukaDbHelper helper = new HarukaDbHelper(context);
         SQLiteDatabase db = helper.getWritableDatabase();
         Set<String> tables = new HashSet<>();
         try (Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null)) {
@@ -150,7 +150,7 @@ public class CaliaryDatabaseInstrumentedTest {
     }
 
     private int countRows(String table) {
-        CaliaryDbHelper helper = new CaliaryDbHelper(context);
+        HarukaDbHelper helper = new HarukaDbHelper(context);
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + table, null)) {
             cursor.moveToFirst();

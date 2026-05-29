@@ -13,31 +13,31 @@
         android:orientation="horizontal">
 
         <TextView
-            style="@style/Caliary.WeekLabel"
+            style="@style/Haruka.WeekLabel"
             android:text="@string/weekday_monday" />
 
         <TextView
-            style="@style/Caliary.WeekLabel"
+            style="@style/Haruka.WeekLabel"
             android:text="@string/weekday_tuesday" />
 
         <TextView
-            style="@style/Caliary.WeekLabel"
+            style="@style/Haruka.WeekLabel"
             android:text="@string/weekday_wednesday" />
 
         <TextView
-            style="@style/Caliary.WeekLabel"
+            style="@style/Haruka.WeekLabel"
             android:text="@string/weekday_thursday" />
 
         <TextView
-            style="@style/Caliary.WeekLabel"
+            style="@style/Haruka.WeekLabel"
             android:text="@string/weekday_friday" />
 
         <TextView
-            style="@style/Caliary.WeekLabel"
+            style="@style/Haruka.WeekLabel"
             android:text="@string/weekday_saturday" />
 
         <TextView
-            style="@style/Caliary.WeekLabel"
+            style="@style/Haruka.WeekLabel"
             android:text="@string/weekday_sunday" />
     </LinearLayout>
 

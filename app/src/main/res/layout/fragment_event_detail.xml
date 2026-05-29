@@ -164,7 +164,7 @@
                 android:orientation="vertical">
 
                 <LinearLayout
-                    style="@style/Caliary.DetailRow">
+                    style="@style/Haruka.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -181,7 +181,7 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_start"
-                        style="@style/Caliary.DetailValue"
+                        style="@style/Haruka.DetailValue"
                         android:textAlignment="viewEnd" />
                 </LinearLayout>
 
@@ -191,7 +191,7 @@
                     android:background="@color/line" />
 
                 <LinearLayout
-                    style="@style/Caliary.DetailRow">
+                    style="@style/Haruka.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -208,7 +208,7 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_end"
-                        style="@style/Caliary.DetailValue"
+                        style="@style/Haruka.DetailValue"
                         android:textAlignment="viewEnd" />
                 </LinearLayout>
 
@@ -218,7 +218,7 @@
                     android:background="@color/line" />
 
                 <LinearLayout
-                    style="@style/Caliary.DetailRow">
+                    style="@style/Haruka.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -235,7 +235,7 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_repeat"
-                        style="@style/Caliary.DetailValueMuted"
+                        style="@style/Haruka.DetailValueMuted"
                         android:textAlignment="viewEnd" />
                 </LinearLayout>
 
@@ -245,7 +245,7 @@
                     android:background="@color/line" />
 
                 <LinearLayout
-                    style="@style/Caliary.DetailRow">
+                    style="@style/Haruka.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -262,7 +262,7 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_reminder"
-                        style="@style/Caliary.DetailValueMuted"
+                        style="@style/Haruka.DetailValueMuted"
                         android:textAlignment="viewEnd" />
                 </LinearLayout>
 
@@ -273,7 +273,7 @@
 
                 <LinearLayout
                     android:id="@+id/event_detail_location_row"
-                    style="@style/Caliary.DetailRow">
+                    style="@style/Haruka.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -290,7 +290,7 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_location"
-                        style="@style/Caliary.DetailValue"
+                        style="@style/Haruka.DetailValue"
                         android:textAlignment="viewEnd" />
                 </LinearLayout>
 
@@ -301,7 +301,7 @@
 
                 <LinearLayout
                     android:id="@+id/event_detail_url_row"
-                    style="@style/Caliary.DetailRow">
+                    style="@style/Haruka.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -318,7 +318,7 @@
 
                     <TextView
                         android:id="@+id/tv_event_detail_url"
-                        style="@style/Caliary.DetailValue"
+                        style="@style/Haruka.DetailValue"
                         android:autoLink="web"
                         android:textAlignment="viewEnd" />
                 </LinearLayout>

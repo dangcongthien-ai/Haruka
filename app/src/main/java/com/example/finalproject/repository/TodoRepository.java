@@ -5,7 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.example.finalproject.data.CaliaryDbHelper;
+import com.example.finalproject.data.HarukaDbHelper;
 import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.data.DbContract;
 import com.example.finalproject.model.Reminder;
@@ -20,10 +20,10 @@ public class TodoRepository {
     public static final int FILTER_ACTIVE = 1;
     public static final int FILTER_DONE = 2;
 
-    private final CaliaryDbHelper dbHelper;
+    private final HarukaDbHelper dbHelper;
 
     public TodoRepository(Context context) {
-        dbHelper = new CaliaryDbHelper(context.getApplicationContext());
+        dbHelper = new HarukaDbHelper(context.getApplicationContext());
     }
 
     public TodoItem getTodo(long todoId) {

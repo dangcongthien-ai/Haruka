@@ -5,7 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.example.finalproject.data.CaliaryDbHelper;
+import com.example.finalproject.data.HarukaDbHelper;
 import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.data.DbContract;
 import com.example.finalproject.model.JournalEntry;
@@ -21,10 +21,10 @@ public class JournalRepository {
     private static final int MAX_JOURNAL_MOODS = 3;
     private static final String STICKER_TYPE_JOURNAL_MOOD = "journal_mood";
 
-    private final CaliaryDbHelper dbHelper;
+    private final HarukaDbHelper dbHelper;
 
     public JournalRepository(Context context) {
-        dbHelper = new CaliaryDbHelper(context.getApplicationContext());
+        dbHelper = new HarukaDbHelper(context.getApplicationContext());
     }
 
     public JournalEntry getJournalEntry(long journalId) {

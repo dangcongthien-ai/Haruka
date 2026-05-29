@@ -83,13 +83,13 @@
         android:layout_height="40dp"
         android:orientation="horizontal">
 
-        <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_monday" />
-        <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_tuesday" />
-        <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_wednesday" />
-        <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_thursday" />
-        <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_friday" />
-        <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_saturday" />
-        <TextView style="@style/Caliary.WeekLabel" android:text="@string/weekday_sunday" />
+        <TextView style="@style/Haruka.WeekLabel" android:text="@string/weekday_monday" />
+        <TextView style="@style/Haruka.WeekLabel" android:text="@string/weekday_tuesday" />
+        <TextView style="@style/Haruka.WeekLabel" android:text="@string/weekday_wednesday" />
+        <TextView style="@style/Haruka.WeekLabel" android:text="@string/weekday_thursday" />
+        <TextView style="@style/Haruka.WeekLabel" android:text="@string/weekday_friday" />
+        <TextView style="@style/Haruka.WeekLabel" android:text="@string/weekday_saturday" />
+        <TextView style="@style/Haruka.WeekLabel" android:text="@string/weekday_sunday" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -109,12 +109,12 @@
 
         <TextView
             android:id="@+id/btn_dialog_cancel"
-            style="@style/Caliary.DialogTextAction"
+            style="@style/Haruka.DialogTextAction"
             android:text="@string/cancel" />
 
         <TextView
             android:id="@+id/btn_dialog_ok"
-            style="@style/Caliary.DialogTextAction"
+            style="@style/Haruka.DialogTextAction"
             android:text="@string/ok" />
     </LinearLayout>
 </LinearLayout>

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.example.finalproject.data.CaliaryDbHelper;
+import com.example.finalproject.data.HarukaDbHelper;
 import com.example.finalproject.data.DateTimeUtils;
 import com.example.finalproject.data.DbContract;
 import com.example.finalproject.model.HabitCategory;
@@ -22,11 +22,11 @@ import java.util.List;
 
 public class HabitRepository {
     private final Context appContext;
-    private final CaliaryDbHelper dbHelper;
+    private final HarukaDbHelper dbHelper;
 
     public HabitRepository(Context context) {
         appContext = context.getApplicationContext();
-        dbHelper = new CaliaryDbHelper(appContext);
+        dbHelper = new HarukaDbHelper(appContext);
     }
 
     public List<HabitItem> getHabits() {
