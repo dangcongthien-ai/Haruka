@@ -57,7 +57,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_delete_cancel"
-            style="@style/Caliary.DialogSecondaryButton"
+            style="@style/Haruka.DialogSecondaryButton"
             android:layout_width="0dp"
             android:layout_height="42dp"
             android:layout_marginEnd="10dp"
@@ -66,7 +66,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_delete_confirm"
-            style="@style/Caliary.DialogPrimaryButton"
+            style="@style/Haruka.DialogPrimaryButton"
             android:layout_width="0dp"
             android:layout_height="42dp"
             android:layout_weight="1"

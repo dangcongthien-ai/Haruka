@@ -64,15 +64,15 @@
 
                 <LinearLayout
                     android:id="@+id/reminder_event_time"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/event_time" />
 
                     <TextView
                         android:id="@+id/check_event_time"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -82,15 +82,15 @@
 
                 <LinearLayout
                     android:id="@+id/reminder_1m"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/before_one_minute" />
 
                     <TextView
                         android:id="@+id/check_1m"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -100,15 +100,15 @@
 
                 <LinearLayout
                     android:id="@+id/reminder_5m"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/before_five_minutes" />
 
                     <TextView
                         android:id="@+id/check_5m"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -118,15 +118,15 @@
 
                 <LinearLayout
                     android:id="@+id/reminder_15m"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/before_fifteen_minutes" />
 
                     <TextView
                         android:id="@+id/check_15m"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -136,15 +136,15 @@
 
                 <LinearLayout
                     android:id="@+id/reminder_30m"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/before_thirty_minutes" />
 
                     <TextView
                         android:id="@+id/check_30m"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -154,15 +154,15 @@
 
                 <LinearLayout
                     android:id="@+id/reminder_1h"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/before_one_hour" />
 
                     <TextView
                         android:id="@+id/check_1h"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -172,15 +172,15 @@
 
                 <LinearLayout
                     android:id="@+id/reminder_1d"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/before_one_day" />
 
                     <TextView
                         android:id="@+id/check_1d"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
 
                 <View
@@ -190,15 +190,15 @@
 
                 <LinearLayout
                     android:id="@+id/reminder_custom"
-                    style="@style/Caliary.OptionRow">
+                    style="@style/Haruka.OptionRow">
 
                     <TextView
-                        style="@style/Caliary.OptionLabel"
+                        style="@style/Haruka.OptionLabel"
                         android:text="@string/custom" />
 
                     <TextView
                         android:id="@+id/check_custom"
-                        style="@style/Caliary.OptionCheck" />
+                        style="@style/Haruka.OptionCheck" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

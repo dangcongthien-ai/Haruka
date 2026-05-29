@@ -6,12 +6,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-public class CaliaryDbHelper extends SQLiteOpenHelper {
-    public static final String DATABASE_NAME = "caliary.db";
-    public static final int DATABASE_VERSION = 1;
-    private static final String DEFAULT_USERNAME = "default_user";
+public class HarukaDbHelper extends SQLiteOpenHelper {
+    public static final String DATABASE_NAME = "haruka.db";
+    public static final int DATABASE_VERSION = 2;
 
-    public CaliaryDbHelper(Context context) {
+    public HarukaDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -79,11 +78,12 @@ public class CaliaryDbHelper extends SQLiteOpenHelper {
         try (Cursor cursor = db.query(
                 DbContract.AppUser.TABLE,
                 new String[]{DbContract.AppUser.USER_ID},
-                DbContract.AppUser.USERNAME + " = ?",
-                new String[]{DEFAULT_USERNAME},
                 null,
                 null,
-                null
+                null,
+                null,
+                DbContract.AppUser.USER_ID + " ASC",
+                "1"
         )) {
             if (cursor.moveToFirst()) {
                 return cursor.getLong(0);
@@ -91,8 +91,6 @@ public class CaliaryDbHelper extends SQLiteOpenHelper {
         }
 
         ContentValues values = new ContentValues();
-        values.put(DbContract.AppUser.USERNAME, DEFAULT_USERNAME);
-        values.put(DbContract.AppUser.EMAIL, "default@caliary.local");
         values.put(DbContract.AppUser.CREATED_AT, DateTimeUtils.nowIso());
         return db.insertOrThrow(DbContract.AppUser.TABLE, null, values);
     }
@@ -113,8 +111,6 @@ public class CaliaryDbHelper extends SQLiteOpenHelper {
     private String createAppUser() {
         return "CREATE TABLE " + DbContract.AppUser.TABLE + " ("
                 + DbContract.AppUser.USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + DbContract.AppUser.USERNAME + " TEXT NOT NULL UNIQUE, "
-                + DbContract.AppUser.EMAIL + " TEXT, "
                 + DbContract.AppUser.CREATED_AT + " TEXT NOT NULL"
                 + ")";
     }

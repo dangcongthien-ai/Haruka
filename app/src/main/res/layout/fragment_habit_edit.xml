@@ -126,7 +126,7 @@
 
             <LinearLayout
                 android:id="@+id/row_habit_category"
-                style="@style/Caliary.FormRow">
+                style="@style/Haruka.FormRow">
 
                 <ImageView
                     android:layout_width="20dp"
@@ -173,7 +173,7 @@
 
             <LinearLayout
                 android:id="@+id/row_habit_start"
-                style="@style/Caliary.FormRow">
+                style="@style/Haruka.FormRow">
 
                 <ImageView
                     android:layout_width="20dp"
@@ -190,7 +190,7 @@
 
                 <TextView
                     android:id="@+id/tv_habit_start"
-                    style="@style/Caliary.FormValue" />
+                    style="@style/Haruka.FormValue" />
             </LinearLayout>
 
             <View
@@ -200,7 +200,7 @@
 
             <LinearLayout
                 android:id="@+id/row_habit_end_toggle"
-                style="@style/Caliary.FormRow"
+                style="@style/Haruka.FormRow"
                 android:layout_height="wrap_content"
                 android:minHeight="52dp"
                 android:paddingTop="8dp"
@@ -263,7 +263,7 @@
 
             <LinearLayout
                 android:id="@+id/row_habit_priority"
-                style="@style/Caliary.FormRow">
+                style="@style/Haruka.FormRow">
 
                 <ImageView
                     android:layout_width="20dp"
@@ -307,7 +307,7 @@
 
             <LinearLayout
                 android:id="@+id/row_habit_repeat"
-                style="@style/Caliary.FormRow">
+                style="@style/Haruka.FormRow">
 
                 <ImageView
                     android:layout_width="20dp"
@@ -324,7 +324,7 @@
 
                 <TextView
                     android:id="@+id/tv_habit_repeat"
-                    style="@style/Caliary.FormValue" />
+                    style="@style/Haruka.FormValue" />
             </LinearLayout>
 
             <View
@@ -334,7 +334,7 @@
 
             <LinearLayout
                 android:id="@+id/row_habit_reminder"
-                style="@style/Caliary.FormRow">
+                style="@style/Haruka.FormRow">
 
                 <ImageView
                     android:layout_width="20dp"
@@ -351,7 +351,7 @@
 
                 <TextView
                     android:id="@+id/tv_habit_reminder"
-                    style="@style/Caliary.FormValue" />
+                    style="@style/Haruka.FormValue" />
             </LinearLayout>
 
             <View

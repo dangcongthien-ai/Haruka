@@ -128,12 +128,12 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_habit_active"
-            style="@style/Caliary.SegmentButton"
+            style="@style/Haruka.SegmentButton"
             android:text="@string/habit_tab_active" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_habit_archived"
-            style="@style/Caliary.SegmentButton"
+            style="@style/Haruka.SegmentButton"
             android:text="@string/habit_tab_archived" />
     </LinearLayout>
 

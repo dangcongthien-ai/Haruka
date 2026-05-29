@@ -81,18 +81,18 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_filter_all"
-            style="@style/Caliary.SegmentButton"
+            style="@style/Haruka.SegmentButton"
             android:text="@string/all" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_filter_active"
-            style="@style/Caliary.SegmentButton"
+            style="@style/Haruka.SegmentButton"
             android:text="@string/todo_filter_pending"
             android:textSize="13sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_filter_done"
-            style="@style/Caliary.SegmentButton"
+            style="@style/Haruka.SegmentButton"
             android:text="@string/todo_filter_done"
             android:textSize="13sp" />
     </LinearLayout>

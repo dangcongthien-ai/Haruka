@@ -165,7 +165,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_custom_color_cancel"
-            style="@style/Caliary.DialogSecondaryButton"
+            style="@style/Haruka.DialogSecondaryButton"
             android:layout_width="0dp"
             android:layout_height="44dp"
             android:layout_marginEnd="10dp"
@@ -174,7 +174,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_custom_color_apply"
-            style="@style/Caliary.DialogPrimaryButton"
+            style="@style/Haruka.DialogPrimaryButton"
             android:layout_width="0dp"
             android:layout_height="44dp"
             android:layout_weight="1"

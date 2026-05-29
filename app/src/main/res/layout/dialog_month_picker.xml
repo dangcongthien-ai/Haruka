@@ -69,12 +69,12 @@
 
         <TextView
             android:id="@+id/btn_month_picker_cancel"
-            style="@style/Caliary.DialogTextAction"
+            style="@style/Haruka.DialogTextAction"
             android:text="@string/cancel" />
 
         <TextView
             android:id="@+id/btn_month_picker_ok"
-            style="@style/Caliary.DialogTextAction"
+            style="@style/Haruka.DialogTextAction"
             android:text="@string/ok" />
     </LinearLayout>
 </LinearLayout>

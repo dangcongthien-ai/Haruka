@@ -7,8 +7,6 @@ public final class DbContract {
     public static final class AppUser {
         public static final String TABLE = "APP_USER";
         public static final String USER_ID = "user_id";
-        public static final String USERNAME = "username";
-        public static final String EMAIL = "email";
         public static final String CREATED_AT = "created_at";
     }
 

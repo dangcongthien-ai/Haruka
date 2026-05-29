@@ -165,7 +165,7 @@
                 android:orientation="vertical">
 
                 <LinearLayout
-                    style="@style/Caliary.DetailRow">
+                    style="@style/Haruka.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -182,7 +182,7 @@
 
                     <TextView
                         android:id="@+id/tv_detail_date"
-                        style="@style/Caliary.DetailValue"
+                        style="@style/Haruka.DetailValue"
                         android:textAlignment="viewEnd" />
                 </LinearLayout>
 
@@ -192,7 +192,7 @@
                     android:background="@color/line" />
 
                 <LinearLayout
-                    style="@style/Caliary.DetailRow">
+                    style="@style/Haruka.DetailRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -209,7 +209,7 @@
 
                     <TextView
                         android:id="@+id/tv_detail_reminder"
-                        style="@style/Caliary.DetailValueMuted"
+                        style="@style/Haruka.DetailValueMuted"
                         android:textAlignment="viewEnd" />
                 </LinearLayout>
             </LinearLayout>

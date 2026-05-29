@@ -195,7 +195,7 @@ public final class UiUtils {
         window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         WindowManager.LayoutParams attributes = window.getAttributes();
         attributes.dimAmount = dimAmount;
-        attributes.windowAnimations = R.style.Caliary_DialogWindowAnimation;
+        attributes.windowAnimations = R.style.Haruka_DialogWindowAnimation;
         window.setAttributes(attributes);
     }
 

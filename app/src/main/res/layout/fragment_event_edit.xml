@@ -212,7 +212,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_event_type"
-                        style="@style/Caliary.SegmentButton"
+                        style="@style/Haruka.SegmentButton"
                         android:text="@string/event"
                         app:icon="@drawable/ic_calendar"
                         app:iconGravity="textStart"
@@ -222,7 +222,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_todo_type"
-                        style="@style/Caliary.SegmentButton"
+                        style="@style/Haruka.SegmentButton"
                         android:text="@string/todo"
                         app:icon="@drawable/ic_todo"
                         app:iconGravity="textStart"
@@ -290,7 +290,7 @@
 
                 <LinearLayout
                     android:id="@+id/start_row"
-                    style="@style/Caliary.FormRow">
+                    style="@style/Haruka.FormRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -307,7 +307,7 @@
 
                     <TextView
                         android:id="@+id/tv_start_date"
-                        style="@style/Caliary.FormValue" />
+                        style="@style/Haruka.FormValue" />
 
                     <FrameLayout
                         android:id="@+id/start_time_container"
@@ -316,7 +316,7 @@
 
                         <TextView
                             android:id="@+id/tv_start_time"
-                            style="@style/Caliary.FormTime" />
+                            style="@style/Haruka.FormTime" />
                     </FrameLayout>
                 </LinearLayout>
 
@@ -327,7 +327,7 @@
 
                 <LinearLayout
                     android:id="@+id/end_row"
-                    style="@style/Caliary.FormRow">
+                    style="@style/Haruka.FormRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -344,7 +344,7 @@
 
                     <TextView
                         android:id="@+id/tv_end_date"
-                        style="@style/Caliary.FormValue" />
+                        style="@style/Haruka.FormValue" />
 
                     <FrameLayout
                         android:id="@+id/end_time_container"
@@ -353,7 +353,7 @@
 
                         <TextView
                             android:id="@+id/tv_end_time"
-                            style="@style/Caliary.FormTime" />
+                            style="@style/Haruka.FormTime" />
                     </FrameLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -372,7 +372,7 @@
 
                 <LinearLayout
                     android:id="@+id/repeat_row"
-                    style="@style/Caliary.FormRow">
+                    style="@style/Haruka.FormRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -389,7 +389,7 @@
 
                     <TextView
                         android:id="@+id/tv_repeat_value"
-                        style="@style/Caliary.FormValueMuted" />
+                        style="@style/Haruka.FormValueMuted" />
 
                     <ImageView
                         android:layout_width="18dp"
@@ -405,7 +405,7 @@
 
                 <LinearLayout
                     android:id="@+id/reminder_header_row"
-                    style="@style/Caliary.FormRow">
+                    style="@style/Haruka.FormRow">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -422,7 +422,7 @@
 
                     <TextView
                         android:id="@+id/tv_reminder_value"
-                        style="@style/Caliary.FormValueMuted"
+                        style="@style/Haruka.FormValueMuted"
                         android:text="@string/none" />
 
                     <ImageView

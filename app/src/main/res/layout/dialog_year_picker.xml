@@ -34,12 +34,12 @@
 
         <TextView
             android:id="@+id/btn_year_cancel"
-            style="@style/Caliary.DialogTextAction"
+            style="@style/Haruka.DialogTextAction"
             android:text="@string/cancel" />
 
         <TextView
             android:id="@+id/btn_year_ok"
-            style="@style/Caliary.DialogTextAction"
+            style="@style/Haruka.DialogTextAction"
             android:layout_marginStart="8dp"
             android:text="@string/ok" />
     </LinearLayout>
