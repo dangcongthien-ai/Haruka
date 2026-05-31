@@ -579,18 +579,20 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
         Dialog dialog = new Dialog(new android.view.ContextThemeWrapper(requireContext(), R.style.Haruka_LightDialog));
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_year_picker, null, false);
+        UiUtils.disableForceDark(content);
         dialog.setContentView(content);
-        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 248), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 204), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
-        WheelPickerView picker = content.findViewById(R.id.picker_year);
         int minYear = Math.max(1900, selectedYear - 100);
         int maxYear = Math.min(2200, selectedYear + 100);
+        WheelPickerView picker = content.findViewById(R.id.picker_year);
         List<String> yearItems = new ArrayList<>();
         for (int year = minYear; year <= maxYear; year++) {
             yearItems.add(String.valueOf(year));
         }
         picker.setItems(yearItems);
-        picker.setSelectedIndex(selectedYear - minYear);
+        int initialYearIndex = selectedYear - minYear;
+        picker.setSelectedIndex(initialYearIndex);
 
         UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_year_cancel), dialog::dismiss);
         UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_year_ok), () -> {
@@ -598,6 +600,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
             dialog.dismiss();
         });
         dialog.show();
+        content.post(() -> picker.setSelectedIndex(initialYearIndex));
     }
 
     private void animateModeArrow(boolean expanded) {

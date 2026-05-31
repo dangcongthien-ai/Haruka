@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.SystemClock;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -142,6 +143,7 @@ public final class UiUtils {
         if (picker == null) {
             return;
         }
+        disableForceDark(picker);
         picker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
         picker.setBackgroundColor(Color.TRANSPARENT);
         picker.setVerticalFadingEdgeEnabled(false);
@@ -192,6 +194,7 @@ public final class UiUtils {
     }
 
     private static void styleNumberPickerInput(EditText editText, int textColor, Context context) {
+        disableForceDark(editText);
         editText.setBackgroundColor(Color.TRANSPARENT);
         editText.setTextColor(textColor);
         editText.setHintTextColor(textColor);
@@ -260,12 +263,28 @@ public final class UiUtils {
         }
         Window window = dialog.getWindow();
         window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.getDecorView().setForceDarkAllowed(false);
+        }
         window.setLayout(width, height);
         window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         WindowManager.LayoutParams attributes = window.getAttributes();
         attributes.dimAmount = dimAmount;
         attributes.windowAnimations = R.style.Haruka_DialogWindowAnimation;
         window.setAttributes(attributes);
+    }
+
+    public static void disableForceDark(View view) {
+        if (view == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return;
+        }
+        view.setForceDarkAllowed(false);
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                disableForceDark(group.getChildAt(i));
+            }
+        }
     }
 
     private static double contrastRatio(int colorA, int colorB) {

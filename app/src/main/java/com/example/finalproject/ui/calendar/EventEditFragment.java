@@ -798,6 +798,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         Dialog dialog = new Dialog(new android.view.ContextThemeWrapper(requireContext(), R.style.Haruka_LightDialog));
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_time_picker, null, false);
+        UiUtils.disableForceDark(content);
         WheelPickerView hourPicker = content.findViewById(R.id.picker_hour);
         WheelPickerView minutePicker = content.findViewById(R.id.picker_minute);
         WheelPickerView ampmPicker = content.findViewById(R.id.picker_ampm);
@@ -811,12 +812,15 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             minuteItems.add(String.format(Locale.US, "%02d", minute));
         }
 
+        int initialHourIndex = toDisplayHour(initial.getHour()) - 1;
+        int initialMinuteIndex = initial.getMinute();
+        int initialAmPmIndex = initial.getHour() < 12 ? 0 : 1;
         hourPicker.setItems(hourItems);
-        hourPicker.setSelectedIndex(toDisplayHour(initial.getHour()) - 1);
+        hourPicker.setSelectedIndex(initialHourIndex);
         minutePicker.setItems(minuteItems);
-        minutePicker.setSelectedIndex(initial.getMinute());
+        minutePicker.setSelectedIndex(initialMinuteIndex);
         ampmPicker.setItems(Arrays.asList("SA", "CH"));
-        ampmPicker.setSelectedIndex(initial.getHour() < 12 ? 0 : 1);
+        ampmPicker.setSelectedIndex(initialAmPmIndex);
 
         timePickerShowing = true;
         dialog.setOnDismissListener(d -> timePickerShowing = false);
@@ -835,9 +839,14 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             dialog.dismiss();
         });
         dialog.setContentView(content);
-        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 300), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 312), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
         dialog.setCanceledOnTouchOutside(true);
         dialog.show();
+        content.post(() -> {
+            hourPicker.setSelectedIndex(initialHourIndex);
+            minutePicker.setSelectedIndex(initialMinuteIndex);
+            ampmPicker.setSelectedIndex(initialAmPmIndex);
+        });
     }
 
     private int toDisplayHour(int hour24) {
@@ -867,7 +876,8 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         if (container == null) {
             return;
         }
-        int expandedWidth = dp(72);
+        int expandedWidth = dp(96);
+        float slideDistance = dp(8);
         ViewGroup.LayoutParams params = container.getLayoutParams();
         if (params == null) {
             return;
@@ -883,20 +893,35 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             return;
         }
         if (show) {
+            params.width = currentWidth;
+            container.setLayoutParams(params);
             container.setVisibility(View.VISIBLE);
-            container.setAlpha(container.getAlpha() > 0f ? container.getAlpha() : 0f);
+            container.setAlpha(0f);
+            container.setTranslationX(slideDistance);
         }
 
-        ValueAnimator animator = ValueAnimator.ofInt(currentWidth, targetWidth);
+        ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
         animator.setDuration(260L);
         animator.setInterpolator(new AccelerateDecelerateInterpolator());
         animator.addUpdateListener(animation -> {
-            int width = (int) animation.getAnimatedValue();
-            float progress = expandedWidth == 0 ? 1f : Math.min(1f, width / (float) expandedWidth);
+            float progress = (float) animation.getAnimatedValue();
             ViewGroup.LayoutParams layoutParams = container.getLayoutParams();
-            layoutParams.width = width;
+            if (show) {
+                float widthPhase = Math.min(1f, progress / 0.55f);
+                int width = lerp(currentWidth, targetWidth, widthPhase);
+                float alphaPhase = progress <= 0.55f ? 0f : (progress - 0.55f) / 0.45f;
+                layoutParams.width = width;
+                container.setAlpha(Math.min(1f, alphaPhase));
+                container.setTranslationX(slideDistance * (1f - Math.min(1f, alphaPhase)));
+            } else {
+                float fadePhase = Math.min(1f, progress / 0.45f);
+                float widthPhase = progress <= 0.45f ? 0f : (progress - 0.45f) / 0.55f;
+                int width = progress <= 0.45f ? currentWidth : lerp(currentWidth, targetWidth, widthPhase);
+                layoutParams.width = width;
+                container.setAlpha(1f - fadePhase);
+                container.setTranslationX(slideDistance * fadePhase);
+            }
             container.setLayoutParams(layoutParams);
-            container.setAlpha(show ? progress : Math.max(0f, 1f - progress));
         });
         animator.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override
@@ -905,6 +930,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
                 layoutParams.width = targetWidth;
                 container.setLayoutParams(layoutParams);
                 container.setAlpha(show ? 1f : 0f);
+                container.setTranslationX(0f);
                 container.setVisibility(show ? View.VISIBLE : View.GONE);
                 if (startContainer) {
                     startTimeAnimator = null;
@@ -935,10 +961,15 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             return;
         }
         ViewGroup.LayoutParams params = container.getLayoutParams();
-        params.width = visible ? dp(72) : 0;
+        params.width = visible ? dp(96) : 0;
         container.setLayoutParams(params);
         container.setAlpha(visible ? 1f : 0f);
+        container.setTranslationX(0f);
         container.setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+
+    private int lerp(int start, int end, float fraction) {
+        return Math.round(start + (end - start) * Math.max(0f, Math.min(1f, fraction)));
     }
 
     private void attachKeyboardFieldBehavior(EditText field, View anchor, long focusDelayMs) {

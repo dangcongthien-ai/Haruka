@@ -378,15 +378,17 @@ public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
         Dialog dialog = new Dialog(new android.view.ContextThemeWrapper(requireContext(), R.style.Haruka_LightDialog));
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_count_picker, null, false);
+        UiUtils.disableForceDark(content);
         dialog.setContentView(content);
-        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 248), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 204), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
         WheelPickerView picker = content.findViewById(R.id.picker_repeat_count);
         List<String> countItems = new ArrayList<>();
         for (int count = 1; count <= 100; count++) {
             countItems.add(String.valueOf(count));
         }
         picker.setItems(countItems);
-        picker.setSelectedIndex(Math.max(0, (rule.getOccurrenceCount() == null ? 1 : rule.getOccurrenceCount()) - 1));
+        int initialCountIndex = Math.max(0, (rule.getOccurrenceCount() == null ? 1 : rule.getOccurrenceCount()) - 1);
+        picker.setSelectedIndex(initialCountIndex);
         UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_count_cancel), dialog::dismiss);
         UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_count_ok), () -> {
             rule.setOccurrenceCount(picker.getSelectedIndex() + 1);
@@ -395,6 +397,7 @@ public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
             dialog.dismiss();
         });
         dialog.show();
+        content.post(() -> picker.setSelectedIndex(initialCountIndex));
     }
 
     private int parseInterval() {
