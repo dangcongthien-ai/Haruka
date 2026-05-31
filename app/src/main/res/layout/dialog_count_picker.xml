@@ -18,7 +18,7 @@
         android:textSize="18sp"
         android:textStyle="bold" />
 
-    <NumberPicker
+    <com.example.finalproject.ui.common.WheelPickerView
         android:id="@+id/picker_repeat_count"
         android:layout_width="match_parent"
         android:layout_height="0dp"

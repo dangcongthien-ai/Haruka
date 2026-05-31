@@ -73,9 +73,9 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
         holder.colorBar.setBackground(UiUtils.rounded(UiUtils.safeColor(event.getColor(), fallback), 4, holder.itemView.getContext()));
         holder.edit.setVisibility(showActions ? View.VISIBLE : View.GONE);
         holder.delete.setVisibility(showActions ? View.VISIBLE : View.GONE);
-        holder.itemView.setOnClickListener(v -> listener.onClick(event));
-        holder.edit.setOnClickListener(v -> listener.onEdit(event));
-        holder.delete.setOnClickListener(v -> listener.onDelete(event));
+        UiUtils.setDebouncedClickListener(holder.itemView, () -> listener.onClick(event));
+        UiUtils.setDebouncedClickListener(holder.edit, () -> listener.onEdit(event));
+        UiUtils.setDebouncedClickListener(holder.delete, () -> listener.onDelete(event));
     }
 
     @Override

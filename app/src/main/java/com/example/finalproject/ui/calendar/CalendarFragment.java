@@ -22,7 +22,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.NumberPicker;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
@@ -56,6 +55,7 @@ import com.example.finalproject.repository.TodoRepository;
 import com.example.finalproject.ui.common.HomeDataRefreshable;
 import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
+import com.example.finalproject.ui.common.WheelPickerView;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -312,16 +312,16 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
     }
 
     private void setupClicks(View view) {
-        modeButton.setOnClickListener(v -> showModeMenu());
+        UiUtils.setDebouncedClickListener(modeButton, this::showModeMenu);
         ImageButton previous = view.findViewById(R.id.btn_previous);
         ImageButton next = view.findViewById(R.id.btn_next);
         previous.setOnClickListener(v -> movePeriod(-1));
         next.setOnClickListener(v -> movePeriod(1));
         todayButton.setOnClickListener(v -> jumpToToday());
-        periodTitle.setOnClickListener(v -> showMonthPicker());
-        weekMonthBadge.setOnClickListener(v -> showMonthPicker());
-        dayMonthBadge.setOnClickListener(v -> showMonthPicker());
-        view.findViewById(R.id.btn_close_month_detail).setOnClickListener(v -> closeMonthDetailPanel());
+        UiUtils.setDebouncedClickListener(periodTitle, this::showMonthPicker);
+        UiUtils.setDebouncedClickListener(weekMonthBadge, this::showMonthPicker);
+        UiUtils.setDebouncedClickListener(dayMonthBadge, this::showMonthPicker);
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_close_month_detail), this::closeMonthDetailPanel);
     }
 
     private void closeMonthDetailPanel() {
@@ -507,7 +507,7 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
     }
 
     private void showMonthPicker() {
-        Dialog dialog = new Dialog(requireContext());
+        Dialog dialog = new Dialog(new android.view.ContextThemeWrapper(requireContext(), R.style.Haruka_LightDialog));
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_month_picker, null, false);
         dialog.setContentView(content);
@@ -558,12 +558,12 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
             draft[0] = draft[0].plusYears(1);
             render[0].run();
         });
-        yearLabel.setOnClickListener(v -> showYearPicker(draft[0].getYear(), year -> {
+        UiUtils.setDebouncedClickListener(yearLabel, () -> showYearPicker(draft[0].getYear(), year -> {
             draft[0] = YearMonth.of(year, draft[0].getMonthValue());
             render[0].run();
         }));
-        content.findViewById(R.id.btn_month_picker_cancel).setOnClickListener(v -> dialog.dismiss());
-        content.findViewById(R.id.btn_month_picker_ok).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_month_picker_cancel), dialog::dismiss);
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_month_picker_ok), () -> {
             visibleMonth = draft[0].atDay(1);
             selectedDate = visibleMonth.withDayOfMonth(Math.min(selectedDate.getDayOfMonth(), draft[0].lengthOfMonth()));
             monthDetailVisible = false;
@@ -576,24 +576,25 @@ public class CalendarFragment extends Fragment implements ScreenBackHandler, Hom
     }
 
     private void showYearPicker(int selectedYear, YearPickerListener listener) {
-        Dialog dialog = new Dialog(requireContext());
+        Dialog dialog = new Dialog(new android.view.ContextThemeWrapper(requireContext(), R.style.Haruka_LightDialog));
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_year_picker, null, false);
         dialog.setContentView(content);
         UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 248), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
-        NumberPicker picker = content.findViewById(R.id.picker_year);
+        WheelPickerView picker = content.findViewById(R.id.picker_year);
         int minYear = Math.max(1900, selectedYear - 100);
         int maxYear = Math.min(2200, selectedYear + 100);
-        picker.setMinValue(minYear);
-        picker.setMaxValue(maxYear);
-        picker.setValue(selectedYear);
-        picker.setWrapSelectorWheel(false);
-        UiUtils.styleNumberPicker(picker, requireContext());
+        List<String> yearItems = new ArrayList<>();
+        for (int year = minYear; year <= maxYear; year++) {
+            yearItems.add(String.valueOf(year));
+        }
+        picker.setItems(yearItems);
+        picker.setSelectedIndex(selectedYear - minYear);
 
-        content.findViewById(R.id.btn_year_cancel).setOnClickListener(v -> dialog.dismiss());
-        content.findViewById(R.id.btn_year_ok).setOnClickListener(v -> {
-            listener.onYearPicked(picker.getValue());
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_year_cancel), dialog::dismiss);
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_year_ok), () -> {
+            listener.onYearPicked(minYear + picker.getSelectedIndex());
             dialog.dismiss();
         });
         dialog.show();

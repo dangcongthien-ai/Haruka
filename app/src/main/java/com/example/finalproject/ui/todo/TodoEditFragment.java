@@ -281,17 +281,17 @@ public class TodoEditFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
-        view.findViewById(R.id.btn_save_todo).setOnClickListener(v -> save());
-        view.findViewById(R.id.todo_date_row).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_back), () -> ((MainActivity) requireActivity()).handleActivityBackPressed());
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_save_todo), this::save);
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.todo_date_row), () -> {
             captureInput();
             DatePickerDialogFragment
                     .newInstance(RESULT_DATE, todoDate)
                     .show(getParentFragmentManager(), RESULT_DATE);
         });
-        view.findViewById(R.id.reminder_header_row).setOnClickListener(v -> openReminderPicker());
-        addReminderButton.setOnClickListener(v -> openReminderPicker());
-        eventTypeButton.setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_header_row), this::openReminderPicker);
+        UiUtils.setDebouncedClickListener(addReminderButton, this::openReminderPicker);
+        UiUtils.setDebouncedClickListener(eventTypeButton, () -> {
             captureInput();
             ((MainActivity) requireActivity()).switchFullScreen(EventEditFragment.newInstance(0, todoDate));
         });
@@ -383,7 +383,7 @@ public class TodoEditFragment extends Fragment implements ScreenBackHandler {
         remove.setContentDescription(getString(R.string.remove_reminder));
         remove.setImageResource(R.drawable.ic_close);
         remove.setColorFilter(requireContext().getColor(R.color.text_secondary));
-        remove.setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(remove, () -> {
             reminders.remove(index);
             bindValues();
         });

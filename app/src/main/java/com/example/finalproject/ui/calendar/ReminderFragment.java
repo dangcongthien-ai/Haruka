@@ -70,36 +70,36 @@ public class ReminderFragment extends Fragment {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
-        view.findViewById(R.id.reminder_event_time).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_back), () -> ((MainActivity) requireActivity()).handleActivityBackPressed());
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_event_time), () -> {
             setAtTime();
             saveResult();
         });
-        view.findViewById(R.id.reminder_1m).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_1m), () -> {
             setBefore(1, "MINUTE");
             saveResult();
         });
-        view.findViewById(R.id.reminder_5m).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_5m), () -> {
             setBefore(5, "MINUTE");
             saveResult();
         });
-        view.findViewById(R.id.reminder_15m).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_15m), () -> {
             setBefore(15, "MINUTE");
             saveResult();
         });
-        view.findViewById(R.id.reminder_30m).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_30m), () -> {
             setBefore(30, "MINUTE");
             saveResult();
         });
-        view.findViewById(R.id.reminder_1h).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_1h), () -> {
             setBefore(1, "HOUR");
             saveResult();
         });
-        view.findViewById(R.id.reminder_1d).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_1d), () -> {
             setBefore(1, "DAY");
             saveResult();
         });
-        view.findViewById(R.id.reminder_custom).setOnClickListener(v -> showCustomDialog());
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_custom), this::showCustomDialog);
     }
 
     private void setAtTime() {
@@ -153,7 +153,7 @@ public class ReminderFragment extends Fragment {
     }
 
     private void showCustomDialog() {
-        Dialog dialog = new Dialog(requireContext());
+        Dialog dialog = new Dialog(new android.view.ContextThemeWrapper(requireContext(), R.style.Haruka_LightDialog));
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_custom_reminder, null, false);
         dialog.setContentView(view);
@@ -172,8 +172,8 @@ public class ReminderFragment extends Fragment {
         } else {
             unitGroup.check(R.id.radio_minutes);
         }
-        view.findViewById(R.id.btn_custom_reminder_cancel).setOnClickListener(v -> dialog.dismiss());
-        view.findViewById(R.id.btn_custom_reminder_done).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_custom_reminder_cancel), dialog::dismiss);
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_custom_reminder_done), () -> {
             int value = parseAmount(amount);
             String unit = "MINUTE";
             int checkedId = unitGroup.getCheckedRadioButtonId();

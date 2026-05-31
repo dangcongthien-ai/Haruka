@@ -57,7 +57,7 @@ public class DaySelectorAdapter extends RecyclerView.Adapter<DaySelectorAdapter.
         holder.name.setTextColor(selected ? holder.itemView.getContext().getColor(R.color.white) : defaultColor);
         holder.number.setTextColor(selected ? holder.itemView.getContext().getColor(R.color.white) : defaultColor);
         holder.number.setTypeface(Typeface.DEFAULT_BOLD);
-        holder.itemView.setOnClickListener(v -> listener.onDaySelected(date));
+        UiUtils.setDebouncedClickListener(holder.itemView, () -> listener.onDaySelected(date));
     }
 
     @Override

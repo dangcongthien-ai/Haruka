@@ -7,6 +7,8 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
+import android.os.SystemClock;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,8 +26,12 @@ import com.example.finalproject.R;
 import com.google.android.material.button.MaterialButton;
 
 import java.lang.reflect.Field;
+import java.util.WeakHashMap;
 
 public final class UiUtils {
+    private static final long DEFAULT_DEBOUNCE_INTERVAL_MS = 550L;
+    private static final WeakHashMap<View, Long> LAST_CLICK_TIMES = new WeakHashMap<>();
+
     private UiUtils() {
     }
 
@@ -99,16 +105,60 @@ public final class UiUtils {
         view.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
+    public static void setDebouncedClickListener(View view, Runnable action) {
+        setDebouncedClickListener(view, DEFAULT_DEBOUNCE_INTERVAL_MS, action);
+    }
+
+    public static void setDebouncedClickListener(View view, long intervalMs, Runnable action) {
+        if (view == null) {
+            return;
+        }
+        view.setOnClickListener(v -> {
+            if (action == null || isRapidClick(v, intervalMs)) {
+                return;
+            }
+            action.run();
+        });
+    }
+
+    public static boolean isRapidClick(View view) {
+        return isRapidClick(view, DEFAULT_DEBOUNCE_INTERVAL_MS);
+    }
+
+    public static boolean isRapidClick(View view, long intervalMs) {
+        if (view == null) {
+            return false;
+        }
+        long now = SystemClock.elapsedRealtime();
+        Long lastClick = LAST_CLICK_TIMES.get(view);
+        if (lastClick != null && now - lastClick < Math.max(0L, intervalMs)) {
+            return true;
+        }
+        LAST_CLICK_TIMES.put(view, now);
+        return false;
+    }
+
     public static void styleNumberPicker(NumberPicker picker, Context context) {
         if (picker == null) {
             return;
         }
         picker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+        picker.setBackgroundColor(Color.TRANSPARENT);
+        picker.setVerticalFadingEdgeEnabled(false);
+        picker.setFadingEdgeLength(0);
+        picker.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        applyNumberPickerColors(picker, context);
+        picker.post(() -> applyNumberPickerColors(picker, context));
+        picker.postDelayed(() -> applyNumberPickerColors(picker, context), 32L);
+        picker.postDelayed(() -> applyNumberPickerColors(picker, context), 96L);
+    }
+
+    private static void applyNumberPickerColors(NumberPicker picker, Context context) {
+        int fixedBlack = Color.BLACK;
         try {
             Field dividerField = NumberPicker.class.getDeclaredField("mSelectionDivider");
             dividerField.setAccessible(true);
-            int dividerColor = ColorUtils.setAlphaComponent(context.getColor(R.color.brand_orange_dark), 132);
-            dividerField.set(picker, new ColorDrawable(dividerColor));
+            dividerField.set(picker, new ColorDrawable(fixedBlack));
 
             Field heightField = NumberPicker.class.getDeclaredField("mSelectionDividerHeight");
             heightField.setAccessible(true);
@@ -118,19 +168,38 @@ public final class UiUtils {
             paintField.setAccessible(true);
             Paint paint = (Paint) paintField.get(picker);
             if (paint != null) {
-                paint.setColor(context.getColor(R.color.text_primary));
+                paint.setAntiAlias(true);
+                paint.setColor(fixedBlack);
+                paint.setAlpha(255);
+                paint.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+                paint.setTextSize(TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_SP,
+                        24f,
+                        context.getResources().getDisplayMetrics()
+                ));
             }
+
             for (int i = 0; i < picker.getChildCount(); i++) {
                 View child = picker.getChildAt(i);
                 if (child instanceof EditText) {
-                    EditText editText = (EditText) child;
-                    editText.setTextColor(context.getColor(R.color.text_primary));
-                    editText.setTextSize(24f);
+                    styleNumberPickerInput((EditText) child, fixedBlack, context);
                 }
             }
             picker.invalidate();
+            picker.requestLayout();
         } catch (Exception ignored) {
         }
+    }
+
+    private static void styleNumberPickerInput(EditText editText, int textColor, Context context) {
+        editText.setBackgroundColor(Color.TRANSPARENT);
+        editText.setTextColor(textColor);
+        editText.setHintTextColor(textColor);
+        editText.setHighlightColor(ColorUtils.setAlphaComponent(textColor, 72));
+        editText.setLinkTextColor(textColor);
+        editText.setAlpha(1f);
+        editText.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        editText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f);
     }
 
     public static void showDeleteDialog(Context context, String message, Runnable onConfirm) {
@@ -163,8 +232,8 @@ public final class UiUtils {
         titleView.setText(title);
         messageView.setText(message);
         confirmView.setText(confirmText);
-        content.findViewById(R.id.btn_delete_cancel).setOnClickListener(v -> dialog.dismiss());
-        confirmView.setOnClickListener(v -> {
+        setDebouncedClickListener(content.findViewById(R.id.btn_delete_cancel), dialog::dismiss);
+        setDebouncedClickListener(confirmView, () -> {
             dialog.dismiss();
             onConfirm.run();
         });

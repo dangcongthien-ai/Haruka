@@ -82,7 +82,7 @@ public class WeekHourAdapter extends RecyclerView.Adapter<WeekHourAdapter.HourVi
                     LinearLayout.LayoutParams eventParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
                     eventParams.setMargins(1, 1, 1, 1);
                     eventView.setLayoutParams(eventParams);
-                    eventView.setOnClickListener(v -> listener.onEventClick(event));
+                    UiUtils.setDebouncedClickListener(eventView, () -> listener.onEventClick(event));
                     column.addView(eventView);
                 }
             }

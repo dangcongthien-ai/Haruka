@@ -11,7 +11,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
-import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -22,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.finalproject.R;
 import com.example.finalproject.data.DateTimeUtils;
+import com.example.finalproject.ui.common.WheelPickerView;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -207,18 +207,19 @@ public class DatePickerDialogFragment extends DialogFragment {
         dialog.setContentView(content);
         UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 248), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
 
-        NumberPicker picker = content.findViewById(R.id.picker_year);
+        WheelPickerView picker = content.findViewById(R.id.picker_year);
         int minYear = Math.max(1900, selectedYear - 100);
         int maxYear = Math.min(2200, selectedYear + 100);
-        picker.setMinValue(minYear);
-        picker.setMaxValue(maxYear);
-        picker.setValue(selectedYear);
-        picker.setWrapSelectorWheel(false);
-        UiUtils.styleNumberPicker(picker, requireContext());
+        List<String> yearItems = new ArrayList<>();
+        for (int year = minYear; year <= maxYear; year++) {
+            yearItems.add(String.valueOf(year));
+        }
+        picker.setItems(yearItems);
+        picker.setSelectedIndex(selectedYear - minYear);
 
         content.findViewById(R.id.btn_year_cancel).setOnClickListener(v -> dialog.dismiss());
         content.findViewById(R.id.btn_year_ok).setOnClickListener(v -> {
-            listener.onYearPicked(picker.getValue());
+            listener.onYearPicked(minYear + picker.getSelectedIndex());
             dialog.dismiss();
         });
         dialog.show();
