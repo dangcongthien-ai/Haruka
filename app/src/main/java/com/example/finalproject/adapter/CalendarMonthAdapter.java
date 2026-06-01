@@ -165,7 +165,7 @@ public class CalendarMonthAdapter extends RecyclerView.Adapter<CalendarMonthAdap
         Sizing sizing = applyResponsiveSizing(holder, cellHeight);
         bindEventChips(holder, cell, max, sizing);
         bindMoreIndicator(holder, hasMore, sizing);
-        holder.itemView.setOnClickListener(v -> listener.onDayClick(cell.getDate()));
+        UiUtils.setDebouncedClickListener(holder.itemView, () -> listener.onDayClick(cell.getDate()));
     }
 
     private void bindBottomSpacer(DayViewHolder holder) {

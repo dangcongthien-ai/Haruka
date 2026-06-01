@@ -14,7 +14,6 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,6 +27,7 @@ import com.example.finalproject.model.RecurrenceRule;
 import com.example.finalproject.ui.common.DatePickerDialogFragment;
 import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.UiUtils;
+import com.example.finalproject.ui.common.WheelPickerView;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -195,7 +195,7 @@ public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
             params.setMargins(UiUtils.dp(requireContext(), 4), 0, UiUtils.dp(requireContext(), 4), 0);
             chip.setLayoutParams(params);
             int index = i;
-            chip.setOnClickListener(v -> {
+            UiUtils.setDebouncedClickListener(chip, () -> {
                 if (selectedWeekDays.contains(values[index])) {
                     selectedWeekDays.remove(values[index]);
                 } else {
@@ -208,28 +208,28 @@ public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
-        view.findViewById(R.id.option_none).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_back), () -> ((MainActivity) requireActivity()).handleActivityBackPressed());
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.option_none), () -> {
             setSimple(RecurrenceRule.FREQ_NONE);
             saveResult();
         });
-        view.findViewById(R.id.option_daily).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.option_daily), () -> {
             setSimple(RecurrenceRule.FREQ_DAILY);
             saveResult();
         });
-        view.findViewById(R.id.option_weekly).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.option_weekly), () -> {
             setSimple(RecurrenceRule.FREQ_WEEKLY);
             saveResult();
         });
-        view.findViewById(R.id.option_monthly).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.option_monthly), () -> {
             setSimple(RecurrenceRule.FREQ_MONTHLY);
             saveResult();
         });
-        view.findViewById(R.id.option_yearly).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.option_yearly), () -> {
             setSimple(RecurrenceRule.FREQ_YEARLY);
             saveResult();
         });
-        view.findViewById(R.id.option_custom).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.option_custom), () -> {
             customMode = true;
             if (rule.isNone()) {
                 rule.setFreq(RecurrenceRule.FREQ_DAILY);
@@ -237,14 +237,14 @@ public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
             }
             refresh();
         });
-        view.findViewById(R.id.end_none_row).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.end_none_row), () -> {
             rule.setEndType(RecurrenceRule.END_NONE);
             refresh();
         });
-        view.findViewById(R.id.end_date_row).setOnClickListener(v -> DatePickerDialogFragment
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.end_date_row), () -> DatePickerDialogFragment
                 .newInstance(END_DATE_RESULT, rule.getEndDate() == null ? baseDate : rule.getEndDate())
                 .show(getParentFragmentManager(), END_DATE_RESULT));
-        view.findViewById(R.id.end_count_row).setOnClickListener(v -> showCountDialog());
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.end_count_row), this::showCountDialog);
     }
 
     @Override
@@ -375,24 +375,29 @@ public class RecurrenceFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void showCountDialog() {
-        Dialog dialog = new Dialog(requireContext());
+        Dialog dialog = new Dialog(new android.view.ContextThemeWrapper(requireContext(), R.style.Haruka_LightDialog));
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_count_picker, null, false);
+        UiUtils.disableForceDark(content);
         dialog.setContentView(content);
-        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 248), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
-        NumberPicker picker = content.findViewById(R.id.picker_repeat_count);
-        picker.setMinValue(1);
-        picker.setMaxValue(100);
-        picker.setValue(rule.getOccurrenceCount() == null ? 1 : rule.getOccurrenceCount());
-        UiUtils.styleNumberPicker(picker, requireContext());
-        content.findViewById(R.id.btn_count_cancel).setOnClickListener(v -> dialog.dismiss());
-        content.findViewById(R.id.btn_count_ok).setOnClickListener(v -> {
-            rule.setOccurrenceCount(picker.getValue());
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 204), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
+        WheelPickerView picker = content.findViewById(R.id.picker_repeat_count);
+        List<String> countItems = new ArrayList<>();
+        for (int count = 1; count <= 100; count++) {
+            countItems.add(String.valueOf(count));
+        }
+        picker.setItems(countItems);
+        int initialCountIndex = Math.max(0, (rule.getOccurrenceCount() == null ? 1 : rule.getOccurrenceCount()) - 1);
+        picker.setSelectedIndex(initialCountIndex);
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_count_cancel), dialog::dismiss);
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_count_ok), () -> {
+            rule.setOccurrenceCount(picker.getSelectedIndex() + 1);
             rule.setEndType(RecurrenceRule.END_COUNT);
             refresh();
             dialog.dismiss();
         });
         dialog.show();
+        content.post(() -> picker.setSelectedIndex(initialCountIndex));
     }
 
     private int parseInterval() {

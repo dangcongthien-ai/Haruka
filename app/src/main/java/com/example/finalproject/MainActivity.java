@@ -38,6 +38,7 @@ import java.time.LocalDate;
 public class MainActivity extends AppCompatActivity {
     private static final long FULL_SCREEN_CONTAINER_HIDE_DELAY_MS = 520L;
     private static final long FULL_SCREEN_DISMISS_DURATION_MS = 380L;
+    private static final long SCREEN_OPEN_DEBOUNCE_MS = 650L;
     private View bottomNavigationView;
     private View mainRoot;
     private View fab;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private View indicatorJournal;
     private int currentTabId = R.id.nav_calendar;
     private LocalDate selectedDate = LocalDate.now();
+    private long lastScreenOpenAt;
     private final Runnable hideFullScreenContainerRunnable = new Runnable() {
         @Override
         public void run() {
@@ -105,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         indicatorJournal = findViewById(R.id.nav_journal_indicator);
         setupNavigation();
         setupBackStackVisibility();
-        fab.setOnClickListener(v -> onFabClicked());
+        UiUtils.setDebouncedClickListener(fab, this::onFabClicked);
 
         if (savedInstanceState == null) {
             showCalendar();
@@ -208,6 +210,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void switchFullScreen(Fragment fragment) {
+        if (!canOpenScreenNow()) {
+            return;
+        }
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         showFullScreenContainer();
         applyFullScreenAnimations(transaction);
@@ -215,10 +220,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupNavigation() {
-        navCalendar.setOnClickListener(v -> selectTab(R.id.nav_calendar));
-        navTodo.setOnClickListener(v -> selectTab(R.id.nav_todo));
-        navHabits.setOnClickListener(v -> selectTab(R.id.nav_habits));
-        navJournal.setOnClickListener(v -> selectTab(R.id.nav_journal));
+        UiUtils.setDebouncedClickListener(navCalendar, () -> selectTab(R.id.nav_calendar));
+        UiUtils.setDebouncedClickListener(navTodo, () -> selectTab(R.id.nav_todo));
+        UiUtils.setDebouncedClickListener(navHabits, () -> selectTab(R.id.nav_habits));
+        UiUtils.setDebouncedClickListener(navJournal, () -> selectTab(R.id.nav_journal));
     }
 
     private void selectTab(int id) {
@@ -306,6 +311,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void pushFullScreenFragment(Fragment fragment, String backStackName, boolean animated) {
+        if (!canOpenScreenNow()) {
+            return;
+        }
         FragmentManager manager = getSupportFragmentManager();
         if (manager.getBackStackEntryCount() == 0) {
             clearFullScreenFragments(manager, true);
@@ -358,6 +366,15 @@ public class MainActivity extends AppCompatActivity {
         if (fullScreenContainer != null) {
             fullScreenContainer.removeCallbacks(hideFullScreenContainerRunnable);
         }
+    }
+
+    private boolean canOpenScreenNow() {
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (now - lastScreenOpenAt < SCREEN_OPEN_DEBOUNCE_MS) {
+            return false;
+        }
+        lastScreenOpenAt = now;
+        return true;
     }
 
     private void refreshHomeAfterFullScreen() {

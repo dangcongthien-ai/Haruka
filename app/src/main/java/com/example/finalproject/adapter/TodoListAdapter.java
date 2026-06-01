@@ -71,12 +71,12 @@ public class TodoListAdapter extends RecyclerView.Adapter<TodoListAdapter.TodoVi
         holder.description.setVisibility(item.getDescription() == null || item.getDescription().isEmpty() ? View.GONE : View.VISIBLE);
         holder.checkIcon.setImageResource(item.isCompleted() ? R.drawable.ic_todo_check_done : R.drawable.ic_todo_check_empty);
         holder.toggle.setContentDescription(context.getString(item.isCompleted() ? R.string.completed : R.string.active));
-        holder.toggle.setOnClickListener(v -> listener.onToggle(item, !item.isCompleted()));
+        UiUtils.setDebouncedClickListener(holder.toggle, () -> listener.onToggle(item, !item.isCompleted()));
         holder.edit.setVisibility(showActions ? View.VISIBLE : View.GONE);
         holder.delete.setVisibility(showActions ? View.VISIBLE : View.GONE);
-        holder.card.setOnClickListener(v -> listener.onClick(item));
-        holder.edit.setOnClickListener(v -> listener.onEdit(item));
-        holder.delete.setOnClickListener(v -> listener.onDelete(item));
+        UiUtils.setDebouncedClickListener(holder.card, () -> listener.onClick(item));
+        UiUtils.setDebouncedClickListener(holder.edit, () -> listener.onEdit(item));
+        UiUtils.setDebouncedClickListener(holder.delete, () -> listener.onDelete(item));
     }
 
     @Override

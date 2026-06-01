@@ -137,7 +137,7 @@ public class WeekTopStripLayout extends ViewGroup {
         int verticalPadding = UiUtils.dp(getContext(), STRIP_TEXT_VERTICAL_PADDING_DP);
         view.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
         view.setBackground(UiUtils.adaptiveEventBackground(fill, 9, getContext()));
-        view.setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view, () -> {
             if (listener != null) {
                 listener.onEventClick(placement.item.getEvent());
             }

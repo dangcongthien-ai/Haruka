@@ -151,8 +151,8 @@ public class TodoFragment extends Fragment implements HomeDataRefreshable {
         ImageButton next = view.findViewById(R.id.btn_todo_next_day);
         previous.setOnClickListener(v -> moveDay(-1));
         next.setOnClickListener(v -> moveDay(1));
-        todayButton.setOnClickListener(v -> jumpToToday());
-        dateLabel.setOnClickListener(v -> DatePickerDialogFragment
+        UiUtils.setDebouncedClickListener(todayButton, this::jumpToToday);
+        UiUtils.setDebouncedClickListener(dateLabel, () -> DatePickerDialogFragment
                 .newInstance(DATE_RESULT_KEY, selectedDate)
                 .show(getParentFragmentManager(), DATE_RESULT_KEY));
         allButton.setOnClickListener(v -> {

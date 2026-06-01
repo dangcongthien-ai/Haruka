@@ -311,7 +311,7 @@ public class WeekTimelineLayout extends ViewGroup {
         view.setEllipsize(TextUtils.TruncateAt.END);
         view.setBackground(UiUtils.adaptiveEventBackground(fill, 10, getContext()));
         view.setElevation(dp(1));
-        view.setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view, () -> {
             if (listener != null) {
                 listener.onEventClick(placement.event);
             }

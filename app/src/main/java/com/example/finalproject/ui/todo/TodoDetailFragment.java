@@ -85,8 +85,8 @@ public class TodoDetailFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
-        view.findViewById(R.id.btn_edit_todo).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_back), () -> ((MainActivity) requireActivity()).handleActivityBackPressed());
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_edit_todo), () -> {
             if (item != null) {
                 ((MainActivity) requireActivity()).pushFullScreenFragment(
                         TodoEditFragment.newInstance(item.getId(), item.getTodoDate()),
@@ -95,7 +95,7 @@ public class TodoDetailFragment extends Fragment implements ScreenBackHandler {
                 );
             }
         });
-        view.findViewById(R.id.btn_delete_todo).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_delete_todo), () -> {
             if (item == null) {
                 return;
             }

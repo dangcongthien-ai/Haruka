@@ -42,16 +42,16 @@ import com.example.finalproject.ui.common.ScreenBackHandler;
 import com.example.finalproject.ui.common.HueSliderView;
 import com.example.finalproject.ui.common.SpectrumColorView;
 import com.example.finalproject.ui.common.UiUtils;
+import com.example.finalproject.ui.common.WheelPickerView;
 import com.example.finalproject.ui.todo.TodoEditFragment;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.google.android.material.timepicker.MaterialTimePicker;
-import com.google.android.material.timepicker.TimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -102,8 +102,8 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
     private boolean allDay;
     private LocalDate startDate;
     private LocalDate endDate;
-    private LocalTime startTime = LocalTime.of(7, 15);
-    private LocalTime endTime = LocalTime.of(11, 40);
+    private LocalTime startTime = LocalTime.of(8, 0);
+    private LocalTime endTime = LocalTime.of(17, 0);
     private RecurrenceRule recurrenceRule = RecurrenceRule.none();
     private final List<Reminder> reminders = new ArrayList<>();
 
@@ -370,26 +370,26 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void setupClicks(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> ((MainActivity) requireActivity()).handleActivityBackPressed());
-        view.findViewById(R.id.btn_save_event).setOnClickListener(v -> save());
-        startDateText.setOnClickListener(v -> openDatePicker(RESULT_START_DATE, startDate));
-        endDateText.setOnClickListener(v -> openDatePicker(RESULT_END_DATE, endDate));
-        startTimeText.setOnClickListener(v -> openTimePicker(true));
-        endTimeText.setOnClickListener(v -> openTimePicker(false));
-        view.findViewById(R.id.repeat_row).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_back), () -> ((MainActivity) requireActivity()).handleActivityBackPressed());
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.btn_save_event), this::save);
+        UiUtils.setDebouncedClickListener(startDateText, () -> openDatePicker(RESULT_START_DATE, startDate));
+        UiUtils.setDebouncedClickListener(endDateText, () -> openDatePicker(RESULT_END_DATE, endDate));
+        UiUtils.setDebouncedClickListener(startTimeText, () -> openTimePicker(true));
+        UiUtils.setDebouncedClickListener(endTimeText, () -> openTimePicker(false));
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.repeat_row), () -> {
             captureInput();
             ((MainActivity) requireActivity()).pushFullScreenFragment(
                     RecurrenceFragment.newInstance(RESULT_RECURRENCE, recurrenceRule, startDate),
                     "Recurrence"
             );
         });
-        view.findViewById(R.id.reminder_header_row).setOnClickListener(v -> openReminderPicker());
-        addReminderButton.setOnClickListener(v -> openReminderPicker());
-        todoTypeButton.setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(view.findViewById(R.id.reminder_header_row), this::openReminderPicker);
+        UiUtils.setDebouncedClickListener(addReminderButton, this::openReminderPicker);
+        UiUtils.setDebouncedClickListener(todoTypeButton, () -> {
             captureInput();
             ((MainActivity) requireActivity()).switchFullScreen(TodoEditFragment.newInstance(0, startDate));
         });
-        customColorTrigger.setOnClickListener(v -> showCustomColorDialog());
+        UiUtils.setDebouncedClickListener(customColorTrigger, this::showCustomColorDialog);
         attachKeyboardFieldBehavior(titleEdit, titleEdit, 60L);
         attachKeyboardFieldBehavior(locationEdit, locationEdit, 90L);
         attachKeyboardFieldBehavior(urlEdit, urlEdit, 90L);
@@ -491,7 +491,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void showCustomColorDialog() {
-        Dialog dialog = new Dialog(requireContext());
+        Dialog dialog = new Dialog(new android.view.ContextThemeWrapper(requireContext(), R.style.Haruka_LightDialog));
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_custom_color, null, false);
         dialog.setContentView(content);
@@ -577,8 +577,8 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             alphaSliderView.setAlphaValue(alphaHolder[0]);
             syncViews.run();
         });
-        content.findViewById(R.id.btn_custom_color_cancel).setOnClickListener(v -> dialog.dismiss());
-        content.findViewById(R.id.btn_custom_color_apply).setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_custom_color_cancel), dialog::dismiss);
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_custom_color_apply), () -> {
             selectedColor = colorIntToHex(Color.argb(alphaHolder[0], Color.red(rgbHolder[0]), Color.green(rgbHolder[0]), Color.blue(rgbHolder[0])));
             buildColorPalette();
             dialog.dismiss();
@@ -648,7 +648,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         remove.setContentDescription(getString(R.string.remove_reminder));
         remove.setImageResource(R.drawable.ic_close);
         remove.setColorFilter(requireContext().getColor(R.color.text_secondary));
-        remove.setOnClickListener(v -> {
+        UiUtils.setDebouncedClickListener(remove, () -> {
             reminders.remove(index);
             renderReminders();
         });
@@ -794,62 +794,69 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         if (timePickerShowing) {
             return;
         }
-        String tag = start ? "start_time_picker" : "end_time_picker";
-        if (getParentFragmentManager().findFragmentByTag(tag) != null) {
-            return;
-        }
         LocalTime initial = start ? startTime : endTime;
-        MaterialTimePicker picker = new MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_12H)
-                .setHour(initial.getHour())
-                .setMinute(initial.getMinute())
-                .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
-                .setTitleText(R.string.set_time)
-                .setNegativeButtonText(R.string.cancel)
-                .setPositiveButtonText(R.string.agree)
-                .build();
+        Dialog dialog = new Dialog(new android.view.ContextThemeWrapper(requireContext(), R.style.Haruka_LightDialog));
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_time_picker, null, false);
+        UiUtils.disableForceDark(content);
+        WheelPickerView hourPicker = content.findViewById(R.id.picker_hour);
+        WheelPickerView minutePicker = content.findViewById(R.id.picker_minute);
+        WheelPickerView ampmPicker = content.findViewById(R.id.picker_ampm);
+
+        List<String> hourItems = new ArrayList<>();
+        for (int hour = 1; hour <= 12; hour++) {
+            hourItems.add(String.valueOf(hour));
+        }
+        List<String> minuteItems = new ArrayList<>();
+        for (int minute = 0; minute < 60; minute++) {
+            minuteItems.add(String.format(Locale.US, "%02d", minute));
+        }
+
+        int initialHourIndex = toDisplayHour(initial.getHour()) - 1;
+        int initialMinuteIndex = initial.getMinute();
+        int initialAmPmIndex = initial.getHour() < 12 ? 0 : 1;
+        hourPicker.setItems(hourItems);
+        hourPicker.setSelectedIndex(initialHourIndex);
+        minutePicker.setItems(minuteItems);
+        minutePicker.setSelectedIndex(initialMinuteIndex);
+        ampmPicker.setItems(Arrays.asList("SA", "CH"));
+        ampmPicker.setSelectedIndex(initialAmPmIndex);
+
         timePickerShowing = true;
-        picker.addOnPositiveButtonClickListener(v -> {
-            LocalTime pickedTime = LocalTime.of(picker.getHour(), picker.getMinute());
+        dialog.setOnDismissListener(d -> timePickerShowing = false);
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_time_cancel), dialog::dismiss);
+        UiUtils.setDebouncedClickListener(content.findViewById(R.id.btn_time_ok), () -> {
+            LocalTime pickedTime = LocalTime.of(
+                    fromDisplayHour(hourPicker.getSelectedIndex() + 1, ampmPicker.getSelectedIndex() == 1),
+                    minutePicker.getSelectedIndex()
+            );
             if (start) {
                 startTime = pickedTime;
             } else {
                 endTime = pickedTime;
             }
             bindValues();
+            dialog.dismiss();
         });
-        picker.addOnDismissListener(dialog -> timePickerShowing = false);
-        picker.show(getParentFragmentManager(), tag);
-        getParentFragmentManager().executePendingTransactions();
-        styleTimePickerActions(picker);
+        dialog.setContentView(content);
+        UiUtils.styleDialogWindow(dialog, UiUtils.dp(requireContext(), 312), ViewGroup.LayoutParams.WRAP_CONTENT, 0.28f);
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.show();
+        content.post(() -> {
+            hourPicker.setSelectedIndex(initialHourIndex);
+            minutePicker.setSelectedIndex(initialMinuteIndex);
+            ampmPicker.setSelectedIndex(initialAmPmIndex);
+        });
     }
 
-    private void styleTimePickerActions(MaterialTimePicker picker) {
-        if (picker == null || picker.getDialog() == null) {
-            return;
-        }
-        Runnable styleButtons = () -> {
-            Dialog dialog = picker.getDialog();
-            if (dialog == null) {
-                return;
-            }
-            int actionColor = requireContext().getColor(R.color.text_primary);
-            TextView cancelButton = dialog.findViewById(com.google.android.material.R.id.material_timepicker_cancel_button);
-            TextView okButton = dialog.findViewById(com.google.android.material.R.id.material_timepicker_ok_button);
-            if (cancelButton != null) {
-                cancelButton.setTextColor(actionColor);
-                cancelButton.setText(getString(R.string.cancel));
-            }
-            if (okButton != null) {
-                okButton.setTextColor(actionColor);
-                okButton.setText(getString(R.string.agree));
-            }
-        };
-        styleButtons.run();
-        Window window = picker.getDialog().getWindow();
-        if (window != null && window.getDecorView() != null) {
-            window.getDecorView().post(styleButtons);
-        }
+    private int toDisplayHour(int hour24) {
+        int hour12 = hour24 % 12;
+        return hour12 == 0 ? 12 : hour12;
+    }
+
+    private int fromDisplayHour(int hour12, boolean pm) {
+        int normalized = hour12 % 12;
+        return pm ? normalized + 12 : normalized;
     }
 
     private void updateTimeVisibility(boolean animate) {
@@ -869,7 +876,8 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
         if (container == null) {
             return;
         }
-        int expandedWidth = dp(72);
+        int expandedWidth = dp(96);
+        float slideDistance = dp(8);
         ViewGroup.LayoutParams params = container.getLayoutParams();
         if (params == null) {
             return;
@@ -885,20 +893,35 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             return;
         }
         if (show) {
+            params.width = currentWidth;
+            container.setLayoutParams(params);
             container.setVisibility(View.VISIBLE);
-            container.setAlpha(container.getAlpha() > 0f ? container.getAlpha() : 0f);
+            container.setAlpha(0f);
+            container.setTranslationX(slideDistance);
         }
 
-        ValueAnimator animator = ValueAnimator.ofInt(currentWidth, targetWidth);
+        ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
         animator.setDuration(260L);
         animator.setInterpolator(new AccelerateDecelerateInterpolator());
         animator.addUpdateListener(animation -> {
-            int width = (int) animation.getAnimatedValue();
-            float progress = expandedWidth == 0 ? 1f : Math.min(1f, width / (float) expandedWidth);
+            float progress = (float) animation.getAnimatedValue();
             ViewGroup.LayoutParams layoutParams = container.getLayoutParams();
-            layoutParams.width = width;
+            if (show) {
+                float widthPhase = Math.min(1f, progress / 0.55f);
+                int width = lerp(currentWidth, targetWidth, widthPhase);
+                float alphaPhase = progress <= 0.55f ? 0f : (progress - 0.55f) / 0.45f;
+                layoutParams.width = width;
+                container.setAlpha(Math.min(1f, alphaPhase));
+                container.setTranslationX(slideDistance * (1f - Math.min(1f, alphaPhase)));
+            } else {
+                float fadePhase = Math.min(1f, progress / 0.45f);
+                float widthPhase = progress <= 0.45f ? 0f : (progress - 0.45f) / 0.55f;
+                int width = progress <= 0.45f ? currentWidth : lerp(currentWidth, targetWidth, widthPhase);
+                layoutParams.width = width;
+                container.setAlpha(1f - fadePhase);
+                container.setTranslationX(slideDistance * fadePhase);
+            }
             container.setLayoutParams(layoutParams);
-            container.setAlpha(show ? progress : Math.max(0f, 1f - progress));
         });
         animator.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override
@@ -907,6 +930,7 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
                 layoutParams.width = targetWidth;
                 container.setLayoutParams(layoutParams);
                 container.setAlpha(show ? 1f : 0f);
+                container.setTranslationX(0f);
                 container.setVisibility(show ? View.VISIBLE : View.GONE);
                 if (startContainer) {
                     startTimeAnimator = null;
@@ -937,10 +961,15 @@ public class EventEditFragment extends Fragment implements ScreenBackHandler {
             return;
         }
         ViewGroup.LayoutParams params = container.getLayoutParams();
-        params.width = visible ? dp(72) : 0;
+        params.width = visible ? dp(96) : 0;
         container.setLayoutParams(params);
         container.setAlpha(visible ? 1f : 0f);
+        container.setTranslationX(0f);
         container.setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+
+    private int lerp(int start, int end, float fraction) {
+        return Math.round(start + (end - start) * Math.max(0f, Math.min(1f, fraction)));
     }
 
     private void attachKeyboardFieldBehavior(EditText field, View anchor, long focusDelayMs) {
