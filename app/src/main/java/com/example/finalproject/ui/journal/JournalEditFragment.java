@@ -3,6 +3,7 @@ package com.example.finalproject.ui.journal;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -10,18 +11,21 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.Spanned;
+import android.text.TextWatcher;
 import android.text.style.AlignmentSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -56,17 +60,14 @@ import java.util.List;
 public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     private static final String ARG_JOURNAL_ID = "journal_id";
     private static final String ARG_DATE = "date";
+    private static final String ARG_INITIAL_MOOD_RESOURCE_NAMES = "initial_mood_resource_names";
     private static final String RESULT_DATE = "journal_edit_date";
     private static final String STATE_INITIAL_MOOD_PICKER_SHOWN = "initial_mood_picker_shown";
-    private static final String MOOD_BUON_NGU = "journal_emo_buon_ngu";
     private static final int MAX_IMAGE_COUNT = 3;
     private static final long LAYOUT_GINGHAM = 1L;
     private static final long LAYOUT_DENIM = 2L;
     private static final long LAYOUT_PLAID = 3L;
     private static final long[] JOURNAL_LAYOUTS = {LAYOUT_GINGHAM, LAYOUT_DENIM, LAYOUT_PLAID};
-    private static final int MOOD_SLOT_WEATHER = 0;
-    private static final int MOOD_SLOT_DAY = 1;
-    private static final int MOOD_SLOT_BODY = 2;
     private static final int DEFAULT_CAPTION_TEXT_SIZE_SP = 25;
     private static final int DEFAULT_CONTENT_TEXT_SIZE_SP = 20;
     private static final int MIN_TEXT_SIZE_SP = 12;
@@ -79,6 +80,7 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     private boolean suppressAutoSave;
     private boolean shouldAutoShowMoodPicker;
     private boolean initialMoodPickerShown;
+    private boolean creatingEntry;
     private String initialSnapshot;
     private LocalDate journalDate;
     private String title = "";
@@ -98,6 +100,8 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     private EditText contentEdit;
     private EditText activeTextEdit;
     private EditText lastSelectionEdit;
+    private View rootView;
+    private View bottomToolbar;
     private TextView dateText;
     private ImageButton deleteButton;
     private ImageView patternBackground;
@@ -110,29 +114,43 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     private ImageView[] photoViews;
     private ImageView[] photoAddViews;
     private ImageButton[] photoRemoveButtons;
+    private Integer previousSoftInputMode;
+    private boolean keyboardVisible;
+    private int keyboardBottomInset;
+    private int systemBarsBottomInset;
+    private int bottomToolbarBaseHeight;
+    private int bottomToolbarBasePaddingBottom;
+    private int contentPaddingLeft;
+    private int contentPaddingTop;
+    private int contentPaddingRight;
+    private int contentPaddingBottom;
+    private boolean keyboardLayoutApplied;
+    private float contentTouchStartY;
+    private boolean contentTouchDragging;
+    @Nullable
+    private ViewTreeObserver.OnGlobalLayoutListener keyboardLayoutListener;
     private final int[] selectedMoodResources = {
             R.drawable.journal_emo_nang,
             R.drawable.journal_emo_vui,
             R.drawable.journal_emo_sang_khoai
     };
 
-    private static class MoodOption {
-        final int drawableRes;
-        final int labelRes;
-        final int slotIndex;
-
-        MoodOption(int drawableRes, int labelRes, int slotIndex) {
-            this.drawableRes = drawableRes;
-            this.labelRes = labelRes;
-            this.slotIndex = slotIndex;
-        }
+    public static JournalEditFragment newInstance(long journalId, LocalDate date) {
+        return newInstance(journalId, date, null);
     }
 
-    public static JournalEditFragment newInstance(long journalId, LocalDate date) {
+    public static JournalEditFragment newInstance(
+            long journalId,
+            LocalDate date,
+            @Nullable ArrayList<String> initialMoodResourceNames
+    ) {
         JournalEditFragment fragment = new JournalEditFragment();
         Bundle args = new Bundle();
         args.putLong(ARG_JOURNAL_ID, journalId);
         args.putString(ARG_DATE, DateTimeUtils.dateToIso(date));
+        if (initialMoodResourceNames != null && !initialMoodResourceNames.isEmpty()) {
+            args.putStringArrayList(ARG_INITIAL_MOOD_RESOURCE_NAMES, initialMoodResourceNames);
+        }
         fragment.setArguments(args);
         return fragment;
     }
@@ -162,6 +180,9 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_journal_edit, container, false);
         repository = new JournalRepository(requireContext());
+        if (getActivity() != null && previousSoftInputMode == null) {
+            previousSoftInputMode = requireActivity().getWindow().getAttributes().softInputMode;
+        }
         bind(view);
         if (!initialized) {
             initializeFields();
@@ -174,6 +195,25 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
         }
         maybeShowInitialMoodPicker(view);
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        enableKeyboardInputMode();
+    }
+
+    @Override
+    public void onPause() {
+        restoreSoftInputMode();
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        detachKeyboardFallback();
+        restoreSoftInputMode();
+        super.onDestroyView();
     }
 
     @Override
@@ -191,6 +231,7 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void bind(View view) {
+        rootView = view.findViewById(R.id.journal_editor_root);
         captionEdit = view.findViewById(R.id.edit_journal_caption);
         contentEdit = view.findViewById(R.id.edit_journal_content);
         dateText = view.findViewById(R.id.tv_journal_edit_date);
@@ -226,6 +267,10 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
                 view.findViewById(R.id.btn_remove_journal_photo_3)
         };
         ensureImageListSize();
+        contentPaddingLeft = contentEdit.getPaddingLeft();
+        contentPaddingTop = contentEdit.getPaddingTop();
+        contentPaddingRight = contentEdit.getPaddingRight();
+        contentPaddingBottom = contentEdit.getPaddingBottom();
         setupTextSelectionTracking(captionEdit);
         setupTextSelectionTracking(contentEdit);
         activeTextEdit = contentEdit;
@@ -233,6 +278,7 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
 
     private void initializeFields() {
         journalId = requireArguments().getLong(ARG_JOURNAL_ID);
+        creatingEntry = journalId <= 0;
         journalDate = DateTimeUtils.isoToDate(requireArguments().getString(ARG_DATE));
         if (journalDate == null) {
             journalDate = LocalDate.now();
@@ -240,6 +286,9 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
         if (journalId <= 0) {
             journalDate = clampFutureDate(journalDate);
         }
+        ArrayList<String> initialMoodResourceNames =
+                requireArguments().getStringArrayList(ARG_INITIAL_MOOD_RESOURCE_NAMES);
+        boolean hasInitialMoodResourceNames = initialMoodResourceNames != null && !initialMoodResourceNames.isEmpty();
         if (journalId > 0) {
             JournalEntry entry = repository.getJournalEntry(journalId);
             if (entry != null) {
@@ -254,9 +303,11 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
                 imageUris.addAll(entry.getImageUris());
                 applyStoredMoods(entry.getMoodResourceNames());
             }
+        } else if (hasInitialMoodResourceNames) {
+            applyStoredMoods(initialMoodResourceNames);
         }
         ensureImageListSize();
-        shouldAutoShowMoodPicker = journalId <= 0 && !hasDraftData();
+        shouldAutoShowMoodPicker = creatingEntry && !hasInitialMoodResourceNames && !hasDraftData();
         initialized = true;
     }
 
@@ -372,137 +423,7 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void showMoodPicker() {
-        Dialog dialog = new Dialog(requireContext());
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_journal_mood_picker);
-
-        dialog.findViewById(R.id.btn_close_journal_mood_picker).setOnClickListener(v -> dialog.dismiss());
-        dialog.findViewById(R.id.btn_done_journal_mood_picker).setOnClickListener(v -> dialog.dismiss());
-        View[] selectedTiles = new View[3];
-        populateMoodGrid(dialog.findViewById(R.id.grid_journal_weather), weatherMoodOptions(), selectedTiles);
-        populateMoodGrid(dialog.findViewById(R.id.grid_journal_day_mood), dayMoodOptions(), selectedTiles);
-        populateMoodGrid(dialog.findViewById(R.id.grid_journal_body_mood), bodyMoodOptions(), selectedTiles);
-
-        dialog.show();
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            WindowManager.LayoutParams params = window.getAttributes();
-            params.width = WindowManager.LayoutParams.MATCH_PARENT;
-            params.height = WindowManager.LayoutParams.MATCH_PARENT;
-            params.dimAmount = 0f;
-            window.setAttributes(params);
-        }
-    }
-
-    private void populateMoodGrid(GridLayout grid, MoodOption[] options, View[] selectedTiles) {
-        if (grid == null) {
-            return;
-        }
-        grid.removeAllViews();
-        grid.setColumnCount(5);
-        for (int index = 0; index < options.length; index++) {
-            MoodOption option = options[index];
-            LinearLayout tile = new LinearLayout(requireContext());
-            tile.setGravity(Gravity.CENTER);
-            tile.setOrientation(LinearLayout.VERTICAL);
-            tile.setPadding(dp(2), dp(2), dp(2), dp(2));
-            tile.setClickable(true);
-            tile.setFocusable(true);
-            android.content.res.TypedArray attrs = requireContext().obtainStyledAttributes(
-                    new int[]{android.R.attr.selectableItemBackground}
-            );
-            tile.setForeground(attrs.getDrawable(0));
-            attrs.recycle();
-            tile.setContentDescription(getString(option.labelRes));
-
-            ImageView image = new ImageView(requireContext());
-            LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(dp(58), dp(58));
-            image.setAdjustViewBounds(true);
-            image.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            image.setImageResource(option.drawableRes);
-            tile.addView(image, imageParams);
-
-            TextView label = new TextView(requireContext());
-            label.setGravity(Gravity.CENTER);
-            label.setMaxLines(2);
-            label.setText(option.labelRes);
-            label.setTextColor(getResources().getColor(R.color.text_primary));
-            label.setTextSize(10);
-            tile.addView(label, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(20)));
-
-            GridLayout.LayoutParams tileParams = new GridLayout.LayoutParams();
-            tileParams.columnSpec = GridLayout.spec(index % 5, 1f);
-            tileParams.width = 0;
-            tileParams.height = dp(82);
-            tile.setLayoutParams(tileParams);
-
-            if (selectedMoodResources[option.slotIndex] == option.drawableRes) {
-                tile.setBackgroundResource(R.drawable.bg_journal_mood_tile_selected);
-                selectedTiles[option.slotIndex] = tile;
-            }
-            tile.setOnClickListener(v -> {
-                selectedMoodResources[option.slotIndex] = option.drawableRes;
-                refreshMoodRow();
-                if (selectedTiles[option.slotIndex] != null) {
-                    selectedTiles[option.slotIndex].setBackgroundColor(Color.TRANSPARENT);
-                }
-                v.setBackgroundResource(R.drawable.bg_journal_mood_tile_selected);
-                selectedTiles[option.slotIndex] = v;
-            });
-            grid.addView(tile);
-        }
-    }
-
-    private MoodOption[] weatherMoodOptions() {
-        return new MoodOption[]{
-                new MoodOption(R.drawable.journal_emo_nang, R.string.journal_emo_nang, MOOD_SLOT_WEATHER),
-                new MoodOption(R.drawable.journal_emo_mua, R.string.journal_emo_mua, MOOD_SLOT_WEATHER),
-                new MoodOption(R.drawable.journal_emo_am_u, R.string.journal_emo_am_u, MOOD_SLOT_WEATHER),
-                new MoodOption(R.drawable.journal_emo_nhieu_may, R.string.journal_emo_nhieu_may, MOOD_SLOT_WEATHER),
-                new MoodOption(R.drawable.journal_emo_tuyet, R.string.journal_emo_tuyet, MOOD_SLOT_WEATHER),
-                new MoodOption(R.drawable.journal_emo_gio, R.string.journal_emo_gio, MOOD_SLOT_WEATHER),
-                new MoodOption(R.drawable.journal_emo_bao, R.string.journal_emo_bao, MOOD_SLOT_WEATHER),
-                new MoodOption(R.drawable.journal_emo_nong, R.string.journal_emo_nong, MOOD_SLOT_WEATHER),
-                new MoodOption(R.drawable.journal_emo_sam, R.string.journal_emo_sam, MOOD_SLOT_WEATHER),
-                new MoodOption(R.drawable.journal_emo_suong, R.string.journal_emo_suong, MOOD_SLOT_WEATHER)
-        };
-    }
-
-    private MoodOption[] dayMoodOptions() {
-        return new MoodOption[]{
-                new MoodOption(R.drawable.journal_emo_vui, R.string.journal_emo_vui, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_tu_hao, R.string.journal_emo_tu_hao, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_phan_khich, R.string.journal_emo_phan_khich, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_binh_yen, R.string.journal_emo_binh_yen, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_binh_thuong, R.string.journal_emo_binh_thuong, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_lo_lang, R.string.journal_emo_lo_lang, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_met_moi, R.string.journal_emo_met_moi, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_buon_ba, R.string.journal_emo_buon, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_chan_nan, R.string.journal_emo_chan_nan, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_tuc_gian, R.string.journal_emo_tuc_gian, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_ton_thuong, R.string.journal_emo_ton_thuong, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_hi_vong, R.string.journal_emo_hi_vong, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_hoai_niem, R.string.journal_emo_hoai_niem, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_nang_suat, R.string.journal_emo_nang_suat, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_ban_ron, R.string.journal_emo_ban_ron, MOOD_SLOT_DAY),
-                new MoodOption(R.drawable.journal_emo_ham_bik_nua, R.string.journal_emo_ham_bik_nua, MOOD_SLOT_DAY)
-        };
-    }
-
-    private MoodOption[] bodyMoodOptions() {
-        return new MoodOption[]{
-                new MoodOption(R.drawable.journal_emo_sang_khoai, R.string.journal_emo_sang_khoai, MOOD_SLOT_BODY),
-                new MoodOption(R.drawable.journal_emo_om, R.string.journal_emo_om, MOOD_SLOT_BODY),
-                new MoodOption(R.drawable.journal_emo_buon_ngu_clean, R.string.journal_emo_buon_ngu, MOOD_SLOT_BODY),
-                new MoodOption(R.drawable.journal_emo_tinh_than_on, R.string.journal_emo_tinh_than_on, MOOD_SLOT_BODY),
-                new MoodOption(R.drawable.journal_emo_cang_thang, R.string.journal_emo_cang_thang, MOOD_SLOT_BODY),
-                new MoodOption(R.drawable.journal_emo_doi_bung, R.string.journal_emo_doi_bung, MOOD_SLOT_BODY),
-                new MoodOption(R.drawable.journal_emo_dang_hoi_phuc, R.string.journal_emo_dang_hoi_phuc, MOOD_SLOT_BODY),
-                new MoodOption(R.drawable.journal_emo_kiet_suc, R.string.journal_emo_kiet_suc, MOOD_SLOT_BODY),
-                new MoodOption(R.drawable.journal_emo_chi_muon_nam, R.string.journal_emo_chi_muon_nam, MOOD_SLOT_BODY),
-                new MoodOption(R.drawable.journal_emo_thu_gian, R.string.journal_emo_thu_gian, MOOD_SLOT_BODY)
-        };
+        JournalMoodPickerDialog.show(requireContext(), selectedMoodResources, this::refreshMoodRow, null);
     }
 
     private void refreshMoodRow() {
@@ -574,20 +495,156 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     private void setupTextSelectionTracking(EditText editText) {
         editText.setOnTouchListener((v, event) -> {
             activeTextEdit = editText;
-            editText.post(this::rememberSelection);
+            int action = event.getActionMasked();
+            boolean wasContentDrag = updateContentEditTouchState(editText, event);
+            if (action == MotionEvent.ACTION_DOWN) {
+                enableKeyboardInputMode();
+                applyKeyboardLayout(keyboardVisible, keyboardBottomInset);
+                editText.post(this::rememberSelection);
+            } else if (action == MotionEvent.ACTION_UP) {
+                editText.post(() -> {
+                    rememberSelection();
+                    if (!wasContentDrag) {
+                        keepEditCursorVisible(editText);
+                    }
+                });
+            } else if (action == MotionEvent.ACTION_CANCEL) {
+                editText.post(this::rememberSelection);
+            }
             return false;
         });
         editText.setOnLongClickListener(v -> {
             activeTextEdit = editText;
-            editText.postDelayed(this::rememberSelection, 150);
+            editText.postDelayed(() -> {
+                rememberSelection();
+                keepEditCursorVisible(editText);
+            }, 150);
             return false;
         });
         editText.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 activeTextEdit = editText;
+                enableKeyboardInputMode();
+                applyKeyboardLayout(keyboardVisible, keyboardBottomInset);
+                scheduleEditCursorVisible(editText, 120);
             }
             editText.post(this::rememberSelection);
         });
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // No-op.
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // No-op.
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (editText.hasFocus()) {
+                    activeTextEdit = editText;
+                    scheduleEditCursorVisible(editText, 40);
+                }
+            }
+        });
+    }
+
+    private boolean updateContentEditTouchState(EditText editText, MotionEvent event) {
+        if (editText != contentEdit) {
+            return false;
+        }
+        int action = event.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN) {
+            contentTouchStartY = event.getRawY();
+            contentTouchDragging = false;
+            requestContentParentKeepTouch(true);
+            return false;
+        }
+        if (action == MotionEvent.ACTION_MOVE) {
+            if (Math.abs(event.getRawY() - contentTouchStartY) > dp(4)) {
+                contentTouchDragging = true;
+            }
+            if (contentEdit.canScrollVertically(-1) || contentEdit.canScrollVertically(1)) {
+                requestContentParentKeepTouch(true);
+            }
+            return contentTouchDragging;
+        }
+        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+            boolean wasDragging = contentTouchDragging;
+            contentTouchDragging = false;
+            contentEdit.post(() -> requestContentParentKeepTouch(false));
+            return wasDragging;
+        }
+        return contentTouchDragging;
+    }
+
+    private void requestContentParentKeepTouch(boolean keepTouch) {
+        ViewParent parent = contentEdit == null ? null : contentEdit.getParent();
+        while (parent != null) {
+            parent.requestDisallowInterceptTouchEvent(keepTouch);
+            parent = parent.getParent();
+        }
+    }
+
+    private void scheduleActiveEditCursorVisible() {
+        EditText editText = focusedEditText();
+        if (editText != null) {
+            scheduleEditCursorVisible(editText, 80);
+        }
+    }
+
+    @Nullable
+    private EditText focusedEditText() {
+        if (captionEdit != null && captionEdit.hasFocus()) {
+            return captionEdit;
+        }
+        if (contentEdit != null && contentEdit.hasFocus()) {
+            return contentEdit;
+        }
+        return null;
+    }
+
+    private void scheduleEditCursorVisible(EditText editText, long delayMs) {
+        editText.postDelayed(() -> keepEditCursorVisible(editText), delayMs);
+    }
+
+    private void keepEditCursorVisible(EditText editText) {
+        if (editText == null || !ViewCompat.isAttachedToWindow(editText)) {
+            return;
+        }
+        int selection = Math.max(0, Math.min(editText.getSelectionEnd(), editText.length()));
+        editText.bringPointIntoView(selection);
+        if (editText != contentEdit) {
+            return;
+        }
+        Layout layout = editText.getLayout();
+        if (layout == null || editText.getHeight() <= 0) {
+            scheduleEditCursorVisible(editText, 40);
+            return;
+        }
+        int line = layout.getLineForOffset(selection);
+        int lineTop = layout.getLineTop(line) + editText.getTotalPaddingTop();
+        int lineBottom = layout.getLineBottom(line) + editText.getTotalPaddingTop();
+        int lineHeight = Math.max(1, lineBottom - lineTop);
+        int visibleTop = editText.getScrollY();
+        int visibleBottom = visibleTop + editText.getHeight() - editText.getTotalPaddingBottom();
+        int breathingRoom = lineHeight * 2;
+        int targetScrollY = editText.getScrollY();
+        if (lineBottom + breathingRoom > visibleBottom) {
+            targetScrollY = lineBottom + breathingRoom - (editText.getHeight() - editText.getTotalPaddingBottom());
+        } else if (lineTop - lineHeight < visibleTop) {
+            targetScrollY = lineTop - lineHeight;
+        }
+        int maxScrollY = Math.max(
+                0,
+                layout.getHeight() + editText.getTotalPaddingTop() + editText.getTotalPaddingBottom() - editText.getHeight()
+        );
+        targetScrollY = Math.max(0, Math.min(targetScrollY, maxScrollY));
+        if (targetScrollY != editText.getScrollY()) {
+            editText.setScrollY(targetScrollY);
+        }
     }
 
     private void rememberSelection() {
@@ -817,29 +874,122 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     }
 
     private void setupSystemInsets(View view) {
-        View bottomToolbar = view.findViewById(R.id.journal_bottom_toolbar);
-        int baseHeight = bottomToolbar.getLayoutParams().height;
-        int basePaddingBottom = bottomToolbar.getPaddingBottom();
+        bottomToolbar = view.findViewById(R.id.journal_bottom_toolbar);
+        bottomToolbarBaseHeight = bottomToolbar.getLayoutParams().height;
+        bottomToolbarBasePaddingBottom = bottomToolbar.getPaddingBottom();
         ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
-            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomToolbar.getLayoutParams();
-            int targetHeight = baseHeight + systemBars.bottom;
-            int targetBottomMargin = Math.max(0, ime.bottom - systemBars.bottom);
-            if (params.height != targetHeight || params.bottomMargin != targetBottomMargin) {
-                params.height = targetHeight;
-                params.bottomMargin = targetBottomMargin;
-                bottomToolbar.setLayoutParams(params);
+            systemBarsBottomInset = systemBars.bottom;
+            int keyboardInset = Math.max(0, ime.bottom - systemBars.bottom);
+            if (ime.bottom > 0 || !keyboardVisible) {
+                applyKeyboardLayout(keyboardInset > 0, keyboardInset);
             }
-            bottomToolbar.setPadding(
-                    bottomToolbar.getPaddingLeft(),
-                    bottomToolbar.getPaddingTop(),
-                    bottomToolbar.getPaddingRight(),
-                    basePaddingBottom + systemBars.bottom
-            );
             return insets;
         });
+        installKeyboardFallback();
         ViewCompat.requestApplyInsets(view);
+    }
+
+    private void installKeyboardFallback() {
+        if (rootView == null || keyboardLayoutListener != null) {
+            return;
+        }
+        keyboardLayoutListener = () -> {
+            if (!isAdded() || rootView == null) {
+                return;
+            }
+            Rect visibleFrame = new Rect();
+            rootView.getWindowVisibleDisplayFrame(visibleFrame);
+            int fullHeight = rootView.getRootView().getHeight();
+            int overlap = Math.max(0, fullHeight - visibleFrame.bottom);
+            int keyboardInset = Math.max(0, overlap - systemBarsBottomInset);
+            boolean visible = keyboardInset > dp(120);
+            applyKeyboardLayout(visible, visible ? keyboardInset : 0);
+        };
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(keyboardLayoutListener);
+    }
+
+    private void detachKeyboardFallback() {
+        if (rootView == null || keyboardLayoutListener == null) {
+            return;
+        }
+        ViewTreeObserver observer = rootView.getViewTreeObserver();
+        if (observer.isAlive()) {
+            observer.removeOnGlobalLayoutListener(keyboardLayoutListener);
+        }
+        keyboardLayoutListener = null;
+    }
+
+    private void applyKeyboardLayout(boolean visible, int inset) {
+        boolean previousVisible = keyboardVisible;
+        keyboardVisible = visible;
+        keyboardBottomInset = visible ? Math.max(0, inset) : 0;
+        updateBottomToolbarInsets();
+        applyContentEditPadding();
+        if (previousVisible != keyboardVisible || keyboardLayoutApplied != keyboardVisible) {
+            keyboardLayoutApplied = keyboardVisible;
+            applyJournalLayout();
+        }
+        if (keyboardVisible) {
+            scheduleActiveEditCursorVisible();
+        }
+    }
+
+    private void updateBottomToolbarInsets() {
+        if (bottomToolbar == null) {
+            return;
+        }
+        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomToolbar.getLayoutParams();
+        int targetHeight = bottomToolbarBaseHeight + systemBarsBottomInset;
+        int targetBottomMargin = keyboardVisible ? keyboardBottomInset : 0;
+        if (params.height != targetHeight || params.bottomMargin != targetBottomMargin) {
+            params.height = targetHeight;
+            params.bottomMargin = targetBottomMargin;
+            bottomToolbar.setLayoutParams(params);
+        }
+        bottomToolbar.setPadding(
+                bottomToolbar.getPaddingLeft(),
+                bottomToolbar.getPaddingTop(),
+                bottomToolbar.getPaddingRight(),
+                bottomToolbarBasePaddingBottom + systemBarsBottomInset
+        );
+    }
+
+    private void setContentEditPadding(int left, int top, int right, int bottom) {
+        contentPaddingLeft = left;
+        contentPaddingTop = top;
+        contentPaddingRight = right;
+        contentPaddingBottom = bottom;
+        applyContentEditPadding();
+    }
+
+    private void applyContentEditPadding() {
+        if (contentEdit == null) {
+            return;
+        }
+        contentEdit.setPadding(
+                contentPaddingLeft,
+                contentPaddingTop,
+                contentPaddingRight,
+                contentPaddingBottom
+        );
+    }
+
+    private void enableKeyboardInputMode() {
+        if (getActivity() == null) {
+            return;
+        }
+        int currentMode = requireActivity().getWindow().getAttributes().softInputMode;
+        int stateMask = currentMode & WindowManager.LayoutParams.SOFT_INPUT_MASK_STATE;
+        requireActivity().getWindow().setSoftInputMode(stateMask | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+    }
+
+    private void restoreSoftInputMode() {
+        if (getActivity() == null || previousSoftInputMode == null) {
+            return;
+        }
+        requireActivity().getWindow().setSoftInputMode(previousSoftInputMode);
     }
 
     private void openFirstAvailableImageSlot() {
@@ -936,8 +1086,12 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
         }
         patternBackground.setImageResource(patternResource(selectedLayoutId));
 
+        moodRow.setVisibility(View.VISIBLE);
+        photoRow.setVisibility(View.VISIBLE);
+        setJournalPageMinHeight(keyboardVisible ? 0 : dp(420));
+        contentEdit.setMinHeight(keyboardVisible ? 0 : dp(190));
         if (selectedLayoutId == LAYOUT_PLAID) {
-            setPageMargins(8, 0);
+            setPageMargins(8, keyboardVisible ? 8 : 0);
             journalPage.setPadding(0, 0, 0, 0);
             journalPage.setBackgroundColor(Color.TRANSPARENT);
             moodRow.setBackgroundResource(R.drawable.bg_journal_layout_red_mood_strip);
@@ -945,10 +1099,15 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
             captionEdit.setBackgroundResource(R.drawable.bg_journal_page_red_note);
             captionEdit.setPadding(dp(8), 0, dp(8), 0);
             contentEdit.setBackgroundResource(R.drawable.bg_journal_page_red_note);
-            contentEdit.setPadding(dp(8), dp(8), dp(8), dp(16));
-            applyPlaidConstraints();
+            setContentEditPadding(dp(8), dp(8), dp(8), dp(16));
+            if (keyboardVisible) {
+                applyCompactKeyboardConstraints();
+            } else {
+                applyPlaidConstraints();
+            }
         } else {
-            setPageMargins(32, 32);
+            int pageMargin = keyboardVisible ? 12 : 32;
+            setPageMargins(pageMargin, pageMargin);
             journalPage.setPadding(dp(8), dp(8), dp(8), dp(8));
             journalPage.setBackgroundResource(selectedLayoutId == LAYOUT_DENIM
                     ? R.drawable.bg_journal_page_graph
@@ -958,10 +1117,72 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
             captionEdit.setBackgroundColor(Color.TRANSPARENT);
             captionEdit.setPadding(0, 0, 0, 0);
             contentEdit.setBackgroundColor(Color.TRANSPARENT);
-            contentEdit.setPadding(0, 0, 0, dp(16));
-            applyStackedConstraints();
+            setContentEditPadding(0, 0, 0, dp(16));
+            if (keyboardVisible) {
+                applyCompactKeyboardConstraints();
+            } else {
+                applyStackedConstraints();
+            }
         }
         refreshImageSlots();
+    }
+
+    private void applyCompactKeyboardConstraints() {
+        ConstraintSet pageSet = new ConstraintSet();
+        pageSet.clone(journalPage);
+
+        pageSet.clear(R.id.journal_mood_row);
+        pageSet.constrainWidth(R.id.journal_mood_row, ConstraintSet.MATCH_CONSTRAINT);
+        pageSet.constrainHeight(R.id.journal_mood_row, dp(52));
+        pageSet.connect(R.id.journal_mood_row, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+        pageSet.connect(R.id.journal_mood_row, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+        pageSet.connect(R.id.journal_mood_row, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+
+        pageSet.clear(R.id.edit_journal_caption);
+        pageSet.constrainWidth(R.id.edit_journal_caption, ConstraintSet.MATCH_CONSTRAINT);
+        pageSet.constrainHeight(R.id.edit_journal_caption, dp(38));
+        pageSet.connect(R.id.edit_journal_caption, ConstraintSet.TOP, R.id.journal_mood_row, ConstraintSet.BOTTOM, dp(6));
+        pageSet.connect(R.id.edit_journal_caption, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+        pageSet.connect(R.id.edit_journal_caption, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+
+        pageSet.clear(R.id.journal_photo_row);
+        pageSet.constrainWidth(R.id.journal_photo_row, ConstraintSet.MATCH_CONSTRAINT);
+        pageSet.constrainHeight(R.id.journal_photo_row, dp(72));
+        pageSet.connect(R.id.journal_photo_row, ConstraintSet.TOP, R.id.edit_journal_caption, ConstraintSet.BOTTOM, dp(6));
+        pageSet.connect(R.id.journal_photo_row, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+        pageSet.connect(R.id.journal_photo_row, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+
+        pageSet.clear(R.id.edit_journal_content);
+        pageSet.constrainWidth(R.id.edit_journal_content, ConstraintSet.MATCH_CONSTRAINT);
+        pageSet.constrainHeight(R.id.edit_journal_content, ConstraintSet.MATCH_CONSTRAINT);
+        pageSet.connect(R.id.edit_journal_content, ConstraintSet.TOP, R.id.journal_photo_row, ConstraintSet.BOTTOM, dp(8));
+        pageSet.connect(R.id.edit_journal_content, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+        pageSet.connect(R.id.edit_journal_content, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+        pageSet.connect(R.id.edit_journal_content, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+        pageSet.applyTo(journalPage);
+
+        ConstraintSet photoSet = new ConstraintSet();
+        photoSet.clone(photoRow);
+        int[] slots = {
+                R.id.journal_photo_slot_1,
+                R.id.journal_photo_slot_2,
+                R.id.journal_photo_slot_3
+        };
+        for (int slotId : slots) {
+            photoSet.clear(slotId);
+            photoSet.constrainWidth(slotId, ConstraintSet.MATCH_CONSTRAINT);
+            photoSet.constrainHeight(slotId, ConstraintSet.MATCH_CONSTRAINT);
+            photoSet.connect(slotId, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            photoSet.connect(slotId, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+            photoSet.setHorizontalWeight(slotId, 1f);
+        }
+        photoSet.connect(R.id.journal_photo_slot_1, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+        photoSet.connect(R.id.journal_photo_slot_1, ConstraintSet.END, R.id.journal_photo_slot_2, ConstraintSet.START, dp(6));
+        photoSet.connect(R.id.journal_photo_slot_2, ConstraintSet.START, R.id.journal_photo_slot_1, ConstraintSet.END, dp(6));
+        photoSet.connect(R.id.journal_photo_slot_2, ConstraintSet.END, R.id.journal_photo_slot_3, ConstraintSet.START, dp(6));
+        photoSet.connect(R.id.journal_photo_slot_3, ConstraintSet.START, R.id.journal_photo_slot_2, ConstraintSet.END, dp(6));
+        photoSet.connect(R.id.journal_photo_slot_3, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+        photoSet.applyTo(photoRow);
     }
 
     private void applyStackedConstraints() {
@@ -1070,6 +1291,17 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
         set.connect(slotId, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, dp(startDp));
     }
 
+    private void setJournalPageMinHeight(int minHeightPx) {
+        if (!(journalPage.getLayoutParams() instanceof ConstraintLayout.LayoutParams)) {
+            return;
+        }
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) journalPage.getLayoutParams();
+        if (params.matchConstraintMinHeight != minHeightPx) {
+            params.matchConstraintMinHeight = minHeightPx;
+            journalPage.setLayoutParams(params);
+        }
+    }
+
     private void setPageMargins(int horizontalDp, int verticalDp) {
         ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) journalPage.getLayoutParams();
         int horizontal = dp(horizontalDp);
@@ -1170,7 +1402,7 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
     }
 
     public void handleBackPressed() {
-        if (hasUnsavedChanges()) {
+        if (creatingEntry || hasUnsavedChanges()) {
             UiUtils.showConfirmDialog(
                     requireContext(),
                     getString(R.string.unsaved_changes_confirm),
@@ -1266,32 +1498,16 @@ public class JournalEditFragment extends Fragment implements ScreenBackHandler {
         }
         int count = Math.min(moodResourceNames.size(), selectedMoodResources.length);
         for (int index = 0; index < count; index++) {
-            selectedMoodResources[index] = moodResource(moodResourceNames.get(index), selectedMoodResources[index]);
+            selectedMoodResources[index] = JournalMoodPickerDialog.moodResource(
+                    requireContext(),
+                    moodResourceNames.get(index),
+                    selectedMoodResources[index]
+            );
         }
     }
 
     private List<String> selectedMoodResourceNames() {
-        List<String> moodResourceNames = new ArrayList<>();
-        for (int moodResource : selectedMoodResources) {
-            try {
-                String resourceName = getResources().getResourceEntryName(moodResource);
-                moodResourceNames.add("journal_emo_buon_ngu_clean".equals(resourceName) ? MOOD_BUON_NGU : resourceName);
-            } catch (android.content.res.Resources.NotFoundException ignored) {
-                moodResourceNames.add("");
-            }
-        }
-        return moodResourceNames;
-    }
-
-    private int moodResource(String resourceName, int fallback) {
-        if (resourceName == null || resourceName.trim().isEmpty()) {
-            return fallback;
-        }
-        String resolvedName = MOOD_BUON_NGU.equals(resourceName.trim())
-                ? "journal_emo_buon_ngu_clean"
-                : resourceName.trim();
-        int resourceId = getResources().getIdentifier(resolvedName, "drawable", requireContext().getPackageName());
-        return resourceId == 0 ? fallback : resourceId;
+        return JournalMoodPickerDialog.selectedMoodResourceNames(requireContext(), selectedMoodResources);
     }
 
     private String valueOrEmpty(String value) {

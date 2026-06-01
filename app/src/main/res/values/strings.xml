@@ -298,6 +298,10 @@
     <string name="habit_today_progress_count">%1$d/%2$d thói quen hoàn thành</string>
     <string name="habit_empty_archived">Chưa có thói quen lưu trữ</string>
     <string name="habit_empty_archived_hint">Những thói quen đã kết thúc sẽ hiện ở đây.</string>
+    <string name="habit_empty_pending">Không còn thói quen chưa xong</string>
+    <string name="habit_empty_pending_hint">Những thói quen cần làm hôm nay sẽ hiện ở đây.</string>
+    <string name="habit_empty_done">Chưa có thói quen xong</string>
+    <string name="habit_empty_done_hint">Đánh dấu xong để thấy thói quen ở đây.</string>
     <string name="habit_archived_count">%1$d thói quen lưu trữ</string>
     <string name="habit_status_done">Đã hoàn thành hôm nay</string>
     <string name="habit_status_pending">Chưa hoàn thành hôm nay</string>
@@ -326,6 +330,7 @@
     <string name="habit_report_period">Tháng %1$02d/%2$d</string>
     <string name="habit_stats_empty">Chưa có dữ liệu thói quen</string>
     <string name="habit_report_page">Trang %1$d</string>
+    <string name="habit_report_page_indicator">Trang %1$d/%2$d</string>
     <string name="unsaved_changes_confirm">Bạn có chắc muốn thoát không? Nội dung chưa lưu sẽ bị bỏ.</string>
     <string name="discard_changes">Bỏ thay đổi</string>
     <string name="future_date_action_blocked">Không thể thao tác với ngày trong tương lai</string>

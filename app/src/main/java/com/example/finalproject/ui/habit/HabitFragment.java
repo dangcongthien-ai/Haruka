@@ -54,17 +54,21 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
     private static final int SORT_PRIORITY = 0;
     private static final int SORT_TITLE = 1;
     private static final int SORT_CATEGORY = 2;
+    private static final int FILTER_ALL = 0;
+    private static final int FILTER_PENDING = 1;
+    private static final int FILTER_DONE = 2;
 
     private HabitRepository repository;
     private HabitAdapter adapter;
     private LocalDate selectedDate;
-    private boolean archivedTab;
+    private int statusFilter = FILTER_ALL;
     private int sortMode = SORT_PRIORITY;
 
     private TextView dateLabel;
     private TextView todayButton;
-    private MaterialButton activeButton;
-    private MaterialButton archivedButton;
+    private MaterialButton allButton;
+    private MaterialButton pendingButton;
+    private MaterialButton doneButton;
     private TextView emptyLabel;
     private TextView emptyHint;
     private TextView summaryLabel;
@@ -122,8 +126,9 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
     private void bind(View view) {
         dateLabel = view.findViewById(R.id.tv_habit_date);
         todayButton = view.findViewById(R.id.btn_habit_today);
-        activeButton = view.findViewById(R.id.btn_habit_active);
-        archivedButton = view.findViewById(R.id.btn_habit_archived);
+        allButton = view.findViewById(R.id.btn_habit_filter_all);
+        pendingButton = view.findViewById(R.id.btn_habit_filter_pending);
+        doneButton = view.findViewById(R.id.btn_habit_filter_done);
         emptyView = view.findViewById(R.id.layout_habit_empty);
         emptyLabel = view.findViewById(R.id.tv_habit_empty);
         emptyHint = view.findViewById(R.id.tv_habit_empty_hint);
@@ -179,12 +184,16 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
         dateLabel.setOnClickListener(v -> DatePickerDialogFragment
                 .newInstance(DATE_RESULT_KEY, selectedDate)
                 .show(getParentFragmentManager(), DATE_RESULT_KEY));
-        activeButton.setOnClickListener(v -> {
-            archivedTab = false;
+        allButton.setOnClickListener(v -> {
+            statusFilter = FILTER_ALL;
             refresh();
         });
-        archivedButton.setOnClickListener(v -> {
-            archivedTab = true;
+        pendingButton.setOnClickListener(v -> {
+            statusFilter = FILTER_PENDING;
+            refresh();
+        });
+        doneButton.setOnClickListener(v -> {
+            statusFilter = FILTER_DONE;
             refresh();
         });
         view.findViewById(R.id.btn_habit_report).setOnClickListener(v ->
@@ -239,14 +248,17 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
         boolean empty = visibleItems.isEmpty();
         UiUtils.visible(emptyView, empty);
         UiUtils.visible(recyclerView, !empty);
-        if (archivedTab) {
-            emptyLabel.setText(R.string.habit_empty_archived);
-            emptyHint.setText(R.string.habit_empty_archived_hint);
+        if (statusFilter == FILTER_PENDING) {
+            emptyLabel.setText(R.string.habit_empty_pending);
+            emptyHint.setText(R.string.habit_empty_pending_hint);
+        } else if (statusFilter == FILTER_DONE) {
+            emptyLabel.setText(R.string.habit_empty_done);
+            emptyHint.setText(R.string.habit_empty_done_hint);
         } else {
             emptyLabel.setText(R.string.habit_empty);
             emptyHint.setText(R.string.habit_empty_hint);
         }
-        UiUtils.visible(summaryLayout, !archivedTab);
+        UiUtils.visible(summaryLayout, true);
         updateSummary(allTodayItems, visibleItems);
     }
 
@@ -272,7 +284,7 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
             item.setArchivedByCompletion(archivedByCompletion);
             item.setDueOnSelectedDate(!permanentlyArchived && HabitScheduleUtils.isDueOnDate(habit, selectedDate));
             item.setCompletedOnSelectedDate(completed);
-            item.setProgressLabel(progressLabelFor(habit, log, completed, archived));
+            item.setProgressLabel(progressLabelFor(habit, log, completed, permanentlyArchived));
             item.setActionLabel(actionLabelFor(habit, completed));
             item.setProgressFraction(HabitScheduleUtils.progressFraction(habit, log));
             items.add(item);
@@ -284,12 +296,24 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
     private List<HabitListItem> filterVisibleItems(List<HabitListItem> items) {
         List<HabitListItem> visibleItems = new ArrayList<>();
         for (HabitListItem item : items) {
-            if (archivedTab == item.isArchived()) {
+            if (statusFilter == FILTER_PENDING) {
+                if (item.isDueOnSelectedDate() && !item.isCompletedOnSelectedDate()) {
+                    visibleItems.add(item);
+                }
+            } else if (statusFilter == FILTER_DONE) {
+                if (item.isCompletedOnSelectedDate() || permanentlyArchived(item)) {
+                    visibleItems.add(item);
+                }
+            } else {
                 visibleItems.add(item);
             }
         }
         Collections.sort(visibleItems, habitComparator());
         return visibleItems;
+    }
+
+    private boolean permanentlyArchived(HabitListItem item) {
+        return item.isArchived() && !item.isArchivedByCompletion();
     }
 
     private Comparator<HabitListItem> habitComparator() {
@@ -352,24 +376,20 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
     }
 
     private void updateFilterButtons() {
-        if (archivedTab) {
-            UiUtils.selectSegment(requireContext(), archivedButton, activeButton);
+        if (statusFilter == FILTER_PENDING) {
+            UiUtils.selectSegment(requireContext(), pendingButton, allButton, doneButton);
+        } else if (statusFilter == FILTER_DONE) {
+            UiUtils.selectSegment(requireContext(), doneButton, allButton, pendingButton);
         } else {
-            UiUtils.selectSegment(requireContext(), activeButton, archivedButton);
+            UiUtils.selectSegment(requireContext(), allButton, pendingButton, doneButton);
         }
     }
 
     private void updateSummary(List<HabitListItem> allTodayItems, List<HabitListItem> visibleItems) {
-        if (archivedTab) {
-            summaryLabel.setText(getString(R.string.habit_archived_count, visibleItems.size()));
-            summaryPercent.setText(visibleItems.isEmpty() ? "0%" : "100%");
-            updateProgressBar(visibleItems.isEmpty() ? 0 : 100);
-            return;
-        }
         int total = 0;
         int completed = 0;
         for (HabitListItem item : allTodayItems) {
-            if (HabitScheduleUtils.isArchivedOnDate(item.getHabit(), selectedDate)) {
+            if (permanentlyArchived(item)) {
                 continue;
             }
             total++;
@@ -396,9 +416,6 @@ public class HabitFragment extends Fragment implements HomeDataRefreshable {
         HabitItem habit = item.getHabit();
         if (item.isArchivedByCompletion() && item.isCompletedOnSelectedDate()) {
             repository.deleteHabitLog(habit.getId(), selectedDate);
-            if (archivedTab && item.isDueOnSelectedDate()) {
-                archivedTab = false;
-            }
             refresh();
             return;
         }
