@@ -127,14 +127,21 @@
         android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_habit_active"
+            android:id="@+id/btn_habit_filter_all"
             style="@style/Haruka.SegmentButton"
-            android:text="@string/habit_tab_active" />
+            android:text="@string/all" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_habit_archived"
+            android:id="@+id/btn_habit_filter_pending"
             style="@style/Haruka.SegmentButton"
-            android:text="@string/habit_tab_archived" />
+            android:text="@string/todo_filter_pending"
+            android:textSize="13sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_habit_filter_done"
+            style="@style/Haruka.SegmentButton"
+            android:text="@string/todo_filter_done"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <FrameLayout
