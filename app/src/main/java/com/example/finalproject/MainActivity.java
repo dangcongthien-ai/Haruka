@@ -28,12 +28,14 @@ import com.example.finalproject.ui.habit.HabitFragment;
 import com.example.finalproject.ui.habit.HabitStatsFragment;
 import com.example.finalproject.ui.journal.JournalEditFragment;
 import com.example.finalproject.ui.journal.JournalFragment;
+import com.example.finalproject.ui.journal.JournalMoodPickerDialog;
 import com.example.finalproject.ui.journal.JournalStatsFragment;
 import com.example.finalproject.ui.todo.TodoDetailFragment;
 import com.example.finalproject.ui.todo.TodoEditFragment;
 import com.example.finalproject.ui.todo.TodoFragment;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     private static final long FULL_SCREEN_CONTAINER_HIDE_DELAY_MS = 520L;
@@ -138,6 +140,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void openJournalEditor(long journalId, LocalDate date) {
         openFullScreen(JournalEditFragment.newInstance(journalId, date == null ? selectedDate : date));
+    }
+
+    public void openJournalEditor(long journalId, LocalDate date, ArrayList<String> moodResourceNames) {
+        openFullScreen(JournalEditFragment.newInstance(
+                journalId,
+                date == null ? selectedDate : date,
+                moodResourceNames
+        ));
     }
 
     public void openJournalStats(LocalDate date) {
@@ -260,8 +270,22 @@ public class MainActivity extends AppCompatActivity {
         } else if (currentTabId == R.id.nav_journal) {
             LocalDate today = LocalDate.now();
             setSelectedDate(today);
-            openJournalEditor(0, today);
+            showJournalMoodPickerBeforeCreate(today);
         }
+    }
+
+    private void showJournalMoodPickerBeforeCreate(LocalDate date) {
+        int[] selectedMoodResources = JournalMoodPickerDialog.defaultMoodResources();
+        JournalMoodPickerDialog.show(
+                this,
+                selectedMoodResources,
+                null,
+                () -> openJournalEditor(
+                        0,
+                        date,
+                        JournalMoodPickerDialog.selectedMoodResourceNames(this, selectedMoodResources)
+                )
+        );
     }
 
     private void showCalendar() {

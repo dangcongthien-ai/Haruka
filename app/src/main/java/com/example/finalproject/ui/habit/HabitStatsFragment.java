@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -44,6 +45,7 @@ public class HabitStatsFragment extends Fragment {
     private static final String ARG_DATE = "date";
     private static final int FILTER_ALL_ID = -1;
     private static final int PAGE_SIZE = 30;
+    private static final int PAGE_GRID_COLUMNS = 7;
 
     private HabitRepository repository;
     private LocalDate selectedDate;
@@ -209,11 +211,11 @@ public class HabitStatsFragment extends Fragment {
                 requireContext().getColor(R.color.brand_orange_light)
         );
         List<LocalDate> dueDates = buildDueDates(habit);
-        List<LocalDate> streakDates = collectCurrentStreakDates(habit, dueDates, logsByDate);
+        List<LocalDate> streakDates = collectStreakDates(habit, dueDates, logsByDate);
         int pageCount = resolvePageCount(dueDates.size());
-        int initialPage = Math.max(0, pageCount - 1);
+        int initialPage = resolveInitialPage(dueDates, pageCount);
 
-        LinearLayout card = new LinearLayout(requireContext());
+        FrameLayout card = new FrameLayout(requireContext());
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -221,21 +223,33 @@ public class HabitStatsFragment extends Fragment {
         cardParams.bottomMargin = dp(14);
         card.setLayoutParams(cardParams);
         card.setBackgroundResource(R.drawable.bg_habit_report_card);
-        card.setOrientation(LinearLayout.VERTICAL);
 
-        card.addView(createReportHeader(habit, dueDates, logsByDate, accentColor));
+        LinearLayout content = new LinearLayout(requireContext());
+        content.setLayoutParams(new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        content.setOrientation(LinearLayout.VERTICAL);
+        card.addView(content);
+
+        content.addView(createReportHeader(habit, dueDates, logsByDate, accentColor));
 
         GridLayout grid = new GridLayout(requireContext());
-        grid.setColumnCount(7);
-        grid.setPadding(dp(12), dp(14), dp(12), dp(12));
+        grid.setColumnCount(PAGE_GRID_COLUMNS);
+        grid.setLayoutParams(new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+        ));
+        grid.setPadding(0, dp(14), 0, dp(12));
         grid.setUseDefaultMargins(false);
 
-        if (pageCount > 1) {
-            card.addView(createPageSelector(grid, habit, dueDates, logsByDate, streakDates, pageCount, initialPage));
-        }
-
         bindPageGrid(grid, habit, dueDates, logsByDate, streakDates, initialPage);
-        card.addView(grid);
+        if (pageCount > 1) {
+            content.addView(createPagedReportBody(grid, habit, dueDates, logsByDate, streakDates, pageCount, initialPage));
+        } else {
+            content.addView(createGridHost(grid, false));
+        }
         return card;
     }
 
@@ -281,7 +295,7 @@ public class HabitStatsFragment extends Fragment {
         return header;
     }
 
-    private View createPageSelector(
+    private View createPagedReportBody(
             GridLayout grid,
             HabitItem habit,
             List<LocalDate> dueDates,
@@ -290,49 +304,79 @@ public class HabitStatsFragment extends Fragment {
             int pageCount,
             int initialPage
     ) {
-        LinearLayout pageRow = new LinearLayout(requireContext());
-        pageRow.setLayoutParams(new LinearLayout.LayoutParams(
+        LinearLayout body = new LinearLayout(requireContext());
+        body.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
-        pageRow.setGravity(Gravity.CENTER);
-        pageRow.setOrientation(LinearLayout.HORIZONTAL);
-        pageRow.setPadding(0, dp(12), 0, 0);
-        List<TextView> pageViews = new ArrayList<>();
-        for (int index = 0; index < pageCount; index++) {
-            TextView page = new TextView(requireContext());
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    dp(30)
-            );
-            params.setMargins(dp(4), 0, dp(4), 0);
-            page.setLayoutParams(params);
-            page.setGravity(Gravity.CENTER);
-            page.setMinWidth(dp(76));
-            page.setPadding(dp(12), 0, dp(12), 0);
-            page.setText(getString(R.string.habit_report_page, index + 1));
-            page.setTextSize(13);
-            final int pageIndex = index;
-            page.setOnClickListener(v -> {
-                bindPageGrid(grid, habit, dueDates, logsByDate, streakDates, pageIndex);
-                updatePageTabs(pageViews, pageIndex);
-            });
-            pageViews.add(page);
-            pageRow.addView(page);
-        }
-        updatePageTabs(pageViews, initialPage);
-        return pageRow;
+        body.setGravity(Gravity.CENTER_VERTICAL);
+        body.setOrientation(LinearLayout.HORIZONTAL);
+        body.setPadding(dp(8), 0, dp(8), 0);
+
+        int[] selectedPage = {initialPage};
+        TextView previous = createPageArrow("<", R.string.previous);
+        TextView next = createPageArrow(">", R.string.next);
+        body.addView(previous);
+        body.addView(createGridHost(grid, true));
+        body.addView(next);
+
+        previous.setOnClickListener(v -> {
+            if (selectedPage[0] <= 0) {
+                return;
+            }
+            selectedPage[0]--;
+            bindPageGrid(grid, habit, dueDates, logsByDate, streakDates, selectedPage[0]);
+            updatePageArrows(previous, next, selectedPage[0], pageCount);
+        });
+        next.setOnClickListener(v -> {
+            if (selectedPage[0] >= pageCount - 1) {
+                return;
+            }
+            selectedPage[0]++;
+            bindPageGrid(grid, habit, dueDates, logsByDate, streakDates, selectedPage[0]);
+            updatePageArrows(previous, next, selectedPage[0], pageCount);
+        });
+        updatePageArrows(previous, next, selectedPage[0], pageCount);
+        return body;
     }
 
-    private void updatePageTabs(List<TextView> pageViews, int selectedPage) {
-        for (int index = 0; index < pageViews.size(); index++) {
-            TextView pageView = pageViews.get(index);
-            boolean selected = index == selectedPage;
-            pageView.setBackground(selected
-                    ? UiUtils.rounded(requireContext().getColor(R.color.brand_orange_light), 15, requireContext())
-                    : UiUtils.rounded(requireContext().getColor(R.color.surface), 15, requireContext()));
-            pageView.setTextColor(requireContext().getColor(selected ? R.color.brand_orange_dark : R.color.text_secondary));
-        }
+    private FrameLayout createGridHost(GridLayout grid, boolean weighted) {
+        FrameLayout host = new FrameLayout(requireContext());
+        LinearLayout.LayoutParams params = weighted
+                ? new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                : new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        host.setLayoutParams(params);
+        host.addView(grid);
+        return host;
+    }
+
+    private TextView createPageArrow(String text, int contentDescriptionRes) {
+        TextView arrow = new TextView(requireContext());
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(26), dp(56));
+        arrow.setLayoutParams(params);
+        arrow.setGravity(Gravity.CENTER);
+        arrow.setIncludeFontPadding(false);
+        arrow.setText(text);
+        arrow.setTextSize(22);
+        arrow.setTypeface(arrow.getTypeface(), android.graphics.Typeface.BOLD);
+        arrow.setContentDescription(getString(contentDescriptionRes));
+        arrow.setClickable(true);
+        arrow.setFocusable(true);
+        return arrow;
+    }
+
+    private void updatePageArrows(TextView previous, TextView next, int selectedPage, int pageCount) {
+        updatePageArrow(previous, selectedPage > 0);
+        updatePageArrow(next, selectedPage < pageCount - 1);
+    }
+
+    private void updatePageArrow(TextView arrow, boolean enabled) {
+        arrow.setEnabled(enabled);
+        arrow.setVisibility(enabled ? View.VISIBLE : View.INVISIBLE);
+        arrow.setTextColor(requireContext().getColor(R.color.brand_orange_dark));
     }
 
     private void bindPageGrid(
@@ -357,33 +401,51 @@ public class HabitStatsFragment extends Fragment {
     }
 
     private View dayCell(HabitItem habit, LocalDate date, @Nullable Map<LocalDate, HabitLog> logsByDate, boolean streak) {
+        int drawableRes;
         if (date.isAfter(selectedDate)) {
-            return snowmanCell(R.drawable.habit_report_snowman_empty);
+            drawableRes = R.drawable.habit_report_snowman_empty;
+        } else if (streak) {
+            drawableRes = R.drawable.habit_report_snowman_hot;
+        } else {
+            HabitLog log = logsByDate == null ? null : logsByDate.get(date);
+            drawableRes = HabitScheduleUtils.evaluateCompletion(habit, log)
+                    ? R.drawable.habit_report_snowman_blue
+                    : R.drawable.habit_report_snowman_gray;
         }
-        HabitLog log = logsByDate == null ? null : logsByDate.get(date);
-        if (streak) {
-            return snowmanCell(R.drawable.habit_report_snowman_hot);
-        }
-        if (HabitScheduleUtils.evaluateCompletion(habit, log)) {
-            return snowmanCell(R.drawable.habit_report_snowman_blue);
-        }
-        return snowmanCell(R.drawable.habit_report_snowman_gray);
+        return snowmanCell(drawableRes, date);
     }
 
-    private View snowmanCell(int drawableRes) {
+    private View snowmanCell(int drawableRes, LocalDate date) {
+        LinearLayout cell = new LinearLayout(requireContext());
+        cell.setGravity(Gravity.CENTER);
+        cell.setOrientation(LinearLayout.VERTICAL);
+        cell.setPadding(0, dp(2), 0, 0);
+
         ImageView imageView = new ImageView(requireContext());
         imageView.setAdjustViewBounds(true);
         imageView.setImageResource(drawableRes);
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        return imageView;
+        cell.addView(imageView, new LinearLayout.LayoutParams(dp(34), dp(34)));
+
+        TextView dateLabel = new TextView(requireContext());
+        dateLabel.setGravity(Gravity.CENTER);
+        dateLabel.setIncludeFontPadding(false);
+        dateLabel.setText(formatSnowmanDate(date));
+        dateLabel.setTextColor(requireContext().getColor(R.color.text_secondary));
+        dateLabel.setTextSize(10);
+        cell.addView(dateLabel, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        return cell;
     }
 
     private GridLayout.LayoutParams cellParams() {
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-        params.width = 0;
-        params.height = dp(38);
-        params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-        params.setMargins(dp(2), dp(2), dp(2), dp(2));
+        params.width = dp(38);
+        params.height = dp(56);
+        params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED);
+        params.setMargins(dp(1), dp(4), dp(1), dp(4));
         return params;
     }
 
@@ -409,9 +471,7 @@ public class HabitStatsFragment extends Fragment {
                 ? habit.getEndDate()
                 : selectedDate;
         for (LocalDate cursor = habit.getStartDate(); !cursor.isAfter(reportEnd); cursor = cursor.plusDays(1)) {
-            if (HabitScheduleUtils.isDueOnDate(habit, cursor)) {
-                dueDates.add(cursor);
-            }
+            dueDates.add(cursor);
         }
         return dueDates;
     }
@@ -420,29 +480,47 @@ public class HabitStatsFragment extends Fragment {
         return Math.max(1, (int) Math.ceil(dueCount / (float) PAGE_SIZE));
     }
 
-    private List<LocalDate> collectCurrentStreakDates(
+    private int resolveInitialPage(List<LocalDate> dueDates, int pageCount) {
+        int selectedIndex = -1;
+        for (int index = 0; index < dueDates.size(); index++) {
+            LocalDate date = dueDates.get(index);
+            if (date.isAfter(selectedDate)) {
+                break;
+            }
+            selectedIndex = index;
+        }
+        if (selectedIndex < 0) {
+            selectedIndex = 0;
+        }
+        return Math.max(0, Math.min(pageCount - 1, selectedIndex / PAGE_SIZE));
+    }
+
+    private List<LocalDate> collectStreakDates(
             HabitItem habit,
             List<LocalDate> dueDates,
             @Nullable Map<LocalDate, HabitLog> logsByDate
     ) {
         List<LocalDate> streakDates = new ArrayList<>();
-        for (int index = dueDates.size() - 1; index >= 0; index--) {
-            LocalDate date = dueDates.get(index);
+        int streakCount = 0;
+        for (LocalDate date : dueDates) {
             if (date.isAfter(selectedDate)) {
-                continue;
+                break;
             }
             HabitLog log = logsByDate == null ? null : logsByDate.get(date);
             if (!HabitScheduleUtils.evaluateCompletion(habit, log)) {
-                break;
+                streakCount = 0;
+                continue;
             }
-            streakDates.add(date);
-        }
-        if (streakDates.size() < 2) {
-            streakDates.clear();
-        } else {
-            streakDates.remove(streakDates.size() - 1);
+            streakCount++;
+            if (streakCount >= 2) {
+                streakDates.add(date);
+            }
         }
         return streakDates;
+    }
+
+    private String formatSnowmanDate(LocalDate date) {
+        return String.format(Locale.US, "%d/%d", date.getDayOfMonth(), date.getMonthValue());
     }
 
     private String completionText(HabitItem habit, List<LocalDate> dueDates, @Nullable Map<LocalDate, HabitLog> logsByDate) {

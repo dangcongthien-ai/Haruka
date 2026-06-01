@@ -326,6 +326,7 @@
     <string name="habit_report_period">Tháng %1$02d/%2$d</string>
     <string name="habit_stats_empty">Chưa có dữ liệu thói quen</string>
     <string name="habit_report_page">Trang %1$d</string>
+    <string name="habit_report_page_indicator">Trang %1$d/%2$d</string>
     <string name="unsaved_changes_confirm">Bạn có chắc muốn thoát không? Nội dung chưa lưu sẽ bị bỏ.</string>
     <string name="discard_changes">Bỏ thay đổi</string>
     <string name="future_date_action_blocked">Không thể thao tác với ngày trong tương lai</string>
