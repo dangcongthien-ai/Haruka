@@ -30,7 +30,7 @@ import java.lang.reflect.Field;
 import java.util.WeakHashMap;
 
 public final class UiUtils {
-    private static final long DEFAULT_DEBOUNCE_INTERVAL_MS = 550L;
+    private static final long DEFAULT_DEBOUNCE_INTERVAL_MS = 650L;
     private static final WeakHashMap<View, Long> LAST_CLICK_TIMES = new WeakHashMap<>();
 
     private UiUtils() {

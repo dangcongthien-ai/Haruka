@@ -38,7 +38,7 @@ import java.time.LocalDate;
 public class MainActivity extends AppCompatActivity {
     private static final long FULL_SCREEN_CONTAINER_HIDE_DELAY_MS = 520L;
     private static final long FULL_SCREEN_DISMISS_DURATION_MS = 380L;
-    private static final long SCREEN_OPEN_DEBOUNCE_MS = 550L;
+    private static final long SCREEN_OPEN_DEBOUNCE_MS = 650L;
     private View bottomNavigationView;
     private View mainRoot;
     private View fab;
